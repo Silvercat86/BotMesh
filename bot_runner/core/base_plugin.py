@@ -1,4 +1,5 @@
 from aiogram import Router
+from api import Api
 
 
 class BasePlugin:
@@ -8,6 +9,7 @@ class BasePlugin:
         self.router = Router()
         self.bot = None
         self.services = None
+        self.api : Api = None
 
     def setup(self):
         raise NotImplementedError()

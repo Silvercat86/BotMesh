@@ -5,11 +5,12 @@ import random
 import uuid
 from typing import Any, Optional
 from core.utils.serializers import build_user_payload
+import os
 from aiogram.types import Message
 
 log = logging.getLogger("bot.api")
 
-API_BASE_URL = "http://bot_platform:8000/api/bot/"
+API_BASE_URL = os.getenv("BACKEND_API_URL","http://bot_platform:8000/api/bot/") 
 DEFAULT_TIMEOUT = aiohttp.ClientTimeout(total=8)
 
 RETRIES = 2
@@ -27,6 +28,8 @@ class APINetworkError(Exception):
 class Api:
     def __init__(self, session: aiohttp.ClientSession):
         self.session = session
+        self.api_url = API_BASE_URL
+        
 
     async def _request(
         self,
