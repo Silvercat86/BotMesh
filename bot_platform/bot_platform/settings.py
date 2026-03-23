@@ -19,7 +19,7 @@ DEBUG = os.getenv("DEBUG", "0") == "1"
 
 
 
-ALLOWED_HOSTS = ["*"]#os.getenv("ALLOWED_HOSTS", "").split(",") if not DEBUG else ["*"]
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "").split(",") if not DEBUG else ["*"]
 
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
