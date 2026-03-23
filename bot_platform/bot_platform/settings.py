@@ -17,13 +17,19 @@ if SECRET_KEY == "unsafe-dev-secret":
 
 DEBUG = os.getenv("DEBUG", "0") == "1"
 
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "").split(",") if not DEBUG else ["*"]
+
+
+ALLOWED_HOSTS = ["*"]#os.getenv("ALLOWED_HOSTS", "").split(",") if not DEBUG else ["*"]
 
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
+CSRF_TRUSTED_ORIGINS = [
+    "https://keepcat.ru",
+    "https://www.keepcat.ru",
+]
 
 # APPS
 
