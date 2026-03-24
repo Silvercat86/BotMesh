@@ -89,9 +89,9 @@ class BirthdayPlugin(BasePlugin):
         @self.router.message(Command("birthday_chat_status"))
         async def birthday_chat_status(message: Message):
 
-            context = await self.api.get_context(message)
+            # context = await self.api.get_context(message)
 
-            self.log.info(context)
+            # self.log.info(context)
             # команда только в ЛС
             if message.chat.type != "private":
                 return
