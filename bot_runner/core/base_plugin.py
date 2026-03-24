@@ -1,5 +1,5 @@
 from aiogram import Router
-from api import Api
+from core.api import Api
 
 
 class BasePlugin:
