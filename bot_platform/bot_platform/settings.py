@@ -31,6 +31,7 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 CSRF_TRUSTED_ORIGINS = [
     "https://keepcat.ru",
     "https://www.keepcat.ru",
+    "http://localhost:8080",
 ]
 
 # APPS
