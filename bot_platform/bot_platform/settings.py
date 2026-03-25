@@ -17,6 +17,8 @@ if SECRET_KEY == "unsafe-dev-secret":
 
 DEBUG = os.getenv("DEBUG", "0") == "1"
 
+BOT_API_KEY = os.getenv("BOT_API_KEY")
+
 
 
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "").split(",") if not DEBUG else ["*"]
@@ -48,14 +50,16 @@ INSTALLED_APPS = [
     'communication',
     'companies',
     'events',
+    'api',
 ]
 
 
 # MIDDLEWARE
 
 MIDDLEWARE = [
+    "core.middleware.ApiKeyMiddleware",
+
     'django.middleware.security.SecurityMiddleware',
-    # "whitenoise.middleware.WhiteNoiseMiddleware",
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -131,15 +135,10 @@ STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
 
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [],
+}
 
-# CELERY
-
-CELERY_BROKER_URL = "redis://redis:6379/0"
-
-CELERY_ACCEPT_CONTENT = ["json"]
-CELERY_TASK_SERIALIZER = "json"
-
-CELERY_TIMEZONE = os.getenv("TIME_ZONE", "Asia/Almaty")
 
 
 # LOGGING
@@ -148,18 +147,20 @@ LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
     "handlers": {
-        "backend_file": {
-            "level": "INFO",
-            "class": "logging.FileHandler",
-            "filename": "backend.log",
-            "encoding": "utf-8",
+        "console": {
+            "class": "logging.StreamHandler",
         },
     },
     "loggers": {
-        "backend": {
-            "handlers": ["backend_file"],
-            "level": "INFO",
-            "propagate": False,
+        "django.request": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+        },
+    },
+    "loggers": {
+        "django.security.csrf": {
+            "handlers": ["console"],
+            "level": "DEBUG",
         },
     },
 }
