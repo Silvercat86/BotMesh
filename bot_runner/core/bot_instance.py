@@ -4,6 +4,8 @@ from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 
+import aiohttp
+
 from core.services.container import ServiceContainer
 from core.services import Services
 from core.api import Api
@@ -18,7 +20,8 @@ class BotInstance:
             token=token,
             default=DefaultBotProperties(parse_mode=ParseMode.HTML),
         )
-        self.api = Api(self.bot.session)
+        self.http_session = aiohttp.ClientSession()
+        self.api = Api(self.http_session)
 
         self.plugins = plugins
 

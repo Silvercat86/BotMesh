@@ -10,7 +10,7 @@ from aiogram.types import Message
 
 log = logging.getLogger("bot.api")
 
-API_BASE_URL = os.getenv("BACKEND_API_URL","http://bot_platform:8000/api/bot/") 
+API_BASE_URL = os.getenv("BACKEND_API_URL","http://bot-platform:8000/api/") 
 DEFAULT_TIMEOUT = aiohttp.ClientTimeout(total=8)
 
 RETRIES = 2
@@ -29,6 +29,9 @@ class Api:
     def __init__(self, session: aiohttp.ClientSession):
         self.session = session
         self.api_url = API_BASE_URL
+        self.api_key = os.getenv("BOT_API_KEY")
+        if not self.api_key:
+            log.error("No api key provided")
         
 
     async def _request(
@@ -46,6 +49,7 @@ class Api:
 
         headers = {
             "X-Request-ID": request_id,
+            "X-API-KEY": self.api_key,
         }
 
         for attempt in range(RETRIES + 1):
@@ -53,8 +57,7 @@ class Api:
                 async with self.session.request(
                     method,
                     url,
-                    json=json,
-                    params=params,
+                    json = json,
                     timeout=DEFAULT_TIMEOUT,
                     headers=headers,
                 ) as resp:
@@ -112,17 +115,13 @@ class Api:
         raise APINetworkError(data)
 
     async def get_context(self, message: Message):
-        return await self._request(
-            "POST",
-            "context/",
-            json={
-                "user": build_user_payload(message.from_user),
-                "chat": {
-                    "tg_id": message.chat.id,
-                    "type": message.chat.type,
-                    "title": getattr(message.chat, "title", None),
-                },
-            },
-        )
+        payload = {
+            "user":  message.from_user.id,
+            "chat":  message.chat.id,
+        }
+
+        log.info("SENDING JSON: %s", payload)
+
+        return await self._request("POST", "context/", json=payload)
 
     
