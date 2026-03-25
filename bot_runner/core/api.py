@@ -6,7 +6,7 @@ import uuid
 from typing import Any, Optional
 from core.utils.serializers import build_user_payload
 import os
-from aiogram.types import Message
+from aiogram.types import Message,User,Chat
 
 log = logging.getLogger("bot.api")
 
@@ -116,12 +116,28 @@ class Api:
 
     async def get_context(self, message: Message):
         payload = {
-            "user":  message.from_user.id,
-            "chat":  message.chat.id,
+            "user": build_user_payload(message.from_user),
+            "chat": build_chat_payload(message.chat)
         }
-
-        log.info("SENDING JSON: %s", payload)
 
         return await self._request("POST", "context/", json=payload)
 
     
+
+def build_user_payload(user:User):
+    payload = {
+        "id" : user.id,
+        "username" : user.username,
+        "first_name" : user.first_name,
+        "last_name" : user.last_name
+    }
+    return payload
+
+def build_chat_payload(chat:Chat):
+    payload = {
+        "id" : chat.id,
+        "type" : chat.type,
+        "title" : chat.username if chat.type == "private" else chat.title
+        
+    }
+    return payload

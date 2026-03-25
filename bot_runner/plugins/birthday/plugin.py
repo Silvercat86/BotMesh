@@ -90,7 +90,7 @@ class BirthdayPlugin(BasePlugin):
         async def birthday_chat_status(message: Message):
 
             context = await self.api.get_context(message)
-
+            
             self.log.info(context)
             if message.chat.type != "private":
                 return
