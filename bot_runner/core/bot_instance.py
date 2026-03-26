@@ -12,7 +12,7 @@ from core.api import Api
 
 
 class BotInstance:
-    def __init__(self, token: str, name: str, plugins: list, services: list):
+    def __init__(self, token: str,api_key:str, name: str, plugins: list, services: list):
         self.dp = Dispatcher()
         self.name = name
 
@@ -21,7 +21,7 @@ class BotInstance:
             default=DefaultBotProperties(parse_mode=ParseMode.HTML),
         )
         self.http_session = aiohttp.ClientSession()
-        self.api = Api(self.http_session)
+        self.api = Api(self.http_session,api_key)
 
         self.plugins = plugins
 
@@ -59,3 +59,7 @@ class BotInstance:
 
     async def run(self):
         await self.dp.start_polling(self.bot)
+
+    async def shutdown(self):
+        await self.http_session.close()
+        await self.bot.session.close()

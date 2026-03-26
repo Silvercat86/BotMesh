@@ -26,10 +26,10 @@ class APINetworkError(Exception):
     pass
 
 class Api:
-    def __init__(self, session: aiohttp.ClientSession):
+    def __init__(self, session: aiohttp.ClientSession,api_key:str):
         self.session = session
         self.api_url = API_BASE_URL
-        self.api_key = os.getenv("BOT_API_KEY")
+        self.api_key = api_key
         if not self.api_key:
             log.error("No api key provided")
         
@@ -42,7 +42,7 @@ class Api:
         json: Optional[dict] = None,
         params: Optional[dict] = None,
     ) -> dict[str, Any]:
-        url = API_BASE_URL + path
+        url = self.api_url + path
         last_error = None
 
         request_id = str(uuid.uuid4())
@@ -60,6 +60,7 @@ class Api:
                     json = json,
                     timeout=DEFAULT_TIMEOUT,
                     headers=headers,
+                    params=params
                 ) as resp:
 
                     text = await resp.text()
@@ -112,7 +113,7 @@ class Api:
             repr(last_error),
         )
 
-        raise APINetworkError(data)
+        raise APINetworkError(str(last_error))
 
     async def get_context(self, message: Message):
         payload = {
@@ -141,3 +142,9 @@ def build_chat_payload(chat:Chat):
         
     }
     return payload
+
+class UserContext():
+    pass
+
+class ChatContext():
+    pass

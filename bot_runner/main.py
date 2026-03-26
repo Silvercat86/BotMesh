@@ -47,6 +47,7 @@ async def main() -> None:
 
         rio_bot_instance = BotInstance(
             token=os.getenv("RIO_BOT_TOKEN", ""),
+            api_key=os.getenv("RIO_API_KEY",""),
             name="RioBot",
             plugins=[
                 ComplimentPlugin(),
@@ -164,6 +165,8 @@ async def main() -> None:
 
         threeit_bot_instance = BotInstance(
             token=os.getenv("THREEIT_BOT_TOKEN", ""),
+            api_key=os.getenv("THREEIT_API_KEY",""),
+
             name="ThreeITBot",
             plugins=[
                 ComplimentPlugin(),
@@ -235,6 +238,7 @@ async def main() -> None:
 
         keepcat_bot_instance = BotInstance(
             token=os.getenv("KEEPCAT_BOT_TOKEN", ""),
+            api_key=os.getenv("KEEPCAT_API_KEY",""),
             name="KeepCatBot",
             plugins=[
                 EmployeeInfoPlugin(),
@@ -333,6 +337,8 @@ async def main() -> None:
         )
         clera_bot_instance = BotInstance(
             token=os.getenv("CLERA_BOT_TOKEN", ""),
+            api_key=os.getenv("CLERA_API_KEY",""),
+
             name="CleraBot",
             plugins=[
                 WelcomePlugin(CLERA_WELCOME_TEMPLATE,
@@ -368,16 +374,17 @@ async def main() -> None:
 
             await asyncio.gather(*tasks, return_exceptions=True)
 
-            await rio_bot_instance.bot.session.close()
-            await threeit_bot_instance.bot.session.close()
-            await keepcat_bot_instance.bot.session.close()
-            await clera_bot_instance.bot.session.close()
+            await rio_bot_instance.shutdown()
+            await threeit_bot_instance.shutdown()
+            await keepcat_bot_instance.shutdown()
+            await clera_bot_instance.shutdown()
 
     else:
         logging.info("Running in testing mode.")
 
         test_bot_instance = BotInstance(
             token=os.getenv("TEST_BOT_TOKEN", ""),
+            api_key=os.getenv("TEST_API_KEY",""),
             name="TestBot",
             plugins=[
                 ComplimentPlugin(),
@@ -576,7 +583,23 @@ async def main() -> None:
             ]
         )
         await test_bot_instance.init_plugins()
-        await test_bot_instance.run()
+
+        tasks = [
+            asyncio.create_task(test_bot_instance.run()), 
+        ]
+
+        try:
+            await asyncio.gather(*tasks)
+        except (asyncio.CancelledError, KeyboardInterrupt):
+            logging.info("Shutting down gracefully...")
+
+            for task in tasks:
+                task.cancel()
+
+            await asyncio.gather(*tasks, return_exceptions=True)
+
+            await test_bot_instance.shutdown()
+            
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, stream=sys.stdout)
