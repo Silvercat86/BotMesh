@@ -21,3 +21,6 @@ class Membership(models.Model):
     company = models.ForeignKey(Company, on_delete=models.CASCADE)
 
     role = models.CharField(max_length=20, choices=Role.choices)
+
+    class Meta:
+        unique_together = ("user", "company")
