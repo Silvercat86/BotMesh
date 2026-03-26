@@ -2,11 +2,13 @@ from django.db import models
 from companies.models import Company
 
 class TelegramUser(models.Model):
-    telegram_id = models.BigIntegerField(unique=True)
+    telegram_id = models.BigIntegerField(unique=True,null = True,blank=True)
 
     username = models.CharField(max_length=255, null=True, blank=True)
     first_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255, null=True, blank=True)
+
+    is_placeholder = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True)
 
