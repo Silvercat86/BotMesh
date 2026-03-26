@@ -24,14 +24,17 @@ def get_context(request):
             defaults={
                 "type": chat_data.get("type"),
                 "title": chat_data.get("title"),
+                "company" : request.company,
             }
         )
 
         
-        membership = (
-            Membership.objects
-            .filter(user=user, company=chat.company)
-            .first()
+        membership, _ = Membership.objects.get_or_create(
+            user=user,
+            company=request.company,
+            defaults={
+                "role": Membership.Role.EMPLOYEE
+            }
         )
 
         role = membership.role if membership else None
