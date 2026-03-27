@@ -13,6 +13,14 @@ class Candidate(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["company", "telegram_user"],
+                name="unique_candidate_per_company_telegram_user",
+            ),
+        ]
+
 
 
 class Offer(models.Model):
@@ -23,6 +31,14 @@ class Offer(models.Model):
         DISCUSS = "discuss"
         REJECTED = "rejected"
     candidate = models.ForeignKey(Candidate, on_delete=models.CASCADE)
+
+    employee = models.OneToOneField(
+        "Employee",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="offer",
+    )
 
     company = models.ForeignKey(Company, on_delete=models.CASCADE)
 
@@ -66,4 +82,15 @@ class Employee(models.Model):
     birthday = models.DateField(null=True, blank=True)
     start_date = models.DateField(null=True, blank=True)
 
+    external_id = models.CharField(max_length=255, null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["company", "telegram_user"],
+                name="unique_employee_per_company_telegram_user",
+            ),
+        ]
