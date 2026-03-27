@@ -12,6 +12,13 @@ class TelegramUser(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
 
+    @property
+    def admin(self):
+        return getattr(self,"administrator",None)
+
+    def __str__(self):
+        return self.first_name + self.last_name + f"({self.username})"
+
 
 class Membership(models.Model):
     class Role(models.TextChoices):
@@ -24,5 +31,17 @@ class Membership(models.Model):
 
     role = models.CharField(max_length=20, choices=Role.choices)
 
+    def __str__(self):
+        return (self.user.username if self.user else "unknown") + f"({self.role})"
+
     class Meta:
         unique_together = ("user", "company")
+
+
+class Administrator(models.Model):
+    class Level(models.TextChoices):
+        SUPER = "super"
+        STANDARD = "standard"
+
+    user = models.OneToOneField(TelegramUser, on_delete=models.CASCADE)
+    level = models.CharField(max_length=20, choices=Level.choices)

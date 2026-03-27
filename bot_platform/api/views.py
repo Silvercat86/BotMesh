@@ -36,6 +36,9 @@ def get_context(request):
         membership = None
         role = None
         company = chat.company
+        admin = user.admin
+        admin_level = admin.level if admin else None
+
 
         if company:
             membership = Membership.objects.filter(
@@ -45,11 +48,15 @@ def get_context(request):
 
             role = membership.role if membership else None
 
+    
+
     return Response({
         "user": {
             "id": user.id,
             "telegram_id": user.telegram_id,
             "username": user.username,
+            "admin" : admin_level if admin else None
+
         },
         "chat": {
             "id": chat.id,
