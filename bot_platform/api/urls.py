@@ -8,6 +8,7 @@ from .views_offers import (
     reject_offer_view,
 )
 
+
 urlpatterns = [
     path("context/", get_context, name="get_context"),
 
@@ -16,4 +17,10 @@ urlpatterns = [
     path("offers/<int:offer_id>/accept/", accept_offer_view, name="accept_offer"),
     path("offers/<int:offer_id>/discuss/", discuss_offer_view, name="discuss_offer"),
     path("offers/<int:offer_id>/reject/", reject_offer_view, name="reject_offer"),
+]
+
+from .views_employees import sync_employees_view
+
+urlpatterns += [
+    path("employees/sync/", sync_employees_view),
 ]

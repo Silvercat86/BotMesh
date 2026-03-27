@@ -34,6 +34,21 @@ CSRF_TRUSTED_ORIGINS = [
     "http://localhost:8080",
 ]
 
+PEOPLE_SOURCES = {
+    "rio_people": {
+        "name": "rio_people",
+        "service_account_b64": os.getenv("RIO_CREDENTIALS_BASE64", ""),
+        "mode": "named",
+        "url": "https://docs.google.com/spreadsheets/d/11xOQjQxoYvfbyOAu5oPtR0SE6xkgCFJY7Q0_Zt1ShuY/export?format=csv&gid=1875323650",
+        "fields_mapping": {
+            "fio": "ФИО",
+            "username": "Телеграм",
+            "birthday": "день рождения",
+            "start_date": "дата выхода",
+        },
+    },
+}
+
 # APPS
 
 INSTALLED_APPS = [

@@ -17,7 +17,7 @@ class TelegramUser(models.Model):
         return getattr(self,"administrator",None)
 
     def __str__(self):
-        return self.first_name + self.last_name + f"({self.username})"
+        return f"{self.first_name or ''} {self.last_name or ''} ({self.username or ''})"
 
 
 class Membership(models.Model):
