@@ -122,6 +122,9 @@ class Api:
         }
 
         return await self._request("POST", "context/", json=payload)
+    
+    async def sync_employees(self):
+        return await self._request("POST", "employees/sync/")
 
     
 
