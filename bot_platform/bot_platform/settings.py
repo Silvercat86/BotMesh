@@ -39,7 +39,7 @@ PEOPLE_SOURCES = {
         "name": "rio_people",
         "service_account_b64": os.getenv("RIO_CREDENTIALS_BASE64", ""),
         "mode": "named",
-        "url": "https://docs.google.com/spreadsheets/d/11xOQjQxoYvfbyOAu5oPtR0SE6xkgCFJY7Q0_Zt1ShuY/export?format=csv&gid=1875323650",
+        "url": "https://docs.google.com/spreadsheets/d/1-5BsFz-i9jnAy-CP_1w7IeBt8IzRDCneaj-EbECADOs/export?format=csv&gid=1875323650",
         "fields_mapping": {
             "fio": "ФИО",
             "username": "Телеграм",

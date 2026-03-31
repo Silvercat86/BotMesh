@@ -55,29 +55,18 @@ def sync_employees(company, employees_data: list):
 
         employee = None
 
+        # ✅ 1. главный ключ
         if external_id:
             employee = Employee.objects.filter(
                 company=company,
                 external_id=external_id
             ).first()
 
-        if not employee and telegram_user and full_name:
-            employee = Employee.objects.filter(
-                company = company,
-                telegram_user = telegram_user,
-                full_name = full_name
-            ).first()
-
+        # ✅ 2. telegram fallback
         if not employee and telegram_user:
             employee = Employee.objects.filter(
                 company=company,
                 telegram_user=telegram_user
-            ).first()
-
-        if not employee and full_name:
-            employee = Employee.objects.filter(
-                company=company,
-                full_name=full_name
             ).first()
 
         if not employee:
@@ -102,10 +91,6 @@ def sync_employees(company, employees_data: list):
             continue
 
         changed = []
-
-        # if full_name and employee.full_name != full_name:
-        #     employee.full_name = full_name
-        #     changed.append("full_name")
 
         if external_id and employee.external_id != external_id:
             employee.external_id = external_id
