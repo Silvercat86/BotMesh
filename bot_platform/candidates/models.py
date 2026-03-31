@@ -68,21 +68,38 @@ class OfferResponse(models.Model):
         unique_together = ("offer","type")
 
 
+
+
 class Employee(models.Model):
-    full_name = models.CharField(max_length=255)
-
-    telegram_user = models.OneToOneField(
-        TelegramUser, null=True, blank=True, on_delete=models.SET_NULL
-    )
-
     company = models.ForeignKey(Company, on_delete=models.CASCADE)
 
-    manager = models.ForeignKey("self", null=True, blank=True, on_delete=models.SET_NULL)
+    full_name = models.CharField(max_length=255)
+    normalized_name = models.CharField(max_length=255, null=True, blank=True)
+
+    telegram_user = models.ForeignKey(
+        TelegramUser,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="employees"
+    )
+
+    email = models.CharField(max_length=255, null=True, blank=True)
+    phone = models.CharField(max_length=50, null=True, blank=True)
+
+    manager = models.ForeignKey(
+        "self",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="subordinates"
+    )
 
     birthday = models.DateField(null=True, blank=True)
     start_date = models.DateField(null=True, blank=True)
 
     external_id = models.CharField(max_length=255, null=True, blank=True)
+
     is_active = models.BooleanField(default=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -96,4 +113,15 @@ class Employee(models.Model):
                 fields=["company", "telegram_user"],
                 name="unique_employee_per_company_telegram_user",
             ),
+            models.UniqueConstraint(
+                fields=["company", "external_id"],
+                name="unique_employee_per_company_external_id",
+            ),
+        ]
+
+        indexes = [
+            models.Index(fields=["company", "external_id"]),
+            models.Index(fields=["company", "normalized_name"]),
+            models.Index(fields=["company", "email"]),
+            models.Index(fields=["company", "phone"]),
         ]
