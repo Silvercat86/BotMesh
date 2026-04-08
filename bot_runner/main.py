@@ -22,6 +22,7 @@ from plugins.start.plugin import StartPlugin
 from plugins.memes.plugin import MemePlugin
 from plugins.march8.plugin import March8Plugin
 from plugins.employee_info.plugin import EmployeeInfoPlugin
+from plugins.clever_shma.plugin import CleverShmaPlugin
 
 from core.templates import RIO_BIRTHDAY_TEMPLATES, THREEIT_BIRTHDAY_TEMPLATES
 from core.templates import RIO_WORK_TEMPLATES, THREEIT_WORK_TEMPLATES
@@ -44,6 +45,16 @@ is_testing = os.getenv("TESTING", "false").lower() == "true"
 
 async def main() -> None:
     if not is_testing:
+
+        not_shma_bot_instance = BotInstance(
+            token=os.getenv("NOT_SHMA_BOT_TOKEN", ""),
+            api_key=os.getenv("NOT_SHMA_API_KEY",""),
+            name="NotShmaBot",
+            plugins=[
+                CleverShmaPlugin(),
+            ],
+            services=[]
+        )
 
         rio_bot_instance = BotInstance(
             token=os.getenv("RIO_BOT_TOKEN", ""),
@@ -353,14 +364,17 @@ async def main() -> None:
 
         await rio_bot_instance.init_plugins()
         # await threeit_bot_instance.init_plugins()
+        #
         await keepcat_bot_instance.init_plugins()
         await clera_bot_instance.init_plugins()
+        await not_shma_bot_instance.init_plugins()
 
         tasks = [
             asyncio.create_task(rio_bot_instance.run()),
             # asyncio.create_task(threeit_bot_instance.run()),
             asyncio.create_task(keepcat_bot_instance.run()),
             asyncio.create_task(clera_bot_instance.run()),
+            asyncio.create_task(not_shma_bot_instance.run()),
             
         ]
 
@@ -378,6 +392,7 @@ async def main() -> None:
             # await threeit_bot_instance.shutdown()
             await keepcat_bot_instance.shutdown()
             await clera_bot_instance.shutdown()
+            await not_shma_bot_instance.shutdown()
 
     else:
         logging.info("Running in testing mode.")
@@ -387,6 +402,7 @@ async def main() -> None:
             api_key=os.getenv("TEST_API_KEY",""),
             name="TestBot",
             plugins=[
+                CleverShmaPlugin(),
                 ComplimentPlugin(),
                 BirthdayPlugin(
                     csv_path="https://docs.google.com/spreadsheets/d/1QFdn6iAmc-krAIY75nDvWvn54LZrpjX5TfufZb1sJRg/export?format=csv&gid=0",
