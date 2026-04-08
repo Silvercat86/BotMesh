@@ -163,78 +163,78 @@ async def main() -> None:
             ]
         )
 
-        threeit_bot_instance = BotInstance(
-            token=os.getenv("THREEIT_BOT_TOKEN", ""),
-            api_key=os.getenv("THREEIT_API_KEY",""),
+        # threeit_bot_instance = BotInstance(
+        #     token=os.getenv("THREEIT_BOT_TOKEN", ""),
+        #     api_key=os.getenv("THREEIT_API_KEY",""),
 
-            name="ThreeITBot",
-            plugins=[
-                ComplimentPlugin(),
-                BirthdayPlugin(
-                    csv_path="https://docs.google.com/spreadsheets/d/1w3KMR_4cRlpG_qdsmdCOJ30ZCiAGtKItLmHHsLIYsqI/export?format=csv&gid=1875323650",
-                    templates=THREEIT_BIRTHDAY_TEMPLATES,
-                    storage_dir="data/TreeIT/birthday",
-                    hour=9,
-                    minute=0,
-                    dry_run=False,
-                    chat_file="data/TreeIT/birthday/chats.txt",
-                ),
-                WorkExperiencePlugin(
-                    csv_path="https://docs.google.com/spreadsheets/d/1ixGBmwFlGxpo4Q-vhyrct79hkDWBtM2ZOGhQVIfk3EM/export?format=csv&gid=1875323650",
-                    templates_by_years=THREEIT_WORK_TEMPLATES,
-                    storage_dir="data/TreeIT/work",
-                    hour=9,
-                    minute=0,
-                    dry_run=False,
-                    chat_file="data/TreeIT/birthday/chats.txt",
-                    column_map={
-                        "fio": "фио",
-                        "username": "контакт тг",
-                        "start_date": "дата выхода",
-                        "photo": "Фото"
-                    },
-                ),
-                WelcomePlugin(
-                    base_template=THREEIT_WELCOME_TEMPLATE,
-                    questions=THREEIT_WELCOME_QUESTIONS,
-                    n_questions=3,
+        #     name="ThreeITBot",
+        #     plugins=[
+        #         ComplimentPlugin(),
+        #         BirthdayPlugin(
+        #             csv_path="https://docs.google.com/spreadsheets/d/1w3KMR_4cRlpG_qdsmdCOJ30ZCiAGtKItLmHHsLIYsqI/export?format=csv&gid=1875323650",
+        #             templates=THREEIT_BIRTHDAY_TEMPLATES,
+        #             storage_dir="data/TreeIT/birthday",
+        #             hour=9,
+        #             minute=0,
+        #             dry_run=False,
+        #             chat_file="data/TreeIT/birthday/chats.txt",
+        #         ),
+        #         WorkExperiencePlugin(
+        #             csv_path="https://docs.google.com/spreadsheets/d/1ixGBmwFlGxpo4Q-vhyrct79hkDWBtM2ZOGhQVIfk3EM/export?format=csv&gid=1875323650",
+        #             templates_by_years=THREEIT_WORK_TEMPLATES,
+        #             storage_dir="data/TreeIT/work",
+        #             hour=9,
+        #             minute=0,
+        #             dry_run=False,
+        #             chat_file="data/TreeIT/birthday/chats.txt",
+        #             column_map={
+        #                 "fio": "фио",
+        #                 "username": "контакт тг",
+        #                 "start_date": "дата выхода",
+        #                 "photo": "Фото"
+        #             },
+        #         ),
+        #         WelcomePlugin(
+        #             base_template=THREEIT_WELCOME_TEMPLATE,
+        #             questions=THREEIT_WELCOME_QUESTIONS,
+        #             n_questions=3,
 
-                ),
-                StartPlugin(
-                    messages=THREEIT_START_TEMPLATES
-                ),
-                MemePlugin(),
-                March8Plugin(
-                    template=THREEIT_MARCH8_TEMPLATE,
-                    chat_file="data/TreeIT/birthday/chats.txt",
-                    storage_dir="data/TreeIT/march8",
-                    hour=9,
-                    minute=0,
-                    photo = "data/TreeIT/march8/image.jpg"
-                ),
-            ],
-            services=[
-                PeopleDirectoryService(
-                    sources={
-                        "birthdays": {
-                            "url": "https://docs.google.com/spreadsheets/d/1w3KMR_4cRlpG_qdsmdCOJ30ZCiAGtKItLmHHsLIYsqI/export?format=csv&gid=0",
-                            "mode": "indexed",
-                            "required_fields": ("fio", "birthday"),
-                            "fields_mapping": {
-                                "fio": 0,
-                                "username": 1,
-                                "birthday": 2,
-                                "photo": 3
-                            },
-                        },
+        #         ),
+        #         StartPlugin(
+        #             messages=THREEIT_START_TEMPLATES
+        #         ),
+        #         MemePlugin(),
+        #         March8Plugin(
+        #             template=THREEIT_MARCH8_TEMPLATE,
+        #             chat_file="data/TreeIT/birthday/chats.txt",
+        #             storage_dir="data/TreeIT/march8",
+        #             hour=9,
+        #             minute=0,
+        #             photo = "data/TreeIT/march8/image.jpg"
+        #         ),
+        #     ],
+        #     services=[
+        #         PeopleDirectoryService(
+        #             sources={
+        #                 "birthdays": {
+        #                     "url": "https://docs.google.com/spreadsheets/d/1w3KMR_4cRlpG_qdsmdCOJ30ZCiAGtKItLmHHsLIYsqI/export?format=csv&gid=0",
+        #                     "mode": "indexed",
+        #                     "required_fields": ("fio", "birthday"),
+        #                     "fields_mapping": {
+        #                         "fio": 0,
+        #                         "username": 1,
+        #                         "birthday": 2,
+        #                         "photo": 3
+        #                     },
+        #                 },
                         
 
-                    },
-                    cache_ttl=300,
-                )
-            ]
+        #             },
+        #             cache_ttl=300,
+        #         )
+        #     ]
             
-        )
+        # )
 
         keepcat_bot_instance = BotInstance(
             token=os.getenv("KEEPCAT_BOT_TOKEN", ""),
@@ -352,13 +352,13 @@ async def main() -> None:
 
 
         await rio_bot_instance.init_plugins()
-        await threeit_bot_instance.init_plugins()
+        # await threeit_bot_instance.init_plugins()
         await keepcat_bot_instance.init_plugins()
         await clera_bot_instance.init_plugins()
 
         tasks = [
             asyncio.create_task(rio_bot_instance.run()),
-            asyncio.create_task(threeit_bot_instance.run()),
+            # asyncio.create_task(threeit_bot_instance.run()),
             asyncio.create_task(keepcat_bot_instance.run()),
             asyncio.create_task(clera_bot_instance.run()),
             
@@ -375,7 +375,7 @@ async def main() -> None:
             await asyncio.gather(*tasks, return_exceptions=True)
 
             await rio_bot_instance.shutdown()
-            await threeit_bot_instance.shutdown()
+            # await threeit_bot_instance.shutdown()
             await keepcat_bot_instance.shutdown()
             await clera_bot_instance.shutdown()
 
