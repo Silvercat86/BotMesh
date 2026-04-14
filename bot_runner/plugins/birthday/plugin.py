@@ -81,7 +81,6 @@ class BirthdayPlugin(BasePlugin):
                 format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
             )
 
-        self.log.info(self.api.api_url)
 
         if self.chat_file:
             self.chat_id = self._load_chat_id_from_file()
@@ -89,11 +88,8 @@ class BirthdayPlugin(BasePlugin):
         @self.router.message(Command("birthday_chat_status"))
         async def birthday_chat_status(message: Message):
 
-            context = await self.api.get_context(message)
 
-            await self.api.sync_employees()
             
-            self.log.info(context)
             if message.chat.type != "private":
                 return
 
