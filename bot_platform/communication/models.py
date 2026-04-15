@@ -1,5 +1,4 @@
 from django.db import models
-from companies.models import Company
 from accounts.models import TelegramUser
 
 class Chat(models.Model):
@@ -12,7 +11,6 @@ class Chat(models.Model):
     type = models.CharField(max_length=20,choices=Type.choices)
     title = models.CharField(max_length=255, null=True, blank=True)
 
-    company = models.ForeignKey(Company, null=True, on_delete=models.SET_NULL)
 
 
 class Notification(models.Model):
@@ -53,10 +51,8 @@ class Template(models.Model):
 
     text = models.TextField()
 
-    company = models.ForeignKey(Company, on_delete=models.CASCADE)
 
-    class Meta:
-        unique_together = ("code", "company")
+
 
 
 class BotSession(models.Model):
@@ -84,5 +80,4 @@ class Bot(models.Model):
     token = models.CharField(max_length=255)
     api_key = models.CharField(max_length=255, unique=True)
 
-    company = models.ForeignKey(Company, on_delete=models.CASCADE)
     is_active = models.BooleanField(default=True)

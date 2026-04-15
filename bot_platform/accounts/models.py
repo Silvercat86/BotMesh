@@ -1,5 +1,4 @@
 from django.db import models
-from companies.models import Company
 
 class TelegramUser(models.Model):
     telegram_id = models.BigIntegerField(unique=True,null = True,blank=True)
@@ -19,23 +18,6 @@ class TelegramUser(models.Model):
     def __str__(self):
         return f"{self.first_name or ''} {self.last_name or ''} ({self.username or ''})"
 
-
-class Membership(models.Model):
-    class Role(models.TextChoices):
-        HR = "hr"
-        MANAGER = "manager"
-        EMPLOYEE = "employee"
-
-    user = models.ForeignKey(TelegramUser, on_delete=models.CASCADE)
-    company = models.ForeignKey(Company, on_delete=models.CASCADE)
-
-    role = models.CharField(max_length=20, choices=Role.choices)
-
-    def __str__(self):
-        return (self.user.username if self.user else "unknown") + f"({self.role})"
-
-    class Meta:
-        unique_together = ("user", "company")
 
 
 class Administrator(models.Model):

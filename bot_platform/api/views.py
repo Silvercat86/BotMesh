@@ -2,7 +2,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from django.db import transaction
 
-from accounts.models import TelegramUser, Membership
+from accounts.models import TelegramUser
 from communication.models import Chat
 
 def resolve_permissions(role):
@@ -40,13 +40,7 @@ def get_context(request):
         admin_level = admin.level if admin else None
 
 
-        if company:
-            membership = Membership.objects.filter(
-                user=user,
-                company=company
-            ).first()
 
-            role = membership.role if membership else None
 
     
 
