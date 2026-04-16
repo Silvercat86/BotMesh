@@ -10,6 +10,8 @@ from core.services.container import ServiceContainer
 from core.services import Services
 from core.api import Api
 
+import maxapi
+
 
 class TelegramBotInstance:
     def __init__(self, token: str,api_key:str, name: str, plugins: list, services: list):
@@ -66,12 +68,45 @@ class TelegramBotInstance:
 
 
 class MaxBotInstance:
-    def __init__(self, token: str,api_key:str, name: str, plugins: list, services: list):
-        pass
+    def __init__(self, token: str, api_key: str, name: str, plugins: list, services: list):
+        self.name = name
+
+        self.bot = maxapi.Bot(token)
+        self.dp = maxapi.Dispatcher()
+
+        self.http_session = aiohttp.ClientSession()
+        self.api = Api(self.http_session, api_key)
+
+        self.plugins = plugins
+
+        for plugin in plugins:
+            plugin.api = self.api
+
+        container = ServiceContainer()
+
+        for service in services:
+            container.register(service.name, service)
+
+        self.services = Services(container)
 
     async def init_plugins(self):
-        pass
+        for plugin in self.plugins:
+
+            if hasattr(plugin, "required_services"):
+                self.services._c.ensure(plugin.required_services)
+
+            plugin.bot_name = self.name
+            plugin.bot = self.bot
+            plugin.dp = self.dp  # ВАЖНО: в maxapi нет router → используем dp
+            plugin.services = self.services
+
+            if hasattr(plugin, "register_commands"):
+                await plugin.register_commands()
+
+            plugin.setup()
+
     async def run(self):
-        pass
+        await self.dp.start_polling(self.bot)
+
     async def shutdown(self):
-        pass
+        await self.http_session.close()

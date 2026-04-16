@@ -13,6 +13,7 @@ from aiogram import Router
 
 
 from core.bot_instance import TelegramBotInstance
+from core.bot_instance import MaxBotInstance
 
 from telegram_plugins.compliment.plugin import ComplimentPlugin
 from telegram_plugins.birthday.plugin import BirthdayPlugin
@@ -23,6 +24,8 @@ from telegram_plugins.memes.plugin import MemePlugin
 from telegram_plugins.march8.plugin import March8Plugin
 from telegram_plugins.employee_info.plugin import EmployeeInfoPlugin
 from telegram_plugins.clever_shma.plugin import CleverShmaPlugin
+
+from max_plugins.birthday_plugin.plugin import MaxBirthdayPlugin
 
 from core.templates import RIO_BIRTHDAY_TEMPLATES, THREEIT_BIRTHDAY_TEMPLATES
 from core.templates import RIO_WORK_TEMPLATES, THREEIT_WORK_TEMPLATES
@@ -397,6 +400,169 @@ async def main() -> None:
     else:
         logging.info("Running in testing mode.")
 
+        max_test_bot_instance = MaxBotInstance(
+            token=os.getenv("MAX_TEST_BOT_TOKEN", ""),
+            api_key=os.getenv("MAX_TEST_API_KEY",""),
+            name="MaxTestBot",
+            plugins=[
+                MaxBirthdayPlugin(
+                    csv_path="https://docs.google.com/spreadsheets/d/1QFdn6iAmc-krAIY75nDvWvn54LZrpjX5TfufZb1sJRg/export?format=csv&gid=0",
+                    templates=RIO_BIRTHDAY_TEMPLATES,
+                    storage_dir="data/testing/birthdayMax",
+                    hour=9,
+                    minute=0,
+                    chat_id=None,
+                )
+            ],
+            services=[
+                PeopleDirectoryService(
+                    sources={
+                       
+                        "threeit_people": {
+                            "name": "threeit_people",
+                            "url": "https://docs.google.com/spreadsheets/d/1w3KMR_4cRlpG_qdsmdCOJ30ZCiAGtKItLmHHsLIYsqI/export?format=csv",
+                            "mode": "named",
+                            "required_fields": ("fio",),
+                            "fields_mapping": {
+
+                                "fio": "ФИО",
+                                "status": "Статус",
+                                "position": "Должность",
+                                "workload": "Занятость",
+                                "employment_type": "формат трудоустройства",
+                                "format": "Форма",
+                                "engagement": "Вовлеченность",
+                                "zone": "Зона",
+                                "risk": "Риск ухода",
+                                "comments": "комментарии",
+
+                                "start_date": "дата выхода",
+                                "current_date": "текущая дата",
+                                "probation_end": "окончание ИС",
+
+                                "resume": "Резюме",
+                                "offer": "Оффер",
+                                "employee_card": "Карточка сотрудника",
+
+                                "last_heat": "Дата последней  тепловой с Заботой",
+                                "next_heat": "Дата след тепловой",
+
+                                "last_1to1": "Дата 1 to 1 с рук",
+                                "next_1to1": "Дата след 1 to 1 с рук",
+
+                                "gender": "пол",
+                                "stack": "Стэк",
+                                "project": "Проект",
+                                "project_description": "Описание проекта",
+
+                                "manager": "Руководитель",
+
+                                "phone": "Телефон",
+
+                                "welcome_training": "Вэлком тренинг",
+
+                                "salary": "Зарплата-ставка",
+                                "social_package": "доступный соц пакет",
+                                "salary_changes": "изменения по зп",
+
+                                "children": "дети",
+                                "address": "адрес проживания",
+
+                                "telegram_contact": "контакт ТГ",
+                                "username": "контакт ТГ",
+
+                                "email": "почта",
+
+                                "birthday": "День рождения",
+
+                                "emergency_contact": "контакт эккстреснгой свзяи",
+                            },
+                        },
+                        # "rio_people_birthdays": {
+                        #     "name": "rio_people_birthdays",
+                        #     "url": "https://docs.google.com/spreadsheets/d/1QFdn6iAmc-krAIY75nDvWvn54LZrpjX5TfufZb1sJRg/export?format=csv&gid=0",
+                        #     "mode": "indexed",
+                        #     "required_fields": ("fio",),
+                        #     "fields_mapping": {
+                        #         "fio": 0,
+                        #         "username": 1,
+                        #         "birthday": 2,
+                        #         "photo_url": 3
+                        # }
+                        # },
+                        # "rio_people_work": {
+                        #     "name": "rio_people_work",
+                        #     "url": "https://docs.google.com/spreadsheets/d/1QFdn6iAmc-krAIY75nDvWvn54LZrpjX5TfufZb1sJRg/export?format=csv&gid=1937147644",
+                        #     "mode": "indexed",
+                        #     "required_fields": ("fio",),
+                        #     "fields_mapping": {
+                        #         "fio": 0,
+                        #         "username": 1,
+                        #         "start_date": 2,
+                        #         "photo_url": 3
+                        # }
+                        # },
+                        # "rio_people": {
+                        #     "name": "rio_people",
+                        #     "type" : "mixed",
+                        #     "sources": ["rio_people_birthdays", "rio_people_work"],
+                        #     "key_field": "username",
+                        #     "field_mapping": {
+                        #         "fio" : "rio_people_birthdays",
+                        #         "username" : "rio_people_birthdays",
+                        #         "birthday" : "rio_people_birthdays",
+                        #         "photo_url" : "rio_people_birthdays",
+                        #         "start_date" : "rio_people_work",
+                        #     }
+                        # },
+                        "rio_people": {
+                            "name": "rio_people",
+                            "service_account_b64": os.getenv("RIO_CREDENTIALS_BASE64", ""),
+                            "mode" : "named",
+                            "url": "https://docs.google.com/spreadsheets/d/11xOQjQxoYvfbyOAu5oPtR0SE6xkgCFJY7Q0_Zt1ShuY/export?format=csv&gid=1875323650",
+                            "fields_mapping": {
+
+                                "fio": "ФИО",
+                                "status": "Статус",
+
+                                "position": "Должность",
+                                "stack": "Специализация",
+                                "zone": "Зона",
+                                "risk": "Риск ухода",
+                                "comments": "комментарии",
+
+                                "start_date": "дата выхода",
+                                "probation_end": "окончание ИС",
+
+                                "employee_card": "Карточка сотрдуника",
+
+                                "last_heat": "Дата посл  тепловой с Заботой",
+                                "next_heat": "Дата след тепловой",
+
+                                "last_1to1": "Дата посл 1 to 1 с рук",
+                                "next_1to1": "Дата след 1 to 1 с рук",
+
+                                "gender": "пол",
+
+                                "manager": "Руководитель",
+
+                                "phone": "Телефон",
+
+                                "employment_type": "формат трудоустройства",
+
+                                "children": "дети",
+                                "address": "Точка",
+
+                            },
+                        },
+
+                    },
+                    cache_ttl=300,
+                )
+            ]
+
+        )
+
         test_bot_instance = TelegramBotInstance(
             token=os.getenv("TEST_BOT_TOKEN", ""),
             api_key=os.getenv("TEST_API_KEY",""),
@@ -599,9 +765,11 @@ async def main() -> None:
             ]
         )
         await test_bot_instance.init_plugins()
+        await max_test_bot_instance.init_plugins()
 
         tasks = [
             asyncio.create_task(test_bot_instance.run()), 
+            asyncio.create_task(max_test_bot_instance.run()),
         ]
 
         try:
@@ -615,6 +783,7 @@ async def main() -> None:
             await asyncio.gather(*tasks, return_exceptions=True)
 
             await test_bot_instance.shutdown()
+            await max_test_bot_instance.shutdown()
             
 
 if __name__ == "__main__":

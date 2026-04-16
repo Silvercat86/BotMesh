@@ -1,4 +1,5 @@
 from aiogram import Router
+import maxapi
 from core.api import Api
 
 
@@ -14,14 +15,14 @@ class BaseTelegramPlugin:
     def setup(self):
         raise NotImplementedError()
     
-class BaseMaxPlugin:
-    required_services: tuple[str, ...] = ()
 
+class BaseMaxPlugin:
     def __init__(self):
-        self.router = Router()
-        self.bot = None
+        self.bot : maxapi.Bot = None
+        self.dp = None
         self.services = None
-        self.api : Api = None
+        self.api = None
+        self.bot_name = None
 
     def setup(self):
-        raise NotImplementedError()
+        raise NotImplementedError
