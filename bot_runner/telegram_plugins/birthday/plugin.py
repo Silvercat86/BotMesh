@@ -12,7 +12,7 @@ from aiogram.types import FSInputFile
 
 
 from core.base_plugin import BaseTelegramPlugin
-from plugins.birthday.service import (
+from telegram_plugins.birthday.service import (
     daily_birthday_run,
     test_birthday_run,
     load_state,

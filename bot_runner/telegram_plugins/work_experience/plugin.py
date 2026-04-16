@@ -10,7 +10,7 @@ from aiogram.filters import Command
 from aiogram.types import Message, FSInputFile
 
 from core.base_plugin import BaseTelegramPlugin
-from plugins.work_experience.service import (
+from telegram_plugins.work_experience.service import (
     daily_work_experience_run,
     today_almaty,
     load_state,
