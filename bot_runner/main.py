@@ -12,7 +12,7 @@ from aiogram.types import Message
 from aiogram import Router
 
 
-from core.bot_instance import BotInstance
+from core.bot_instance import TelegramBotInstance
 
 from plugins.compliment.plugin import ComplimentPlugin
 from plugins.birthday.plugin import BirthdayPlugin
@@ -46,7 +46,7 @@ is_testing = os.getenv("TESTING", "false").lower() == "true"
 async def main() -> None:
     if not is_testing:
 
-        not_shma_bot_instance = BotInstance(
+        not_shma_bot_instance = TelegramBotInstance(
             token=os.getenv("NOT_SHMA_BOT_TOKEN", ""),
             api_key=os.getenv("NOT_SHMA_API_KEY",""),
             name="NotShmaBot",
@@ -56,7 +56,7 @@ async def main() -> None:
             services=[]
         )
 
-        rio_bot_instance = BotInstance(
+        rio_bot_instance = TelegramBotInstance(
             token=os.getenv("RIO_BOT_TOKEN", ""),
             api_key=os.getenv("RIO_API_KEY",""),
             name="RioBot",
@@ -247,7 +247,7 @@ async def main() -> None:
             
         # )
 
-        keepcat_bot_instance = BotInstance(
+        keepcat_bot_instance = TelegramBotInstance(
             token=os.getenv("KEEPCAT_BOT_TOKEN", ""),
             api_key=os.getenv("KEEPCAT_API_KEY",""),
             name="KeepCatBot",
@@ -346,7 +346,7 @@ async def main() -> None:
 
                 )]
         )
-        clera_bot_instance = BotInstance(
+        clera_bot_instance = TelegramBotInstance(
             token=os.getenv("CLERA_BOT_TOKEN", ""),
             api_key=os.getenv("CLERA_API_KEY",""),
 
@@ -397,12 +397,12 @@ async def main() -> None:
     else:
         logging.info("Running in testing mode.")
 
-        test_bot_instance = BotInstance(
+        test_bot_instance = TelegramBotInstance(
             token=os.getenv("TEST_BOT_TOKEN", ""),
             api_key=os.getenv("TEST_API_KEY",""),
             name="TestBot",
             plugins=[
-                CleverShmaPlugin(),
+                # CleverShmaPlugin(),
                 ComplimentPlugin(),
                 BirthdayPlugin(
                     csv_path="https://docs.google.com/spreadsheets/d/1QFdn6iAmc-krAIY75nDvWvn54LZrpjX5TfufZb1sJRg/export?format=csv&gid=0",

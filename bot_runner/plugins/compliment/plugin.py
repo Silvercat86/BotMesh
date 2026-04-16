@@ -2,7 +2,7 @@
 import random
 from aiogram.filters import Command
 from aiogram.types import Message
-from core.base_plugin import BasePlugin
+from core.base_plugin import BaseTelegramPlugin
 
 COMPLIMENTS = [
     # блок 1
@@ -92,7 +92,7 @@ COMPLIMENTS = [
     "Спасибо, что ты такой 💛 обнимаю лапками 🐾🤗",
 ]
 
-class ComplimentPlugin(BasePlugin):
+class ComplimentPlugin(BaseTelegramPlugin):
     def setup(self):
         @self.router.message(Command("compliment"))
         async def compliment_handler(message: Message):

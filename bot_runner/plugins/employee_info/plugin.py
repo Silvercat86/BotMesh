@@ -1,6 +1,6 @@
 # plugins/employee_info/plugin.py
 
-from core.base_plugin import BasePlugin
+from core.base_plugin import BaseTelegramPlugin
 
 from aiogram.filters import Command
 from aiogram.types import Message, InlineKeyboardButton, CallbackQuery
@@ -22,7 +22,7 @@ class InfoState(StatesGroup):
     
 
 
-class EmployeeInfoPlugin(BasePlugin):
+class EmployeeInfoPlugin(BaseTelegramPlugin):
 
     def __init__(self,sources: List[str] = [],available_nicknames : List[str] = [],available_chats : List[str] = [],scope_chats : List[int] = []):
         super().__init__()

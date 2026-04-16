@@ -1,4 +1,4 @@
-from core.base_plugin import BasePlugin
+from core.base_plugin import BaseTelegramPlugin
 from aiogram.filters import Command
 from aiogram.types import Message
 import os
@@ -12,7 +12,7 @@ MODEL = os.getenv("OPENROUTER_MODEL", "deepseek/deepseek-chat")
 
 
 
-class CleverShmaPlugin(BasePlugin):
+class CleverShmaPlugin(BaseTelegramPlugin):
     def __init__(self):
         super().__init__()
 

@@ -1,5 +1,5 @@
 # core/bot_instance.py
-
+import aiogram
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
@@ -11,12 +11,12 @@ from core.services import Services
 from core.api import Api
 
 
-class BotInstance:
+class TelegramBotInstance:
     def __init__(self, token: str,api_key:str, name: str, plugins: list, services: list):
         self.dp = Dispatcher()
         self.name = name
 
-        self.bot = Bot(
+        self.bot = aiogram.Bot(
             token=token,
             default=DefaultBotProperties(parse_mode=ParseMode.HTML),
         )
@@ -63,3 +63,15 @@ class BotInstance:
     async def shutdown(self):
         await self.http_session.close()
         await self.bot.session.close()
+
+
+class MaxBotInstance:
+    def __init__(self, token: str,api_key:str, name: str, plugins: list, services: list):
+        pass
+
+    async def init_plugins(self):
+        pass
+    async def run(self):
+        pass
+    async def shutdown(self):
+        pass

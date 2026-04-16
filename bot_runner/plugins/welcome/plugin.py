@@ -7,10 +7,10 @@ from typing import List, Dict, Tuple
 from aiogram.types import ChatMemberUpdated, Message
 from aiogram import F
 
-from core.base_plugin import BasePlugin
+from core.base_plugin import BaseTelegramPlugin
 
 
-class WelcomePlugin(BasePlugin):
+class WelcomePlugin(BaseTelegramPlugin):
     def __init__(
         self,
         base_template: str,

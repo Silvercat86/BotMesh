@@ -1,10 +1,10 @@
-from core.base_plugin import BasePlugin
+from core.base_plugin import BaseTelegramPlugin
 import random
 from typing import List
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, Message
 from aiogram.filters import Command,CommandStart
 
-class StartPlugin(BasePlugin):
+class StartPlugin(BaseTelegramPlugin):
     def __init__(self,messages: List[str]):
         super().__init__()
         self.messages = messages

@@ -11,7 +11,7 @@ from aiogram.types import Message
 from aiogram.types import FSInputFile
 
 
-from core.base_plugin import BasePlugin
+from core.base_plugin import BaseTelegramPlugin
 from plugins.birthday.service import (
     daily_birthday_run,
     test_birthday_run,
@@ -25,7 +25,7 @@ from html import escape
 
 
 
-class BirthdayPlugin(BasePlugin):
+class BirthdayPlugin(BaseTelegramPlugin):
     def __init__(
         self,
         csv_path: str,
@@ -81,6 +81,8 @@ class BirthdayPlugin(BasePlugin):
                 format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
             )
 
+        self.log.info(self.api.api_url)
+       
 
         if self.chat_file:
             self.chat_id = self._load_chat_id_from_file()
@@ -88,8 +90,10 @@ class BirthdayPlugin(BasePlugin):
         @self.router.message(Command("birthday_chat_status"))
         async def birthday_chat_status(message: Message):
 
+            context = await self.api.get_context(message)
 
             
+            self.log.info(context)
             if message.chat.type != "private":
                 return
 
