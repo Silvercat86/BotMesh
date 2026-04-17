@@ -406,12 +406,12 @@ async def main() -> None:
             name="MaxTestBot",
             plugins=[
                 MaxBirthdayPlugin(
-                    csv_path="https://docs.google.com/spreadsheets/d/1QFdn6iAmc-krAIY75nDvWvn54LZrpjX5TfufZb1sJRg/export?format=csv&gid=0",
+                    csv_path="https://docs.google.com/spreadsheets/d/1EdBbNp8QLD04-TNl5uIYmk2NJaZCguyzTbGSnhp5ld4/export?format=csv&gid=0",
                     templates=RIO_BIRTHDAY_TEMPLATES,
                     storage_dir="data/testing/birthdayMax",
                     hour=9,
                     minute=0,
-                    chat_id=None,
+                    chat_id="-73548766634171",
                 )
             ],
             services=[
@@ -571,7 +571,7 @@ async def main() -> None:
                 # CleverShmaPlugin(),
                 ComplimentPlugin(),
                 BirthdayPlugin(
-                    csv_path="https://docs.google.com/spreadsheets/d/1QFdn6iAmc-krAIY75nDvWvn54LZrpjX5TfufZb1sJRg/export?format=csv&gid=0",
+                    csv_path="https://docs.google.com/spreadsheets/d/1EdBbNp8QLD04-TNl5uIYmk2NJaZCguyzTbGSnhp5ld4/export?format=csv&gid=0",
                     templates=RIO_BIRTHDAY_TEMPLATES,
                     storage_dir="data/testing/birthday",
                     hour=9,

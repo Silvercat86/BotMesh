@@ -54,9 +54,13 @@ class MaxBirthdayPlugin(BaseMaxPlugin):
 
         self.log = logging.getLogger("max_birthdays")
 
+
+
     # -------------------- SETUP --------------------
 
     def setup(self):
+
+        self.log.info("Setting up MaxBirthdayPlugin")
 
         @self.dp.message_created()
         async def handle_commands(event: MessageCreated):
@@ -158,12 +162,17 @@ class MaxBirthdayPlugin(BaseMaxPlugin):
         state = load_state(self.state_path)
         today = today_almaty()
 
+        self.log.info(f"Checking if catch-up is needed. Last sent for date: {state.get('last_sent_for_date')}, today: {today.isoformat()}")
+
         if state.get("last_sent_for_date") == today.isoformat():
+            self.log.info("Already sent for today, no catch-up needed")
             return
 
         now = datetime.now()
         if (now.hour, now.minute) >= (self.hour, self.minute):
+            self.log.info("Catch-up needed, running daily_birthday_run for today")
             if not self.chat_id:
+                self.log.info("No chat_id configured, skipping catch-up")
                 return
 
             send_fn = self._make_send_fn()
@@ -177,3 +186,4 @@ class MaxBirthdayPlugin(BaseMaxPlugin):
                 images_dir=self.images_dir,
                 external_images_dir=self.external_images_dir,
             )
+        self.log.info("Catch-up check complete")
