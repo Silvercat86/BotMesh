@@ -11,34 +11,43 @@ from core.services import Services
 from core.api import Api
 
 import maxapi
-
-
-class TelegramBotInstance:
-    def __init__(self, token: str,api_key:str, name: str, plugins: list, services: list):
-        self.dp = Dispatcher()
+class BotInstance:
+    def __init__(self, token: str, api_key: str, name: str, plugins: list, services: list):
         self.name = name
-
-        self.bot = aiogram.Bot(
-            token=token,
-            default=DefaultBotProperties(parse_mode=ParseMode.HTML),
-        )
+        
         self.http_session = aiohttp.ClientSession()
-        self.api = Api(self.http_session,api_key)
+        self.api = Api(self.http_session, api_key)
 
         self.plugins = plugins
 
         for plugin in plugins:
             plugin.api = self.api
 
-
         container = ServiceContainer()
 
         for service in services:
             container.register(service.name, service)
 
+        self.services = Services(container)
+
+    
+
+class TelegramBotInstance(BotInstance):
+    def __init__(self, token: str,api_key:str, name: str, plugins: list, services: list):
+
+        super().__init__(token, api_key, name, plugins, services)
+
+        self.dp = Dispatcher()
+
+        self.bot = aiogram.Bot(
+            token=token,
+            default=DefaultBotProperties(parse_mode=ParseMode.HTML),
+        )
+
+
+
             
 
-        self.services = Services(container)
 
 
     async def init_plugins(self):
@@ -46,7 +55,7 @@ class TelegramBotInstance:
             
 
             if hasattr(plugin, "required_services"):
-                self.services._c.ensure(plugin.required_services)
+                self.services.ensure(plugin.required_services)
 
             plugin.bot_name = self.name
             plugin.bot = self.bot
@@ -67,29 +76,17 @@ class TelegramBotInstance:
         await self.bot.session.close()
 
 
-class MaxBotInstance:
+class MaxBotInstance(BotInstance):
     def __init__(self, token: str, api_key: str, name: str, plugins: list, services: list):
-        self.name = name
+        super().__init__(token, api_key, name, plugins, services)
 
         self.bot = maxapi.Bot(token)
         self.dp = maxapi.Dispatcher()
 
-        self.http_session = aiohttp.ClientSession()
-        self.api = Api(self.http_session, api_key)
-
-        self.plugins = plugins
-
-        for plugin in plugins:
-            plugin.api = self.api
-
-        container = ServiceContainer()
-
-        for service in services:
-            container.register(service.name, service)
-
-        self.services = Services(container)
+        
 
     async def init_plugins(self):
+        
         for plugin in self.plugins:
 
             if hasattr(plugin, "required_services"):

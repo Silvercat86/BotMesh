@@ -4,7 +4,6 @@ import logging
 import random
 import uuid
 from typing import Any, Optional
-from core.utils.serializers import build_user_payload
 import os
 from aiogram.types import Message,User,Chat
 
@@ -123,8 +122,7 @@ class Api:
 
         return await self._request("POST", "context/", json=payload)
     
-    async def sync_employees(self):
-        return await self._request("POST", "employees/sync/")
+    
 
     
 

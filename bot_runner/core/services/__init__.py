@@ -4,6 +4,9 @@ class Services:
     def __init__(self, container: ServiceContainer):
         self._c = container
 
+    def ensure(self, names: tuple[str, ...]):
+        self._c.ensure(names)
+
     @property
     def scheduler(self):
         return self._c.get("scheduler")
