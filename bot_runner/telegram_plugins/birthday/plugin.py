@@ -69,6 +69,11 @@ class BirthdayPlugin(BaseTelegramPlugin):
 
         self._schedule_task = None
 
+    def _send(self, chat_id, text, photo=None):
+                asyncio.create_task(
+                    self.adapter.send(chat_id, text, photo)
+                )
+
     # -------------------- SETUP --------------------
 
     def setup(self):
@@ -87,8 +92,12 @@ class BirthdayPlugin(BaseTelegramPlugin):
         if self.chat_file:
             self.chat_id = self._load_chat_id_from_file()
 
+        
+
         @self.router.message(Command("birthday_chat_status"))
         async def birthday_chat_status(message: Message):
+
+            
 
             context = await self.api.get_context(message)
 
@@ -98,7 +107,7 @@ class BirthdayPlugin(BaseTelegramPlugin):
                 return
 
             if not self.chat_id:
-                await message.reply("❌ chat_id не задан")
+                await self.adapter.send(message.chat.id, "❌ chat_id не задан")
                 return
 
             self.log.info(f"Checking bot membership for chat_id={self.chat_id}")
@@ -111,41 +120,42 @@ class BirthdayPlugin(BaseTelegramPlugin):
                 self.log.info(f"getChatMember OK: status={member.status}")
 
                 if member.status in ("member", "administrator","restricted"):
-                    await message.reply(
+                    await self.adapter.send(
+                        message.chat.id,
                         f"✅ Бот находится в чате\n"
                         f"chat_id: `{self.chat_id}`\n"
                         f"status: `{member.status}`",
-                        parse_mode="HTML",
                     )
                 else:
-                    await message.reply(
+                    await self.adapter.send(
+                        message.chat.id,
                         f"❌ Бот НЕ находится в чате\n"
                         f"chat_id: `{self.chat_id}`\n"
                         f"status: `{member.status}`",
-                        parse_mode="HTML",
                     )
 
             except TelegramForbiddenError:
-                await message.reply(
+                await self.adapter.send(
+                    message.chat.id,
                     f"❌ Нет доступа к чату `{self.chat_id}`\n"
                     f"(бот не добавлен или был удалён)",
-                    parse_mode="HTML",
                 )
 
 
             except TelegramBadRequest as e:
-                await message.reply(
+                await self.adapter.send(
+                    message.chat.id,
                     "❌ Ошибка проверки чата\n"
                     f"chat_id: <code>{self.chat_id}</code>\n"
                     f"<pre>{escape(str(e))}</pre>",
-                    parse_mode="HTML",
                 )
 
         @self.router.message(Command("birthday_test"))
         async def birthday_test(message: Message):
+            
             args = message.text.split()
             if len(args) < 2:
-                await message.reply("Нужна дата YYYY-MM-DD")
+                await self.adapter.send(message.chat.id, "Нужна дата YYYY-MM-DD")
                 return
 
             from datetime import date
@@ -153,26 +163,13 @@ class BirthdayPlugin(BaseTelegramPlugin):
             try:
                 d = date.fromisoformat(args[1])
             except ValueError:
-                await message.reply("Неверный формат даты")
+                await self.adapter.send(message.chat.id, "Неверный формат даты")
                 return
 
             await self._run_test(d, message.chat.id)
 
         self._schedule_task = asyncio.create_task(self._schedule_loop())
-        # @self.router.message(Command("register_birthday_chat"))
-        # async def register_birthday_chat(message: Message):
-        #     if message.chat.type == "private":
-        #         await message.delete()
-        #         return
 
-        #     chat_id = message.chat.id
-        #     self.chat_id = chat_id
-
-        #     if self.chat_file:
-        #         with open(self.chat_file, "w", encoding="utf-8") as f:
-        #             f.write(str(chat_id))
-
-        #     await message.reply(f"✅ Зарегистрирован chat_id: `{chat_id}`", parse_mode="HTML")
         
 
     def _load_chat_id_from_file(self) -> int | None:
@@ -193,10 +190,10 @@ class BirthdayPlugin(BaseTelegramPlugin):
     # -------------------- RUN --------------------
 
     async def _run_today(self, chat_id: int):
-        send_fn = self._make_send_fn()
+        
         
         daily_birthday_run(
-            send_fn=send_fn,
+            send_fn=self._send,
             chat_id=chat_id,
             csv_path=self.csv_path,
             templates=self.templates,
@@ -206,9 +203,9 @@ class BirthdayPlugin(BaseTelegramPlugin):
         )
 
     async def _run_test(self, test_date, chat_id: int):
-        send_fn = self._make_send_fn()
+        
         test_birthday_run(
-            send_fn=send_fn,
+            send_fn=self._send,
             test_date=test_date,
             chat_id=chat_id,
             csv_path=self.csv_path,
@@ -220,25 +217,7 @@ class BirthdayPlugin(BaseTelegramPlugin):
 
     # -------------------- SEND FN --------------------
 
-
-    def _make_send_fn(self):
-
-        async def async_send(chat_id: int, text: str, photo: str | None):
-            bot = self.bot
-
-            if self.dry_run:
-                print("[DRY]", text)
-                return
-
-            if photo:
-                file = FSInputFile(photo)
-                await bot.send_photo(chat_id, photo=file, caption=text)
-            else:
-                await bot.send_message(chat_id, text)
-        def send(chat_id, text, photo=None):
-            asyncio.create_task(async_send(chat_id, text, photo))
-
-        return send
+    
 
     # -------------------- SCHEDULE --------------------
 
@@ -246,7 +225,6 @@ class BirthdayPlugin(BaseTelegramPlugin):
         state = load_state(self.state_path)
         today = today_almaty()
 
-        # если уже отправляли — ничего не делаем
         if state.get("last_sent_for_date") == today.isoformat():
             self.log.info("BirthdayPlugin: already sent for today, no catch-up needed")
             return
@@ -257,11 +235,10 @@ class BirthdayPlugin(BaseTelegramPlugin):
                 self.log.info("BirthdayPlugin: no chat_id configured, skipping catch-up")
                 return
 
-            send_fn = self._make_send_fn()
+            
             self.log.info("BirthdayPlugin: catch-up needed, running daily_birthday_run for today")
-            # people = self.services.people.get_people("birthdays_test_three")
             daily_birthday_run(
-                send_fn=send_fn,
+                send_fn=self._send,
                 chat_id=self.chat_id,
                 csv_path=self.csv_path,
                 templates=self.templates,
@@ -287,9 +264,9 @@ class BirthdayPlugin(BaseTelegramPlugin):
             if not chat_id:
                 return
 
-            send_fn = self._make_send_fn()
+            
             daily_birthday_run(
-                send_fn=send_fn,
+                send_fn=self._send,
                 chat_id=chat_id,
                 csv_path=self.csv_path,
                 templates=self.templates,

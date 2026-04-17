@@ -10,6 +10,9 @@ from core.services.container import ServiceContainer
 from core.services import Services
 from core.api import Api
 
+from core.adapters.max import MaxAdapter
+from core.adapters.telegram import TelegramAdapter
+
 import maxapi
 class BotInstance:
     def __init__(self, token: str, api_key: str, name: str, plugins: list, services: list):
@@ -43,6 +46,7 @@ class TelegramBotInstance(BotInstance):
             token=token,
             default=DefaultBotProperties(parse_mode=ParseMode.HTML),
         )
+        self.adapter = TelegramAdapter(self.bot)
 
 
 
@@ -56,7 +60,8 @@ class TelegramBotInstance(BotInstance):
 
             if hasattr(plugin, "required_services"):
                 self.services.ensure(plugin.required_services)
-
+                
+            plugin.adapter = self.adapter
             plugin.bot_name = self.name
             plugin.bot = self.bot
             plugin.services = self.services
@@ -82,6 +87,8 @@ class MaxBotInstance(BotInstance):
 
         self.bot = maxapi.Bot(token)
         self.dp = maxapi.Dispatcher()
+        self.adapter = MaxAdapter(self.bot)
+        
 
         
 
@@ -91,6 +98,8 @@ class MaxBotInstance(BotInstance):
 
             if hasattr(plugin, "required_services"):
                 self.services._c.ensure(plugin.required_services)
+
+            plugin.adapter = self.adapter
 
             plugin.bot_name = self.name
             plugin.bot = self.bot

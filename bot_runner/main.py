@@ -405,7 +405,7 @@ async def main() -> None:
             api_key=os.getenv("MAX_TEST_API_KEY",""),
             name="MaxTestBot",
             plugins=[
-                MaxBirthdayPlugin(
+                BirthdayPlugin(
                     csv_path="https://docs.google.com/spreadsheets/d/1EdBbNp8QLD04-TNl5uIYmk2NJaZCguyzTbGSnhp5ld4/export?format=csv&gid=0",
                     templates=RIO_BIRTHDAY_TEMPLATES,
                     storage_dir="data/testing/birthdayMax",
