@@ -12,6 +12,7 @@ class BaseTelegramPlugin:
     def __init__(self):
         self.adapter: BotAdapter = None
         self.router = Router()
+        self.dp = None
         self.bot = None
         self.services = None
         self.api : Api = None

@@ -22,7 +22,7 @@ from telegram_plugins.birthday.service import (
 from aiogram.exceptions import TelegramBadRequest, TelegramForbiddenError
 from html import escape
 
-
+from maxapi.types import MessageCreated
 
 
 class BirthdayPlugin(BaseTelegramPlugin):
@@ -167,8 +167,34 @@ class BirthdayPlugin(BaseTelegramPlugin):
                 return
 
             await self._run_test(d, message.chat.id)
+        if self.dp:
+            @self.dp.message_created()
+            async def handle_commands(event: MessageCreated):
+                self.log.info(f"Received message: {event.message.body.text}")
+                text = event.message.body.text or ""
+
+                if text.startswith("/birthday_test"):
+                    self.log.info("Running birthday test command")
+                    parts = text.split()
+                    if len(parts) < 2:
+                        self.log.warning("No date provided for birthday test command")
+                        return
+
+                    from datetime import date
+
+                    try:
+                        d = date.fromisoformat(parts[1])
+                        self.log.info(f"Parsed date for test command: {d}")
+                    except:
+                        self.log.warning(f"Failed to parse date from command: {parts[1]}")
+                        return
+
+                    await self._run_test(d, event.chat.chat_id)
 
         self._schedule_task = asyncio.create_task(self._schedule_loop())
+
+
+
 
         
 
