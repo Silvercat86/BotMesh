@@ -154,7 +154,18 @@ def load_people(csv_path) -> List[Person]:
 # ===================== STATE =====================
 
 def today_almaty() -> date:
-    return datetime.now(TZ).date() if TZ else datetime.now().date()
+    log.info("startingtoday")
+    from datetime import datetime
+    log.info("imported datetime")
+    try:
+        from zoneinfo import ZoneInfo
+        log.info("imported zoneinfo")
+        result = datetime.now(ZoneInfo("Asia/Almaty")).date()
+        log.info(result)
+        return result
+    except Exception as e:
+        log.info(e)
+        return datetime.utcnow().date()
 
 
 def load_state(state_path: Path) -> Dict:

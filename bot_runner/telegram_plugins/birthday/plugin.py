@@ -34,7 +34,7 @@ class BirthdayPlugin(BaseTelegramPlugin):
         hour: int = 9,
         minute: int = 0,
         dry_run: bool = False,
-        chat_id: int | None = None,
+        chat_id: str | None = None,
         chat_file: str | None = None,
     ):
         super().__init__()
@@ -87,9 +87,11 @@ class BirthdayPlugin(BaseTelegramPlugin):
             )
 
         self.log.info(self.api.api_url)
+        self.log.info(self.chat_id)
        
 
-        if self.chat_file:
+        if self.chat_file and not self.chat_id:
+            
             self.chat_id = self._load_chat_id_from_file()
 
         
@@ -170,7 +172,7 @@ class BirthdayPlugin(BaseTelegramPlugin):
         if self.dp:
             @self.dp.message_created()
             async def handle_commands(event: MessageCreated):
-                self.log.info(f"Received message: {event.message.body.text}")
+                self.log.info(f"Received message: {event.message}")
                 text = event.message.body.text or ""
 
                 if text.startswith("/birthday_test"):
@@ -249,6 +251,7 @@ class BirthdayPlugin(BaseTelegramPlugin):
 
     async def _catch_up_if_needed(self):
         state = load_state(self.state_path)
+        self.log.info(state)
         today = today_almaty()
 
         if state.get("last_sent_for_date") == today.isoformat():
@@ -256,6 +259,7 @@ class BirthdayPlugin(BaseTelegramPlugin):
             return
 
         now = datetime.now()
+
         if (now.hour, now.minute) >= (self.hour, self.minute):
             if not self.chat_id:
                 self.log.info("BirthdayPlugin: no chat_id configured, skipping catch-up")
@@ -272,15 +276,21 @@ class BirthdayPlugin(BaseTelegramPlugin):
                 images_dir=self.images_dir,
                 external_images_dir=self.external_images_dir,
             )
+        else:
+            self.log.info("No need because time")
 
     async def _schedule_loop(self):
-        self._register_daily_job()
+        try:
+            self._register_daily_job()
 
-        await self._catch_up_if_needed()
 
-        while True:
-            schedule.run_pending()
-            await asyncio.sleep(60)
+            await self._catch_up_if_needed()
+
+            while True:
+                schedule.run_pending()
+                await asyncio.sleep(60)
+        except Exception as e:
+            self.log(f"Crashed: {e}")
 
     def _register_daily_job(self):
         schedule_time = f"{self.hour:02d}:{self.minute:02d}"
@@ -288,6 +298,7 @@ class BirthdayPlugin(BaseTelegramPlugin):
         def job():
             chat_id = self.chat_id
             if not chat_id:
+                self.log.info("No chat_id")
                 return
 
             

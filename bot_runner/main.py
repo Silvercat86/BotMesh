@@ -364,8 +364,72 @@ async def main() -> None:
                 ]
         )
 
+        rio_max_bot_instance = MaxBotInstance(
+            token=os.getenv("RIO_MAX_BOT_TOKEN", ""),
+            api_key=os.getenv("RIO_MAX_API_KEY",""),
+            name="RioMaxBot",
+            plugins=[
+                BirthdayPlugin(
+                    csv_path="https://docs.google.com/spreadsheets/d/1QFdn6iAmc-krAIY75nDvWvn54LZrpjX5TfufZb1sJRg/export?format=csv&gid=0",
+                    templates=RIO_BIRTHDAY_TEMPLATES,
+                    storage_dir="data/rio/max/birthday",
+                    hour=9,
+                    minute=0,
+                    dry_run=False,
+                    chat_id="-72336909860345",
+                ),
+                WorkExperiencePlugin(
+                    csv_path="https://docs.google.com/spreadsheets/d/1QFdn6iAmc-krAIY75nDvWvn54LZrpjX5TfufZb1sJRg/export?format=csv&gid=1937147644",
+                    templates_by_years=RIO_WORK_TEMPLATES,
+                    storage_dir="data/rio/max/work",
+                    hour=9,
+                    minute=0,
+                    dry_run=False,
+                    chat_id="-72336909860345"
+                
+                ),
+                
+            ],
+            services=[
+                PeopleDirectoryService(
+                    sources={
+                        "rio_people": {
+                            "name": "rio_people",
+                            "service_account_b64": os.getenv("RIO_CREDENTIALS_BASE64", ""),
+                            "mode" : "named",
+                            "url": "https://docs.google.com/spreadsheets/d/11xOQjQxoYvfbyOAu5oPtR0SE6xkgCFJY7Q0_Zt1ShuY/export?format=csv&gid=1875323650",
+                            "fields_mapping": {
+
+                                "fio": "ФИО",
+                                "status": "Статус",
+
+                                "position": "Должность",
+                                "stack": "Специализация",
+                                "zone": "Зона",
+                                "risk": "Риск ухода",
+                                "comments": "комментарии",
+
+                                "start_date": "дата выхода",
+                                "probation_end": "окончание ИС",
+
+                                "employee_card": "Карточка сотрдуника",
+
+                                "last_heat": "Дата посл  тепловой с Заботой",
+                                "next_heat": "Дата след тепловой",
+
+                                "last_1to1": "Дата посл 1 to 1 с рук",
+                                "next_1to1": "Дата след 1 to 1 с рук",
+                            },
+                        },
+                    },
+                    cache_ttl=300,
+                )
+            ]
+        )
+
 
         await rio_bot_instance.init_plugins()
+        await rio_max_bot_instance.init_plugins()
         # await threeit_bot_instance.init_plugins()
         #
         await keepcat_bot_instance.init_plugins()
@@ -378,6 +442,7 @@ async def main() -> None:
             asyncio.create_task(keepcat_bot_instance.run()),
             asyncio.create_task(clera_bot_instance.run()),
             asyncio.create_task(not_shma_bot_instance.run()),
+            asyncio.create_task(rio_max_bot_instance.run()),
             
         ]
 
@@ -396,6 +461,7 @@ async def main() -> None:
             await keepcat_bot_instance.shutdown()
             await clera_bot_instance.shutdown()
             await not_shma_bot_instance.shutdown()
+            await rio_max_bot_instance.shutdown()
 
     else:
         logging.info("Running in testing mode.")
@@ -409,10 +475,18 @@ async def main() -> None:
                     csv_path="https://docs.google.com/spreadsheets/d/1EdBbNp8QLD04-TNl5uIYmk2NJaZCguyzTbGSnhp5ld4/export?format=csv&gid=0",
                     templates=RIO_BIRTHDAY_TEMPLATES,
                     storage_dir="data/testing/birthdayMax",
-                    hour=9,
+                    hour=7,
                     minute=0,
                     chat_id="-73548766634171",
-                )
+                ),
+                WorkExperiencePlugin(
+                    csv_path="https://docs.google.com/spreadsheets/d/1EdBbNp8QLD04-TNl5uIYmk2NJaZCguyzTbGSnhp5ld4/export?format=csv&gid=1937147644",
+                    templates_by_years=RIO_WORK_TEMPLATES,
+                    storage_dir="data/testing/workMax",
+                    hour=7,
+                    minute=0,
+                    chat_id="-73548766634171",
+                ),
             ],
             services=[
                 PeopleDirectoryService(
@@ -574,7 +648,7 @@ async def main() -> None:
                     csv_path="https://docs.google.com/spreadsheets/d/1EdBbNp8QLD04-TNl5uIYmk2NJaZCguyzTbGSnhp5ld4/export?format=csv&gid=0",
                     templates=RIO_BIRTHDAY_TEMPLATES,
                     storage_dir="data/testing/birthday",
-                    hour=9,
+                    hour=7,
                     minute=0,
                     dry_run=False,
                     chat_file="data/testing/birthday/chat.txt",

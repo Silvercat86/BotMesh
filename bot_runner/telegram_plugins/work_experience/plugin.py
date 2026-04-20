@@ -15,6 +15,8 @@ from telegram_plugins.work_experience.service import (
     today_almaty,
     load_state,
 )
+from telegram_plugins.work_experience.service import test_work_experience_run
+
 
 
 
@@ -74,7 +76,7 @@ class WorkExperiencePlugin(BaseTelegramPlugin):
                 format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
             )
 
-        if self.chat_file:
+        if self.chat_file and not self.chat_id:
             self.chat_id = self._load_chat_id_from_file()
 
 
@@ -108,13 +110,18 @@ class WorkExperiencePlugin(BaseTelegramPlugin):
 
         asyncio.create_task(self._schedule_loop())
 
+    def _send(self, chat_id, text, photo=None):
+        asyncio.create_task(
+            self.adapter.send(chat_id, text, photo)
+        )
+
     # ---------------- RUN ----------------
 
     async def _run_today(self, chat_id: int):
-        send_fn = self._make_send_fn()
+        
 
         daily_work_experience_run(
-            send_fn=send_fn,
+            send_fn=self._send,
             chat_id=chat_id,
             csv_path=self.csv_path,
             templates_by_years=self.templates_by_years,
@@ -124,12 +131,10 @@ class WorkExperiencePlugin(BaseTelegramPlugin):
             column_map=self.column_map,
         )
     async def _run_test(self, test_date: date, chat_id: int):
-        send_fn = self._make_send_fn()
 
-        from plugins.work_experience.service import test_work_experience_run
 
         test_work_experience_run(
-            send_fn=send_fn,
+            send_fn=self._send,
             test_date=test_date,
             chat_id=chat_id,
             csv_path=self.csv_path,
@@ -143,26 +148,7 @@ class WorkExperiencePlugin(BaseTelegramPlugin):
 
     # ---------------- SEND ----------------
 
-    def _make_send_fn(self):
-        async def async_send(chat_id: int, text: str, photo: str | None):
-            try:
-                if self.dry_run:
-                    print("[DRY]", text)
-                    return
-
-                if photo:
-                    file = FSInputFile(photo)
-                    await self.bot.send_photo(chat_id, photo=file, caption=text)
-                else:
-                    await self.bot.send_message(chat_id, text)
-
-            except Exception as e:
-                self.log.exception(f"Ошибка отправки стажа: {e}")
-
-        def send(chat_id, text, photo=None):
-            asyncio.create_task(async_send(chat_id, text, photo))
-
-        return send
+    
 
     # ---------------- SCHEDULE ----------------
 
@@ -176,21 +162,24 @@ class WorkExperiencePlugin(BaseTelegramPlugin):
 
     async def _catch_up_if_needed(self):
         state = load_state(self.state_path)
-        self.log.info(state)
+        self.log.info(f"Current state: {state}")
 
         today = today_almaty()
+        self.log.info(f"Checking if we need to catch up for {today.isoformat()}")
 
         if state.get("last_sent_for_date") == today.isoformat():
+            self.log.info("Already sent today's work experience, no catch-up needed")
             return
 
         now = datetime.now()
         if (now.hour, now.minute) >= (self.hour, self.minute):
             if not self.chat_id:
+                self.log.warning("No chat_id configured for WorkExperiencePlugin, skipping catch-up")
                 return
 
-            send_fn = self._make_send_fn()
+            
             daily_work_experience_run(
-                send_fn=send_fn,
+                send_fn=self._send,
                 chat_id=self.chat_id,
                 csv_path=self.csv_path,
                 templates_by_years=self.templates_by_years,
@@ -199,6 +188,8 @@ class WorkExperiencePlugin(BaseTelegramPlugin):
                 external_images_dir=self.external_images_dir,
                 column_map=self.column_map,
             )
+        else:
+            self.log.info("Scheduled time has not arrived yet, no catch-up needed")
 
     def _register_job(self):
         schedule_time = f"{self.hour:02d}:{self.minute:02d}"
@@ -209,9 +200,9 @@ class WorkExperiencePlugin(BaseTelegramPlugin):
                 self.log.warning("No chat_id configured for WorkExperiencePlugin, skipping job")
                 return
 
-            send_fn = self._make_send_fn()
+            
             daily_work_experience_run(
-                send_fn=send_fn,
+                send_fn=self._send,
                 chat_id=self.chat_id,
                 csv_path=self.csv_path,
                 templates_by_years=self.templates_by_years,
