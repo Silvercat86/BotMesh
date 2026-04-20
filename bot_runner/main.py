@@ -68,6 +68,7 @@ async def main() -> None:
                     csv_path="https://docs.google.com/spreadsheets/d/1QFdn6iAmc-krAIY75nDvWvn54LZrpjX5TfufZb1sJRg/export?format=csv&gid=0",
                     templates=RIO_BIRTHDAY_TEMPLATES,
                     storage_dir="data/rio/birthday",
+                    people_source="rio_people_birthdays",
                     hour=9,
                     minute=0,
                     dry_run=False,
@@ -77,6 +78,7 @@ async def main() -> None:
                     csv_path="https://docs.google.com/spreadsheets/d/1QFdn6iAmc-krAIY75nDvWvn54LZrpjX5TfufZb1sJRg/export?format=csv&gid=1937147644",
                     templates_by_years=RIO_WORK_TEMPLATES,
                     storage_dir="data/rio/work",
+                    people_source="rio_people_work",
                     hour=9,
                     minute=0,
                     dry_run=False,
@@ -115,60 +117,28 @@ async def main() -> None:
             services=[
                 PeopleDirectoryService(
                     sources={
-                        "birthdays": {
+                         "rio_people_birthdays": {
                             "url": "https://docs.google.com/spreadsheets/d/1QFdn6iAmc-krAIY75nDvWvn54LZrpjX5TfufZb1sJRg/export?format=csv&gid=0",
                             "mode": "indexed",
-                            "required_fields": ("fio", "birthday"),
+                            "required_fields": ("fio",),
                             "fields_mapping": {
                                 "fio": 0,
                                 "username": 1,
                                 "birthday": 2,
                                 "photo": 3
-                            },
+                        }
                         },
-                        "rio_people": {
-                            "name": "rio_people",
-                            "service_account_b64": os.getenv("RIO_CREDENTIALS_BASE64", ""),
-                            "mode" : "named",
-                            "url": "https://docs.google.com/spreadsheets/d/11xOQjQxoYvfbyOAu5oPtR0SE6xkgCFJY7Q0_Zt1ShuY/export?format=csv&gid=1875323650",
+                        "rio_people_work": {
+                            "url": "https://docs.google.com/spreadsheets/d/1QFdn6iAmc-krAIY75nDvWvn54LZrpjX5TfufZb1sJRg/export?format=csv&gid=1937147644",
+                            "mode": "indexed",
+                            "required_fields": ("fio",),
                             "fields_mapping": {
-
-                                "fio": "ФИО",
-                                "birthday":"день рождения",
-                                "status": "Статус",
-
-                                "position": "Должность",
-                                "stack": "Специализация",
-                                "zone": "Зона",
-                                "risk": "Риск ухода",
-                                "comments": "комментарии",
-
-                                "start_date": "дата выхода",
-                                "probation_end": "окончание ИС",
-
-                                "employee_card": "Карточка сотрдуника",
-
-                                "last_heat": "Дата посл  тепловой с Заботой",
-                                "next_heat": "Дата след тепловой",
-
-                                "last_1to1": "Дата посл 1 to 1 с рук",
-                                "next_1to1": "Дата след 1 to 1 с рук",
-
-                                "gender": "пол",
-
-                                "manager": "Руководитель",
-
-                                "phone": "Телефон",
-                                "telegram_contact": "Телеграм",
-
-                                "employment_type": "формат трудоустройства",
-
-                                "children": "дети",
-                                "address": "Точка",
-
-                            },
+                                "fio": 0,
+                                "username": 1,
+                                "start_date": 2,
+                                "photo": 3
+                        }
                         },
-                        
 
                     },
                     cache_ttl=300,
@@ -176,78 +146,7 @@ async def main() -> None:
             ]
         )
 
-        # threeit_bot_instance = BotInstance(
-        #     token=os.getenv("THREEIT_BOT_TOKEN", ""),
-        #     api_key=os.getenv("THREEIT_API_KEY",""),
-
-        #     name="ThreeITBot",
-        #     plugins=[
-        #         ComplimentPlugin(),
-        #         BirthdayPlugin(
-        #             csv_path="https://docs.google.com/spreadsheets/d/1w3KMR_4cRlpG_qdsmdCOJ30ZCiAGtKItLmHHsLIYsqI/export?format=csv&gid=1875323650",
-        #             templates=THREEIT_BIRTHDAY_TEMPLATES,
-        #             storage_dir="data/TreeIT/birthday",
-        #             hour=9,
-        #             minute=0,
-        #             dry_run=False,
-        #             chat_file="data/TreeIT/birthday/chats.txt",
-        #         ),
-        #         WorkExperiencePlugin(
-        #             csv_path="https://docs.google.com/spreadsheets/d/1ixGBmwFlGxpo4Q-vhyrct79hkDWBtM2ZOGhQVIfk3EM/export?format=csv&gid=1875323650",
-        #             templates_by_years=THREEIT_WORK_TEMPLATES,
-        #             storage_dir="data/TreeIT/work",
-        #             hour=9,
-        #             minute=0,
-        #             dry_run=False,
-        #             chat_file="data/TreeIT/birthday/chats.txt",
-        #             column_map={
-        #                 "fio": "фио",
-        #                 "username": "контакт тг",
-        #                 "start_date": "дата выхода",
-        #                 "photo": "Фото"
-        #             },
-        #         ),
-        #         WelcomePlugin(
-        #             base_template=THREEIT_WELCOME_TEMPLATE,
-        #             questions=THREEIT_WELCOME_QUESTIONS,
-        #             n_questions=3,
-
-        #         ),
-        #         StartPlugin(
-        #             messages=THREEIT_START_TEMPLATES
-        #         ),
-        #         MemePlugin(),
-        #         March8Plugin(
-        #             template=THREEIT_MARCH8_TEMPLATE,
-        #             chat_file="data/TreeIT/birthday/chats.txt",
-        #             storage_dir="data/TreeIT/march8",
-        #             hour=9,
-        #             minute=0,
-        #             photo = "data/TreeIT/march8/image.jpg"
-        #         ),
-        #     ],
-        #     services=[
-        #         PeopleDirectoryService(
-        #             sources={
-        #                 "birthdays": {
-        #                     "url": "https://docs.google.com/spreadsheets/d/1w3KMR_4cRlpG_qdsmdCOJ30ZCiAGtKItLmHHsLIYsqI/export?format=csv&gid=0",
-        #                     "mode": "indexed",
-        #                     "required_fields": ("fio", "birthday"),
-        #                     "fields_mapping": {
-        #                         "fio": 0,
-        #                         "username": 1,
-        #                         "birthday": 2,
-        #                         "photo": 3
-        #                     },
-        #                 },
-                        
-
-        #             },
-        #             cache_ttl=300,
-        #         )
-        #     ]
-            
-        # )
+        
 
         keepcat_bot_instance = TelegramBotInstance(
             token=os.getenv("KEEPCAT_BOT_TOKEN", ""),
@@ -372,6 +271,7 @@ async def main() -> None:
                     csv_path="https://docs.google.com/spreadsheets/d/1QFdn6iAmc-krAIY75nDvWvn54LZrpjX5TfufZb1sJRg/export?format=csv&gid=0",
                     templates=RIO_BIRTHDAY_TEMPLATES,
                     storage_dir="data/rio/max/birthday",
+                    people_source="rio_people_birthdays",
                     hour=9,
                     minute=0,
                     dry_run=False,
@@ -381,6 +281,7 @@ async def main() -> None:
                     csv_path="https://docs.google.com/spreadsheets/d/1QFdn6iAmc-krAIY75nDvWvn54LZrpjX5TfufZb1sJRg/export?format=csv&gid=1937147644",
                     templates_by_years=RIO_WORK_TEMPLATES,
                     storage_dir="data/rio/max/work",
+                    people_source="rio_people_work",
                     hour=9,
                     minute=0,
                     dry_run=False,
@@ -470,6 +371,7 @@ async def main() -> None:
                     csv_path="https://docs.google.com/spreadsheets/d/1EdBbNp8QLD04-TNl5uIYmk2NJaZCguyzTbGSnhp5ld4/export?format=csv&gid=0",
                     templates=RIO_BIRTHDAY_TEMPLATES,
                     storage_dir="data/testing/birthdayMax",
+                    people_source="rio_people_birthdays",
                     hour=7,
                     minute=0,
                     chat_id="-73548766634171",
@@ -478,6 +380,7 @@ async def main() -> None:
                     csv_path="https://docs.google.com/spreadsheets/d/1EdBbNp8QLD04-TNl5uIYmk2NJaZCguyzTbGSnhp5ld4/export?format=csv&gid=1937147644",
                     templates_by_years=RIO_WORK_TEMPLATES,
                     storage_dir="data/testing/workMax",
+                    people_source="rio_people_work",
                     hour=7,
                     minute=0,
                     chat_id="-73548766634171",
@@ -511,19 +414,7 @@ async def main() -> None:
                                 "photo_url": 3
                         }
                         },
-                        # "rio_people": {
-                        #     "name": "rio_people",
-                        #     "type" : "mixed",
-                        #     "sources": ["rio_people_birthdays", "rio_people_work"],
-                        #     "key_field": "username",
-                        #     "field_mapping": {
-                        #         "fio" : "rio_people_birthdays",
-                        #         "username" : "rio_people_birthdays",
-                        #         "birthday" : "rio_people_birthdays",
-                        #         "photo_url" : "rio_people_birthdays",
-                        #         "start_date" : "rio_people_work",
-                        #     }
-                        # },
+                        
                         
                     },
                     cache_ttl=300,
@@ -543,6 +434,7 @@ async def main() -> None:
                     csv_path="https://docs.google.com/spreadsheets/d/1EdBbNp8QLD04-TNl5uIYmk2NJaZCguyzTbGSnhp5ld4/export?format=csv&gid=0",
                     templates=RIO_BIRTHDAY_TEMPLATES,
                     storage_dir="data/testing/birthday",
+                    people_source="rio_people_birthdays",
                     hour=7,
                     minute=0,
                     dry_run=False,
@@ -552,6 +444,7 @@ async def main() -> None:
                     csv_path="https://docs.google.com/spreadsheets/d/1QFdn6iAmc-krAIY75nDvWvn54LZrpjX5TfufZb1sJRg/export?format=csv&gid=1937147644",
                     templates_by_years=RIO_WORK_TEMPLATES,
                     storage_dir="data/testing/work",
+                    people_source="rio_people_work",
                     hour=9,
                     minute=0,
                     dry_run=False,

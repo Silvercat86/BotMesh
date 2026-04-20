@@ -33,6 +33,8 @@ class BirthdayPlugin(BaseTelegramPlugin):
         csv_path: str,
         templates: list[str],
         storage_dir: str,
+        people_source: str,
+
         hour: int = 9,
         minute: int = 0,
         dry_run: bool = False,
@@ -66,6 +68,8 @@ class BirthdayPlugin(BaseTelegramPlugin):
         self.external_images_dir.mkdir(parents=True, exist_ok=True)
 
         self.log = None
+
+        self.people_source = people_source
 
         
 
@@ -195,10 +199,9 @@ class BirthdayPlugin(BaseTelegramPlugin):
                         self.log.warning(f"Failed to parse date from command: {parts[1]}")
                         return
                     
-                    people = self.services.people.get_people("rio_people_birthdays")
 
 
-                    await self._run_test(d, event.chat.chat_id, people=people)
+                    await self._run_test(d, event.chat.chat_id)
 
         self._schedule_task = asyncio.create_task(self._schedule_loop())
 
@@ -236,7 +239,7 @@ class BirthdayPlugin(BaseTelegramPlugin):
 
         payloads = build_payloads(
             for_date=date,
-            people=self.services.people.get_people("rio_people_birthdays"),
+            people=self.services.people.get_people(self.people_source),
             state=state,
             state_path=self.state_path,
             templates=self.templates,
@@ -255,7 +258,7 @@ class BirthdayPlugin(BaseTelegramPlugin):
 
         payloads = build_payloads(
             for_date=test_date,
-            people=self.services.people.get_people("rio_people_birthdays"),
+            people=self.services.people.get_people(self.people_source),
             state=state,
             state_path=self.state_path,
             templates=self.templates,

@@ -26,6 +26,7 @@ class WorkExperiencePlugin(BaseTelegramPlugin):
         csv_path: str,
         templates_by_years: dict,
         storage_dir: str,
+        people_source: str ,
         column_map: dict = None,
         hour: int = 9,
         minute: int = 0,
@@ -60,7 +61,7 @@ class WorkExperiencePlugin(BaseTelegramPlugin):
         self.external_images_dir.mkdir(parents=True, exist_ok=True)
 
         
-
+        self.people_source = people_source
         self.column_map = column_map
 
 
@@ -120,7 +121,7 @@ class WorkExperiencePlugin(BaseTelegramPlugin):
 
         payloads = build_payloads(
             for_date=date,
-            people=self.services.people.get_people("rio_people_work"),
+            people=self.services.people.get_people(self.people_source),
             state_path=self.state_path,
             templates_by_years=self.templates_by_years,
             images_dir=self.images_dir,
@@ -136,7 +137,7 @@ class WorkExperiencePlugin(BaseTelegramPlugin):
     async def _run_test(self, test_date: date, chat_id: int):
         payloads = build_payloads(
             for_date=test_date,
-            people=self.services.people.get_people("rio_people_work"),
+            people=self.services.people.get_people(self.people_source),
             state_path=self.state_path,
             templates_by_years=self.templates_by_years,
             images_dir=self.images_dir,
