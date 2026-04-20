@@ -409,7 +409,7 @@ class PeopleDirectoryService:
 
                     emergency_contact=get_field_value(row, "emergency_contact"),
 
-                    photo_url=get_field_value(row, "photo"),
+                    photo_url=get_field_value(row, "photo_url"),
                     
 
                     source=source

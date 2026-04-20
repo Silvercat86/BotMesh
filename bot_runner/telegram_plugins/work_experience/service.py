@@ -208,14 +208,17 @@ def load_people(csv_path, column_map: dict) -> List[Person]:
 def build_payloads(
     for_date: date,
     people: List[Person],
-    state: Dict,
+    state_path: Path,
     templates_by_years: Dict,
     images_dir: Path,
     external_images_dir: Path,
 ):
+    state = load_state(state_path)
     payloads = []
 
     for p in people:
+        if not p.start_date:
+            continue
         years = _calc_years(p.start_date, for_date)
         if years is None:
             continue
@@ -243,92 +246,17 @@ def build_payloads(
         if photo is None:
             photo = pick_next_image(state, images_dir)
 
+        state["last_sent_for_date"] = for_date.isoformat()
+
         payloads.append({
             "text": text,
             "photo": str(photo) if photo else None,
         })
+    save_state(state_path, state)
 
     return payloads
 
 
 # ================= RUN =================
 
-def daily_work_experience_run(
-    send_fn,
-    chat_id: int,
-    csv_path,
-    templates_by_years: Dict,
-    state_path: Path,
-    images_dir: Path,
-    external_images_dir: Path,
-    column_map: dict,
-):
-    state = load_state(state_path)
-    today = today_almaty()
-
-    if state.get("last_sent_for_date") == today.isoformat():
-        log.info("Work experience already sent for today, skipping")
-        return 0
-
-    people = load_people(csv_path, column_map=column_map)
-
-    payloads = build_payloads(
-        today,
-        people,
-        state,
-        templates_by_years,
-        images_dir,
-        external_images_dir,
-    )
-
-    if not payloads:
-        return 0
-
-    for p in payloads:
-        send_fn(chat_id, p["text"], p["photo"])
-
-    state["last_sent_for_date"] = today.isoformat()
-    save_state(state_path, state)
-
-    return len(payloads)
-
-def test_work_experience_run(
-    send_fn,
-    test_date: date,
-    chat_id: int,
-    csv_path,
-    templates_by_years: Dict,
-    state_path: Path,
-    images_dir: Path,
-    external_images_dir: Path,
-    column_map: dict,
-):
-
-    state = load_state(state_path).copy()
-
-    people = load_people(csv_path, column_map=column_map)
-
-    payloads = build_payloads(
-        for_date=test_date,
-        people=people,
-        state=state,
-        templates_by_years=templates_by_years,
-        images_dir=images_dir,
-        external_images_dir=external_images_dir,
-
-    )
-
-    if not payloads:
-        log.info("TEST: нет совпадений")
-        return []
-
-    for p in payloads:
-        send_fn(
-            chat_id,
-            f"[TEST {test_date.isoformat()}] {p['text']}",
-            p["photo"],
-        )
-
-    log.info(f"TEST отправлено сообщений: {len(payloads)}")
-    return payloads
 

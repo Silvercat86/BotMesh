@@ -1,6 +1,7 @@
 # plugins/birthday/plugin.py
 
 import asyncio
+from email.mime import message
 import logging
 from datetime import datetime
 from pathlib import Path
@@ -13,16 +14,17 @@ from aiogram.types import FSInputFile
 
 from core.base_plugin import BaseTelegramPlugin
 from telegram_plugins.birthday.service import (
-    daily_birthday_run,
-    test_birthday_run,
     load_state,
     today_almaty,
+    build_payloads,
 )
 
 from aiogram.exceptions import TelegramBadRequest, TelegramForbiddenError
 from html import escape
 
 from maxapi.types import MessageCreated
+
+from services.people_directory import Employee
 
 
 class BirthdayPlugin(BaseTelegramPlugin):
@@ -167,6 +169,8 @@ class BirthdayPlugin(BaseTelegramPlugin):
             except ValueError:
                 await self.adapter.send(message.chat.id, "Неверный формат даты")
                 return
+            
+            
 
             await self._run_test(d, message.chat.id)
         if self.dp:
@@ -190,14 +194,17 @@ class BirthdayPlugin(BaseTelegramPlugin):
                     except:
                         self.log.warning(f"Failed to parse date from command: {parts[1]}")
                         return
+                    
+                    people = self.services.people.get_people("rio_people_birthdays")
 
-                    await self._run_test(d, event.chat.chat_id)
+
+                    await self._run_test(d, event.chat.chat_id, people=people)
 
         self._schedule_task = asyncio.create_task(self._schedule_loop())
 
 
 
-
+    
         
 
     def _load_chat_id_from_file(self) -> int | None:
@@ -217,31 +224,47 @@ class BirthdayPlugin(BaseTelegramPlugin):
 
     # -------------------- RUN --------------------
 
-    async def _run_today(self, chat_id: int):
+    async def _run_today(self):
+        self.log.info("Running daily birthday check")
+        date = today_almaty()
+        self.log.info(f"Today's date in Almaty: {date.isoformat()}")
         
+        state = load_state(self.state_path)
+        self.log.info(f"Loaded state: {state}")
+
         
-        daily_birthday_run(
-            send_fn=self._send,
-            chat_id=chat_id,
-            csv_path=self.csv_path,
-            templates=self.templates,
+
+        payloads = build_payloads(
+            for_date=date,
+            people=self.services.people.get_people("rio_people_birthdays"),
+            state=state,
             state_path=self.state_path,
+            templates=self.templates,
             images_dir=self.images_dir,
             external_images_dir=self.external_images_dir,
         )
+        for p in payloads:
+            self.log.info(f"Birthday отправка в чат {self.chat_id}: photo={bool(p['photo'])}")
+            self._send(self.chat_id, f"{p['text']}", p["photo"])
 
     async def _run_test(self, test_date, chat_id: int):
         
-        test_birthday_run(
-            send_fn=self._send,
-            test_date=test_date,
-            chat_id=chat_id,
-            csv_path=self.csv_path,
-            templates=self.templates,
+        state = load_state(self.state_path)
+
+        
+
+        payloads = build_payloads(
+            for_date=test_date,
+            people=self.services.people.get_people("rio_people_birthdays"),
+            state=state,
             state_path=self.state_path,
+            templates=self.templates,
             images_dir=self.images_dir,
             external_images_dir=self.external_images_dir,
         )
+        for p in payloads:
+            self.log.info(f"TEST отправка в чат {chat_id}: photo={bool(p['photo'])}")
+            self._send(chat_id, f"[TEST {test_date.isoformat()}] {p['text']}", p["photo"])
 
     # -------------------- SEND FN --------------------
 
@@ -267,15 +290,7 @@ class BirthdayPlugin(BaseTelegramPlugin):
 
             
             self.log.info("BirthdayPlugin: catch-up needed, running daily_birthday_run for today")
-            daily_birthday_run(
-                send_fn=self._send,
-                chat_id=self.chat_id,
-                csv_path=self.csv_path,
-                templates=self.templates,
-                state_path=self.state_path,
-                images_dir=self.images_dir,
-                external_images_dir=self.external_images_dir,
-            )
+            await self._run_today()
         else:
             self.log.info("No need because time")
 
@@ -302,14 +317,10 @@ class BirthdayPlugin(BaseTelegramPlugin):
                 return
 
             
-            daily_birthday_run(
-                send_fn=self._send,
-                chat_id=chat_id,
-                csv_path=self.csv_path,
-                templates=self.templates,
-                state_path=self.state_path,
-                images_dir=self.images_dir,
-                external_images_dir=self.external_images_dir,
+            asyncio.create_task(
+                self._run_today(
+                    self.chat_id
+                )
             )
 
         schedule.every().day.at(schedule_time).do(job)

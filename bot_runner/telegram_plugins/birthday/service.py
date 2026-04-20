@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import List, Optional, Dict, Tuple, Any
 
 import requests
+from services.people_directory import Employee
 
 # ===================== LOGGING =====================
 
@@ -272,18 +273,30 @@ def get_or_download_external_image(url: str, external_images_dir: Path) -> Optio
 
 def build_payloads(
     for_date: date,
-    people: List[Person],
+    people: List[Employee],
     state: Dict,
+    state_path: Path,
     templates: list[str],
     images_dir: Path,
     external_images_dir: Path,
 ) -> List[Dict[str, Any]]:
     payloads: List[Dict[str, Any]] = []
 
-    todays = [p for p in people if ((p.month, p.day) == (for_date.month, for_date.day))]
+    todays = []
+    for p in people:
+        if p.birthday:
+            if (p.birthday.month, p.birthday.day) == (for_date.month, for_date.day):
+                todays.append(p)
+        else:
+            log.info(f"У {p.fio} нет даты рождения, пропуск")
+                
+        
+
+
     log.info(f"Именинники на {for_date}: {len(todays)}")
 
     for p in todays:
+        log.info(f"{p.fio} (tg: @{p.username if p.username else 'нет'}, фото: {'есть' if p.photo_url else 'нет'})")
         tpl = pick_next_template(state, templates)
 
         name = ""
@@ -303,91 +316,19 @@ def build_payloads(
         if photo is None:
             photo = pick_next_image(state, images_dir)
 
+        state["last_sent_for_date"] = for_date.isoformat()
+
         payloads.append(
             {
                 "text": text,
                 "photo": str(photo) if photo else None,
             }
         )
-
-    return payloads
-
-
-# ===================== RUN =====================
-
-def daily_birthday_run(
-    send_fn,
-    chat_id: int,
-    csv_path,
-    templates: list[str],
-    state_path: Path,
-    images_dir: Path,
-    external_images_dir: Path,
-) -> int:
-    log.info("=== Запуск birthday_run ===")
-
-    state = load_state(state_path)
-    today = today_almaty()
-
-    if state.get("last_sent_for_date") == today.isoformat():
-        log.info("Уже отправляли сегодня — пропуск")
-        return 0
-
-    people = load_people(csv_path)
-    payloads = build_payloads(
-        for_date=today,
-        people=people,
-        state=state,
-        templates=templates,
-        images_dir=images_dir,
-        external_images_dir=external_images_dir,
-    )
-
-    if not payloads:
-        log.info("Нет поздравлений для отправки")
-        return 0
-
-    for p in payloads:
-        log.info(f"Отправка в чат {chat_id}: photo={bool(p['photo'])}")
-        send_fn(chat_id, p["text"], p["photo"])
-
-    state["last_sent_for_date"] = today.isoformat()
     save_state(state_path, state)
 
-    log.info(f"Отправлено сообщений: {len(payloads)}")
-    return len(payloads)
-
-
-def test_birthday_run(
-    send_fn,
-    test_date: date,
-    chat_id: int,
-    csv_path,
-    templates: list[str],
-    state_path: Path,
-    images_dir: Path,
-    external_images_dir: Path,
-) -> List[Dict[str, Any]]:
-    log.info(f"=== TEST birthday_run for {test_date} ===")
-
-    state = load_state(state_path).copy()
-    people = load_people(csv_path)
-    payloads = build_payloads(
-        for_date=test_date,
-        people=people,
-        state=state,
-        templates=templates,
-        images_dir=images_dir,
-        external_images_dir=external_images_dir,
-    )
-
-    if not payloads:
-        log.info("TEST: нет поздравлений для выбранной даты")
-        return []
-
-    for p in payloads:
-        log.info(f"TEST отправка в чат {chat_id}: photo={bool(p['photo'])}")
-        send_fn(chat_id, f"[TEST {test_date.isoformat()}] {p['text']}", p["photo"])
-
-    log.info(f"TEST отправлено сообщений: {len(payloads)}")
     return payloads
+
+
+
+
+

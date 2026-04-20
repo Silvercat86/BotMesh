@@ -11,11 +11,11 @@ from aiogram.types import Message, FSInputFile
 
 from core.base_plugin import BaseTelegramPlugin
 from telegram_plugins.work_experience.service import (
-    daily_work_experience_run,
     today_almaty,
     load_state,
+    build_payloads,
+    save_state,
 )
-from telegram_plugins.work_experience.service import test_work_experience_run
 
 
 
@@ -89,9 +89,7 @@ class WorkExperiencePlugin(BaseTelegramPlugin):
             else:
                 await message.reply("Файл чатов не настроен.")
 
-        @self.router.message(Command("work_today"))
-        async def work_today(message: Message):
-            await self._run_today(message.chat.id)
+        
 
         @self.router.message(Command("work_test"))
         async def work_test(message: Message):
@@ -117,32 +115,39 @@ class WorkExperiencePlugin(BaseTelegramPlugin):
 
     # ---------------- RUN ----------------
 
-    async def _run_today(self, chat_id: int):
-        
+    async def _run_today(self):
+        date = today_almaty()
 
-        daily_work_experience_run(
-            send_fn=self._send,
-            chat_id=chat_id,
-            csv_path=self.csv_path,
-            templates_by_years=self.templates_by_years,
+        payloads = build_payloads(
+            for_date=date,
+            people=self.services.people.get_people("rio_people_work"),
             state_path=self.state_path,
+            templates_by_years=self.templates_by_years,
             images_dir=self.images_dir,
             external_images_dir=self.external_images_dir,
-            column_map=self.column_map,
+        )
+
+        for p in payloads:
+            self._send(
+            self.chat_id,
+            f"{p['text']}",
+            p["photo"],
         )
     async def _run_test(self, test_date: date, chat_id: int):
-
-
-        test_work_experience_run(
-            send_fn=self._send,
-            test_date=test_date,
-            chat_id=chat_id,
-            csv_path=self.csv_path,
-            templates_by_years=self.templates_by_years,
+        payloads = build_payloads(
+            for_date=test_date,
+            people=self.services.people.get_people("rio_people_work"),
             state_path=self.state_path,
+            templates_by_years=self.templates_by_years,
             images_dir=self.images_dir,
             external_images_dir=self.external_images_dir,
-            column_map=self.column_map,
+        )
+
+        for p in payloads:
+            self._send(
+            chat_id,
+            f"[TEST {test_date.isoformat()}] {p['text']}",
+            p["photo"],
         )
 
 
@@ -178,16 +183,7 @@ class WorkExperiencePlugin(BaseTelegramPlugin):
                 return
 
             
-            daily_work_experience_run(
-                send_fn=self._send,
-                chat_id=self.chat_id,
-                csv_path=self.csv_path,
-                templates_by_years=self.templates_by_years,
-                state_path=self.state_path,
-                images_dir=self.images_dir,
-                external_images_dir=self.external_images_dir,
-                column_map=self.column_map,
-            )
+            await self._run_today()
         else:
             self.log.info("Scheduled time has not arrived yet, no catch-up needed")
 
@@ -201,15 +197,8 @@ class WorkExperiencePlugin(BaseTelegramPlugin):
                 return
 
             
-            daily_work_experience_run(
-                send_fn=self._send,
-                chat_id=self.chat_id,
-                csv_path=self.csv_path,
-                templates_by_years=self.templates_by_years,
-                state_path=self.state_path,
-                images_dir=self.images_dir,
-                external_images_dir=self.external_images_dir,
-                column_map=self.column_map,
+            asyncio.create_task(
+                self._run_today()
             )
 
         schedule.every().day.at(schedule_time).do(job)
