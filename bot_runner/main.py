@@ -340,6 +340,12 @@ async def main() -> None:
                     chat_id="-72336909860345"
                 
                 ),
+                EmployeeInfoPlugin(
+                    sources=["rio_people"],
+                    available_nicknames=["Katya LAY","Ольга Воропаева","Алла","Камила","Ксения","М","Антон"],
+                    available_chats=["Забота Рио🧡","Ы"],
+                
+                ),
                 
             ],
             services=[
@@ -369,6 +375,60 @@ async def main() -> None:
                                 "photo_url": 3
                         }
                         },
+                        "rio_people": {
+                            "url": "https://docs.google.com/spreadsheets/d/18jBpO_kBRp1mMnomexdEb3z7YXfNvWWUr4vnX8qaGrY/export?format=csv",
+                            "service_account_b64": os.getenv("RIO_CREDENTIALS_BASE64", ""),
+                            "mode": "named",
+                            "required_fields": ("fio",),
+                            "fields_mapping": {
+
+                                # база
+                                "fio": "ФИО",
+                                "status": "Статус",
+                                "position": "Должность",
+
+                                # занятость / hr
+                                "employment_type": "формат трудоустройства",
+                                "zone": "Зона",
+                                "risk": "Риск ухода",
+                                "comments": "комментарии",
+
+                                # даты
+                                "start_date": "дата выхода",
+                                "birthday": "день рождения",
+                                "probation_end": "окончание ИС",
+
+                                # тепловые / встречи (исправлены названия)
+                                "last_heat": "Дата посл  тепловой с Заботой",
+                                "next_heat": "Дата след тепловой",
+
+                                "last_1to1": "Дата посл 1 to 1 с рук",
+                                "next_1to1": "Дата след 1 to 1 с рук",
+
+                                # hr данные
+                                "employee_card": "Карточка сотрдуника",
+
+                                # человек
+                                "gender": "пол",
+                                "stack": "Специализация",
+
+                                # орг структура
+                                "manager": "Руководитель",
+                                "project": "Точка",  # тут спорно, но лучше чем терять поле
+
+                                # контакты
+                                "phone": "Телефон",
+                                "telegram_contact": "Телеграм",
+
+                                # доп
+                                "children": "дети",
+                                "address": "адрес проживания",
+
+                                # медиа
+                                "photo_url": "фото для поздравления",
+                            }
+                        },
+                        
                     },
                     cache_ttl=300,
                 )
