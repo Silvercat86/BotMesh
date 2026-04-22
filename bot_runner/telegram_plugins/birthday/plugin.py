@@ -12,7 +12,7 @@ from aiogram.types import Message
 from aiogram.types import FSInputFile
 
 
-from core.base_plugin import BaseTelegramPlugin
+from core.base_plugin import BasePlugin
 from telegram_plugins.birthday.service import (
     load_state,
     today_almaty,
@@ -27,7 +27,7 @@ from maxapi.types import MessageCreated
 from services.people_directory import Employee
 
 
-class BirthdayPlugin(BaseTelegramPlugin):
+class BirthdayPlugin(BasePlugin):
     def __init__(
         self,
         csv_path: str,

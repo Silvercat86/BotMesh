@@ -10,3 +10,5 @@ class BotAdapter(Protocol):
         photo: str,
         caption: str | None = None
     ) -> None: ...
+
+    

@@ -12,19 +12,20 @@ from core.api import Api
 
 from core.adapters.max import MaxAdapter
 from core.adapters.telegram import TelegramAdapter
+from core.base_plugin import BasePlugin
 
 import maxapi
 class BotInstance:
-    def __init__(self, token: str, api_key: str, name: str, plugins: list, services: list):
+    def __init__(self, api_key: str, name: str, plugins: list, services: list):
         self.name = name
         
         self.http_session = aiohttp.ClientSession()
         self.api = Api(self.http_session, api_key)
 
-        self.plugins = plugins
+        self.plugins : list[BasePlugin] = plugins
 
-        for plugin in plugins:
-            plugin.api = self.api
+
+            
 
         container = ServiceContainer()
 
@@ -35,7 +36,7 @@ class BotInstance:
 
     
 
-    async def _initialize_plugin(self, plugin):
+    async def _initialize_plugin(self, plugin : BasePlugin):
         if hasattr(plugin, "required_services"):
             self.services.ensure(plugin.required_services)
 
@@ -43,6 +44,7 @@ class BotInstance:
         plugin.bot_name = self.name
         plugin.bot = self.bot
         plugin.services = self.services
+        plugin.api = self.api
 
         if hasattr(plugin, "register_commands"):
             await plugin.register_commands()
@@ -53,7 +55,8 @@ class BotInstance:
 class TelegramBotInstance(BotInstance):
     def __init__(self, token: str,api_key:str, name: str, plugins: list, services: list):
 
-        super().__init__(token, api_key, name, plugins, services)
+        super().__init__(api_key, name, plugins, services)
+
 
         self.dp = Dispatcher()
 
@@ -73,16 +76,7 @@ class TelegramBotInstance(BotInstance):
         for plugin in self.plugins:
             await super()._initialize_plugin(plugin)
 
-            # if hasattr(plugin, "required_services"):
-            #     self.services.ensure(plugin.required_services)
-                
-            # plugin.adapter = self.adapter
-            # plugin.bot_name = self.name
-            # plugin.bot = self.bot
-            # plugin.services = self.services
-
-            # if hasattr(plugin,"register_commands"):
-            #     await plugin.register_commands()
+            
 
             plugin.setup()
 
@@ -98,7 +92,7 @@ class TelegramBotInstance(BotInstance):
 
 class MaxBotInstance(BotInstance):
     def __init__(self, token: str, api_key: str, name: str, plugins: list, services: list):
-        super().__init__(token, api_key, name, plugins, services)
+        super().__init__(api_key, name, plugins, services)
 
         self.bot = maxapi.Bot(token)
         self.dp = maxapi.Dispatcher()
@@ -113,19 +107,9 @@ class MaxBotInstance(BotInstance):
 
             await super()._initialize_plugin(plugin)
 
-            # if hasattr(plugin, "required_services"):
-            #     self.services._c.ensure(plugin.required_services)
-
-            # plugin.adapter = self.adapter
-
-            # plugin.bot_name = self.name
-            # plugin.bot = self.bot
+           
             plugin.dp = self.dp
-            # plugin.services = self.services
-
-            # if hasattr(plugin, "register_commands"):
-            #     await plugin.register_commands()
-
+        
             plugin.setup()
 
     async def run(self):

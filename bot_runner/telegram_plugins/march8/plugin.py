@@ -8,10 +8,10 @@ import schedule
 from aiogram.filters import Command
 from aiogram.types import Message, FSInputFile
 
-from core.base_plugin import BaseTelegramPlugin
+from core.base_plugin import BasePlugin
 
 
-class March8Plugin(BaseTelegramPlugin):
+class March8Plugin(BasePlugin):
     def __init__(
         self,
         template: str,

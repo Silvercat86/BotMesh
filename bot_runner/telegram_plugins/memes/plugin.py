@@ -3,9 +3,9 @@ from aiogram.types import Message
 from aiogram.filters import Command
 import random
 
-from core.base_plugin import BaseTelegramPlugin
+from core.base_plugin import BasePlugin
 
-class MemePlugin(BaseTelegramPlugin):
+class MemePlugin(BasePlugin):
     def setup(self):
         memes_file = Path("data/memes/memes.txt")
         memes_file.parent.mkdir(parents=True, exist_ok=True)

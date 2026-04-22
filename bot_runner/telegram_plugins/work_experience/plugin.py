@@ -9,7 +9,7 @@ import schedule
 from aiogram.filters import Command
 from aiogram.types import Message, FSInputFile
 
-from core.base_plugin import BaseTelegramPlugin
+from core.base_plugin import BasePlugin
 from telegram_plugins.work_experience.service import (
     today_almaty,
     load_state,
@@ -20,7 +20,7 @@ from telegram_plugins.work_experience.service import (
 
 
 
-class WorkExperiencePlugin(BaseTelegramPlugin):
+class WorkExperiencePlugin(BasePlugin):
     def __init__(
         self,
         csv_path: str,
