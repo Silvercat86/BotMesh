@@ -1,5 +1,10 @@
 # plugins/employee_info/plugin.py
 
+import logging
+from multiprocessing import context
+
+import maxapi
+
 from core.base_plugin import BaseTelegramPlugin
 
 from aiogram.filters import Command
@@ -15,6 +20,18 @@ from typing import List
 
 from aiogram.types import BotCommand, BotCommandScopeChat
 
+from maxapi.types.attachments.buttons.button import Button
+from maxapi.types.attachments.buttons.message_button import MessageButton
+from maxapi.types import CallbackButton, MessageCreated, MessageCallback
+from maxapi.enums.button_type import ButtonType
+from maxapi.utils.inline_keyboard import InlineKeyboardBuilder
+from maxapi.context import MemoryContext, StatesGroup as MaxStateGroup, State as MaxState
+from maxapi.types import Command as MaxCommand
+from maxapi.enums.format import Format
+
+class MaxInfoState(MaxStateGroup):
+    waiting_query = MaxState()
+    waiting_choice = MaxState()
 
 class InfoState(StatesGroup):
     waiting_query = State()
@@ -134,6 +151,14 @@ class EmployeeInfoPlugin(BaseTelegramPlugin):
         return
 
     def setup(self):
+
+        self.log = logging.getLogger(f"[{self.bot_name}] birthdays")
+        if not self.log.handlers:
+            logging.basicConfig(
+                level=logging.INFO,
+                format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+            )
+
         @self.router.message(Command("chat_info"))
         async def chat_info(message: Message,state: FSMContext):
             await message.reply(f"chat id {message.chat.id}")
@@ -302,3 +327,120 @@ class EmployeeInfoPlugin(BaseTelegramPlugin):
             await state.clear()
 
             await callback.answer()
+
+        if self.dp:
+            @self.dp.message_created(MaxCommand("info"))
+            async def employee_info(event: MessageCreated, context: MemoryContext):
+                chat_type = event.chat.type if event.chat else "no chat type"
+                self.log.info(f"Chat type: {chat_type}")
+                chat_title = event.chat.title if event.chat else "no chat title"
+                self.log.info(f"Chat title: {chat_title}")
+                self.log.info(event.from_user)
+                username = event.from_user.username if event.from_user.username else event.from_user.first_name if event.from_user.first_name else "no username" 
+                self.log.info(f"Username: {username}")
+
+
+                if chat_type != "dialog":
+                    if chat_title in self.available_chats:
+                        self.log.info("available chat")
+                        pass
+
+                    else:
+                        if (
+                            username
+                            and username.lower() not in self.available_nicknames
+                        ):
+                            self.log.info("not available_chat+not available nick")
+                            return
+                        
+                        
+                        self.log.info("not available_chat but available nick")
+
+                else:
+                    if (
+                        username
+                        and username.lower() not in self.available_nicknames
+                    ):
+                        self.log.info("not available nick in private")
+                        return
+                    else:
+                        self.log.info("available nick in private")
+
+
+                await event.message.reply("Укажи ФИО, телефон или @username")
+                await context.set_state(MaxInfoState.waiting_query)
+
+
+
+            @self.dp.message_created(MaxInfoState.waiting_query)
+            async def employee_info_query(event: MessageCreated, context: MemoryContext):
+                query = (event.message.body.text or "").strip()
+
+                if not query:
+                    await event.message.reply("Укажи ФИО, телефон или @username")
+                    return
+
+                results = []
+
+                for source in self.sources:
+                    people = self.services.people.get_people(source)
+                    results.extend(self.search_people(people, query))
+
+                if not results:
+                    await event.message.reply("Сотрудник не найден")
+                    await context.clear()
+                    return
+                
+                if len(results) == 1:
+                    p = results[0]
+                    text = self.build_employee_text(p)
+
+                    await event.message.reply(text, parse_mode="HTML")
+                    await context.clear()
+                    return
+                
+                results = results[:5]
+
+                builder = InlineKeyboardBuilder()
+
+                for i, p in enumerate(results):
+                    birthday = getattr(p, "birthday", None)
+                    source = "3IT" if p.source == "threeit_people" else "RIO"
+
+                    text = f"{p.fio} {f'— {birthday}' if birthday else ''} ({source})"
+
+                    builder.row(
+                        CallbackButton(
+                            text=text,
+                            payload=f"emp_{i}"
+                        )
+                    )
+
+                await context.update_data(results=results)
+
+                await event.message.reply(
+                    "Найдено несколько сотрудников. Уточни:",
+                    attachments=[builder.as_markup()]
+                )
+
+                await context.set_state(MaxInfoState.waiting_choice)
+            @self.dp.message_callback(MaxInfoState.waiting_choice)
+            async def employee_choice(event: MessageCallback, context: MemoryContext):
+                data = await context.get_data()
+                results = data.get("results", [])
+
+                payload = event.callback.payload
+
+                if not payload.startswith("emp_"):
+                    return
+
+                index = int(payload.split("_")[1])
+
+                if index >= len(results):
+                    return
+
+                p = results[index]
+                text = self.build_employee_text(p)
+
+                await event.message.edit(text, attachments=[],parse_mode=Format.HTML)
+                await context.clear()
