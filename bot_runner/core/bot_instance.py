@@ -35,6 +35,21 @@ class BotInstance:
 
     
 
+    async def _initialize_plugin(self, plugin):
+        if hasattr(plugin, "required_services"):
+            self.services.ensure(plugin.required_services)
+
+        plugin.adapter = self.adapter
+        plugin.bot_name = self.name
+        plugin.bot = self.bot
+        plugin.services = self.services
+
+        if hasattr(plugin, "register_commands"):
+            await plugin.register_commands()
+
+
+    
+
 class TelegramBotInstance(BotInstance):
     def __init__(self, token: str,api_key:str, name: str, plugins: list, services: list):
 
@@ -56,18 +71,18 @@ class TelegramBotInstance(BotInstance):
 
     async def init_plugins(self):
         for plugin in self.plugins:
-            
+            await super()._initialize_plugin(plugin)
 
-            if hasattr(plugin, "required_services"):
-                self.services.ensure(plugin.required_services)
+            # if hasattr(plugin, "required_services"):
+            #     self.services.ensure(plugin.required_services)
                 
-            plugin.adapter = self.adapter
-            plugin.bot_name = self.name
-            plugin.bot = self.bot
-            plugin.services = self.services
+            # plugin.adapter = self.adapter
+            # plugin.bot_name = self.name
+            # plugin.bot = self.bot
+            # plugin.services = self.services
 
-            if hasattr(plugin,"register_commands"):
-                await plugin.register_commands()
+            # if hasattr(plugin,"register_commands"):
+            #     await plugin.register_commands()
 
             plugin.setup()
 
@@ -96,18 +111,20 @@ class MaxBotInstance(BotInstance):
         
         for plugin in self.plugins:
 
-            if hasattr(plugin, "required_services"):
-                self.services._c.ensure(plugin.required_services)
+            await super()._initialize_plugin(plugin)
 
-            plugin.adapter = self.adapter
+            # if hasattr(plugin, "required_services"):
+            #     self.services._c.ensure(plugin.required_services)
 
-            plugin.bot_name = self.name
-            plugin.bot = self.bot
-            plugin.dp = self.dp  # ВАЖНО: в maxapi нет router → используем dp
-            plugin.services = self.services
+            # plugin.adapter = self.adapter
 
-            if hasattr(plugin, "register_commands"):
-                await plugin.register_commands()
+            # plugin.bot_name = self.name
+            # plugin.bot = self.bot
+            plugin.dp = self.dp
+            # plugin.services = self.services
+
+            # if hasattr(plugin, "register_commands"):
+            #     await plugin.register_commands()
 
             plugin.setup()
 
