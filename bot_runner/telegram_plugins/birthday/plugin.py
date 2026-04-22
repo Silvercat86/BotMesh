@@ -26,6 +26,8 @@ from maxapi.types import MessageCreated
 
 from services.people_directory import Employee
 
+from maxapi.types import Command as MaxCommand
+
 
 class BirthdayPlugin(BaseTelegramPlugin):
     def __init__(
@@ -178,7 +180,7 @@ class BirthdayPlugin(BaseTelegramPlugin):
 
             await self._run_test(d, message.chat.id)
         if self.dp:
-            @self.dp.message_created()
+            @self.dp.message_created(MaxCommand("birthday_test"))
             async def handle_commands(event: MessageCreated):
                 self.log.info(f"Received message: {event.message}")
                 text = event.message.body.text or ""

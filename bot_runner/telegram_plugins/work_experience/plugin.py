@@ -16,7 +16,7 @@ from telegram_plugins.work_experience.service import (
     build_payloads,
     save_state,
 )
-
+from maxapi.types import Command as MaxCommand
 
 
 
