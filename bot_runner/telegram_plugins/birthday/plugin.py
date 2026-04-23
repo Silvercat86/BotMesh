@@ -5,6 +5,7 @@ from email.mime import message
 import logging
 from datetime import datetime
 from pathlib import Path
+from typing import Callable
 
 import schedule
 from aiogram.filters import Command
@@ -79,7 +80,86 @@ class BirthdayPlugin(BasePlugin):
                 asyncio.create_task(
                     self.adapter.send(chat_id, text, photo)
                 )
+    def get_actions(self) -> dict[str, Callable]:
+        return {
+            "birthday_test": self.birthday_test,
+            "birthday_chat_status": self.birthday_chat_status,
+        }
+    
 
+    async def birthday_test(self, message: Message):
+            
+            args = message.text.split()
+            if len(args) < 2:
+                await self.adapter.send(message.chat.id, "Нужна дата YYYY-MM-DD")
+                return
+
+            from datetime import date
+
+            try:
+                d = date.fromisoformat(args[1])
+            except ValueError:
+                await self.adapter.send(message.chat.id, "Неверный формат даты")
+                return
+            
+            
+
+            await self._run_test(d, message.chat.id)
+
+    async def birthday_chat_status(self,message: Message):
+
+            
+
+        context = await self.api.get_context(message)
+
+            
+        self.log.info(context)
+        if message.chat.type != "private":
+            return
+
+        if not self.chat_id:
+            await self.adapter.send(message.chat.id, "❌ chat_id не задан")
+            return
+
+        self.log.info(f"Checking bot membership for chat_id={self.chat_id}")
+
+        bot = self.bot
+        try:
+            me = await bot.get_me()
+            member = await bot.get_chat_member(self.chat_id, me.id)
+
+            self.log.info(f"getChatMember OK: status={member.status}")
+
+            if member.status in ("member", "administrator","restricted"):
+                await self.adapter.send(
+                    message.chat.id,
+                    f"✅ Бот находится в чате\n"
+                    f"chat_id: `{self.chat_id}`\n"
+                    f"status: `{member.status}`",
+                )
+            else:
+                await self.adapter.send(
+                    message.chat.id,
+                    f"❌ Бот НЕ находится в чате\n"
+                    f"chat_id: `{self.chat_id}`\n"
+                    f"status: `{member.status}`",
+                )
+
+        except TelegramForbiddenError:
+            await self.adapter.send(
+                message.chat.id,
+                f"❌ Нет доступа к чату `{self.chat_id}`\n"
+                f"(бот не добавлен или был удалён)",
+            )
+
+
+        except TelegramBadRequest as e:
+            await self.adapter.send(
+                message.chat.id,
+                "❌ Ошибка проверки чата\n"
+                f"chat_id: <code>{self.chat_id}</code>\n"
+                f"<pre>{escape(str(e))}</pre>",
+            )
     # -------------------- SETUP --------------------
 
     def setup(self):
@@ -102,81 +182,81 @@ class BirthdayPlugin(BasePlugin):
 
         
 
-        @self.router.message(Command("birthday_chat_status"))
-        async def birthday_chat_status(message: Message):
+        # @self.router.message(Command("birthday_chat_status"))
+        # async def birthday_chat_status(message: Message):
 
             
 
-            context = await self.api.get_context(message)
+        #     context = await self.api.get_context(message)
 
             
-            self.log.info(context)
-            if message.chat.type != "private":
-                return
+        #     self.log.info(context)
+        #     if message.chat.type != "private":
+        #         return
 
-            if not self.chat_id:
-                await self.adapter.send(message.chat.id, "❌ chat_id не задан")
-                return
+        #     if not self.chat_id:
+        #         await self.adapter.send(message.chat.id, "❌ chat_id не задан")
+        #         return
 
-            self.log.info(f"Checking bot membership for chat_id={self.chat_id}")
+        #     self.log.info(f"Checking bot membership for chat_id={self.chat_id}")
 
-            bot = self.bot
-            try:
-                me = await bot.get_me()
-                member = await bot.get_chat_member(self.chat_id, me.id)
+        #     bot = self.bot
+        #     try:
+        #         me = await bot.get_me()
+        #         member = await bot.get_chat_member(self.chat_id, me.id)
 
-                self.log.info(f"getChatMember OK: status={member.status}")
+        #         self.log.info(f"getChatMember OK: status={member.status}")
 
-                if member.status in ("member", "administrator","restricted"):
-                    await self.adapter.send(
-                        message.chat.id,
-                        f"✅ Бот находится в чате\n"
-                        f"chat_id: `{self.chat_id}`\n"
-                        f"status: `{member.status}`",
-                    )
-                else:
-                    await self.adapter.send(
-                        message.chat.id,
-                        f"❌ Бот НЕ находится в чате\n"
-                        f"chat_id: `{self.chat_id}`\n"
-                        f"status: `{member.status}`",
-                    )
+        #         if member.status in ("member", "administrator","restricted"):
+        #             await self.adapter.send(
+        #                 message.chat.id,
+        #                 f"✅ Бот находится в чате\n"
+        #                 f"chat_id: `{self.chat_id}`\n"
+        #                 f"status: `{member.status}`",
+        #             )
+        #         else:
+        #             await self.adapter.send(
+        #                 message.chat.id,
+        #                 f"❌ Бот НЕ находится в чате\n"
+        #                 f"chat_id: `{self.chat_id}`\n"
+        #                 f"status: `{member.status}`",
+        #             )
 
-            except TelegramForbiddenError:
-                await self.adapter.send(
-                    message.chat.id,
-                    f"❌ Нет доступа к чату `{self.chat_id}`\n"
-                    f"(бот не добавлен или был удалён)",
-                )
+        #     except TelegramForbiddenError:
+        #         await self.adapter.send(
+        #             message.chat.id,
+        #             f"❌ Нет доступа к чату `{self.chat_id}`\n"
+        #             f"(бот не добавлен или был удалён)",
+        #         )
 
 
-            except TelegramBadRequest as e:
-                await self.adapter.send(
-                    message.chat.id,
-                    "❌ Ошибка проверки чата\n"
-                    f"chat_id: <code>{self.chat_id}</code>\n"
-                    f"<pre>{escape(str(e))}</pre>",
-                )
+        #     except TelegramBadRequest as e:
+        #         await self.adapter.send(
+        #             message.chat.id,
+        #             "❌ Ошибка проверки чата\n"
+        #             f"chat_id: <code>{self.chat_id}</code>\n"
+        #             f"<pre>{escape(str(e))}</pre>",
+        #         )
 
-        @self.router.message(Command("birthday_test"))
-        async def birthday_test(message: Message):
+        # @self.router.message(Command("birthday_test"))
+        # async def birthday_test(message: Message):
             
-            args = message.text.split()
-            if len(args) < 2:
-                await self.adapter.send(message.chat.id, "Нужна дата YYYY-MM-DD")
-                return
+        #     args = message.text.split()
+        #     if len(args) < 2:
+        #         await self.adapter.send(message.chat.id, "Нужна дата YYYY-MM-DD")
+        #         return
 
-            from datetime import date
+        #     from datetime import date
 
-            try:
-                d = date.fromisoformat(args[1])
-            except ValueError:
-                await self.adapter.send(message.chat.id, "Неверный формат даты")
-                return
+        #     try:
+        #         d = date.fromisoformat(args[1])
+        #     except ValueError:
+        #         await self.adapter.send(message.chat.id, "Неверный формат даты")
+        #         return
             
             
 
-            await self._run_test(d, message.chat.id)
+        #     await self._run_test(d, message.chat.id)
         if self.dp:
             @self.dp.message_created()
             async def handle_commands(event: MessageCreated):

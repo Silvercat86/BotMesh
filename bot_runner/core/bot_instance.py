@@ -14,11 +14,17 @@ from core.adapters.max import MaxAdapter
 from core.adapters.telegram import TelegramAdapter
 from core.base_plugin import BasePlugin
 
+from aiogram.types import Message
+from aiogram.filters import Command as AiogramCommand
+
+from core.command import Command
+
 import maxapi
 class BotInstance:
-    def __init__(self, api_key: str, name: str, plugins: list, services: list):
+    def __init__(self, api_key: str, name: str, plugins: list, services: list, commands: list[Command] = None):
         self.name = name
-        
+        self.commands = commands or []
+
         self.http_session = aiohttp.ClientSession()
         self.api = Api(self.http_session, api_key)
 
@@ -53,9 +59,9 @@ class BotInstance:
     
 
 class TelegramBotInstance(BotInstance):
-    def __init__(self, token: str,api_key:str, name: str, plugins: list, services: list):
+    def __init__(self, token: str,api_key:str, name: str, plugins: list, services: list, commands: list[Command] = None):
 
-        super().__init__(api_key, name, plugins, services)
+        super().__init__(api_key, name, plugins, services, commands)
 
 
         self.dp = Dispatcher()
@@ -81,6 +87,26 @@ class TelegramBotInstance(BotInstance):
             plugin.setup()
 
             self.dp.include_router(plugin.router)
+        self._register_commands()
+
+
+    def _register_commands(self):
+
+
+        for cmd in self.commands:
+            self._register_telegram_command(cmd)
+
+    def _register_telegram_command(self, cmd: Command):
+        for plugin in self.plugins:
+            action = plugin.get_action(cmd.func_name)
+            if action:
+                self.dp.message.register(action, AiogramCommand(cmd.name))
+                return
+        print(f"Warning: Command '{cmd.name}' with function '{cmd.func_name}' not found in any plugin.")
+            
+        
+
+            
 
     async def run(self):
         await self.dp.start_polling(self.bot)
@@ -91,8 +117,8 @@ class TelegramBotInstance(BotInstance):
 
 
 class MaxBotInstance(BotInstance):
-    def __init__(self, token: str, api_key: str, name: str, plugins: list, services: list):
-        super().__init__(api_key, name, plugins, services)
+    def __init__(self, token: str, api_key: str, name: str, plugins: list, services: list, commands: list[Command] = None):
+        super().__init__(api_key, name, plugins, services, commands)
 
         self.bot = maxapi.Bot(token)
         self.dp = maxapi.Dispatcher()

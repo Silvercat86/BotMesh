@@ -37,6 +37,8 @@ from core.templates import RIO_MARCH8_TEMPLATE, THREEIT_MARCH8_TEMPLATE
 
 from services.people_directory import PeopleDirectoryService
 
+from core.command import Command
+
 
 
 
@@ -549,6 +551,7 @@ async def main() -> None:
                     minute=0,
                     dry_run=False,
                     chat_file="data/testing/birthday/chat.txt",
+                    
                 ),
                 WorkExperiencePlugin(
                     csv_path="https://docs.google.com/spreadsheets/d/1QFdn6iAmc-krAIY75nDvWvn54LZrpjX5TfufZb1sJRg/export?format=csv&gid=1937147644",
@@ -674,7 +677,12 @@ async def main() -> None:
                     },
                     cache_ttl=300,
                 )
-            ]
+            ],
+            commands=[
+                Command(name="birthday_test", func_name="birthday_test", scope="private"),
+                Command(name="birthday_chat_status", func_name="birthday_chat_status", scope="private")
+            ],
+
         )
         await test_bot_instance.init_plugins()
         await max_test_bot_instance.init_plugins()
