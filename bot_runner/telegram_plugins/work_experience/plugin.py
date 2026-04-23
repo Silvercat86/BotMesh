@@ -145,6 +145,7 @@ class WorkExperiencePlugin(BaseTelegramPlugin):
         )
 
         for p in payloads:
+            self.log.info(f"TEST PAYLOAD for {test_date.isoformat()}: {p['text']} (photo: {p['photo']})")
             self._send(
             chat_id,
             f"[TEST {test_date.isoformat()}] {p['text']}",
