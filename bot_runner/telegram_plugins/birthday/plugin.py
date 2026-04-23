@@ -324,7 +324,6 @@ class BirthdayPlugin(BaseTelegramPlugin):
             
             asyncio.create_task(
                 self._run_today(
-                    self.chat_id
                 )
             )
 
