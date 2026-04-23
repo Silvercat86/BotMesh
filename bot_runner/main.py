@@ -125,7 +125,7 @@ async def main() -> None:
                                 "fio": 0,
                                 "username": 1,
                                 "birthday": 2,
-                                "photo": 3
+                                "photo_url": 3
                         }
                         },
                         "rio_people_work": {
@@ -136,7 +136,7 @@ async def main() -> None:
                                 "fio": 0,
                                 "username": 1,
                                 "start_date": 2,
-                                "photo": 3
+                                "photo_url": 3
                         }
                         },
                         "rio_people": {
@@ -279,7 +279,7 @@ async def main() -> None:
                                 "fio": 0,
                                 "username": 1,
                                 "birthday": 2,
-                                "photo": 3
+                                "photo_url": 3
                         }
                         },
                         "rio_people_work": {
@@ -290,7 +290,7 @@ async def main() -> None:
                                 "fio": 0,
                                 "username": 1,
                                 "start_date": 2,
-                                "photo": 3
+                                "photo_url": 3
                         }
                         },},
                         
