@@ -245,6 +245,7 @@ def build_payloads(
             text = f"@{p.username}\n" + text
 
         photo = None
+        log.info(f"Пробуем фото из таблицы для {p.fio} {p.photo_url}")
         if p.photo_url:
             photo = get_or_download_external_image(p.photo_url, external_images_dir)
             log.info(f"Using external image for {p.fio}: {photo}")
