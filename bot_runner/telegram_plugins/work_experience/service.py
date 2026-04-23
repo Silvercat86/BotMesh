@@ -22,7 +22,6 @@ log = logging.getLogger("work_experience")
 
 def load_state(state_path: Path) -> Dict:
     state_path.parent.mkdir(parents=True, exist_ok=True)
-    log.info(state_path)
     if state_path.exists():
         try:
             return json.loads(state_path.read_text(encoding="utf-8"))
@@ -214,6 +213,7 @@ def build_payloads(
     external_images_dir: Path,
 ):
     state = load_state(state_path)
+    log.info(f"Building payloads for {for_date.isoformat()} with {len(people)} people, state: {state}")
     payloads = []
 
     for p in people:
@@ -223,7 +223,7 @@ def build_payloads(
         if years is None:
             continue
 
-        
+        log.info(f"Processing person: {p.fio}")
 
         templates = templates_by_years.get(years)
         if not templates:
@@ -242,9 +242,11 @@ def build_payloads(
         photo = None
         if p.photo_url:
             photo = get_or_download_external_image(p.photo_url, external_images_dir)
+            log.info(f"Using external image for {p.fio}: {photo}")
 
         if photo is None:
             photo = pick_next_image(state, images_dir)
+            log.info(f"Using internal image for {p.fio}: {photo}")
 
         state["last_sent_for_date"] = for_date.isoformat()
 
