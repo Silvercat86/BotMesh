@@ -27,6 +27,8 @@ from maxapi.types import MessageCreated
 
 from services.people_directory import Employee
 
+from maxapi.types import Command as MaxCommand
+
 
 class BirthdayPlugin(BasePlugin):
     def __init__(
@@ -258,7 +260,7 @@ class BirthdayPlugin(BasePlugin):
 
         #     await self._run_test(d, message.chat.id)
         if self.dp:
-            @self.dp.message_created()
+            @self.dp.message_created(MaxCommand("birthday_test"))
             async def handle_commands(event: MessageCreated):
                 self.log.info(f"Received message: {event.message}")
                 text = event.message.body.text or ""
@@ -402,7 +404,6 @@ class BirthdayPlugin(BasePlugin):
             
             asyncio.create_task(
                 self._run_today(
-                    self.chat_id
                 )
             )
 

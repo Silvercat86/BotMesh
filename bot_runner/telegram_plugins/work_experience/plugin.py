@@ -16,7 +16,7 @@ from telegram_plugins.work_experience.service import (
     build_payloads,
     save_state,
 )
-
+from maxapi.types import Command as MaxCommand
 
 
 
@@ -145,6 +145,7 @@ class WorkExperiencePlugin(BasePlugin):
         )
 
         for p in payloads:
+            self.log.info(f"TEST PAYLOAD for {test_date.isoformat()} (photo: {p['photo']})")
             self._send(
             chat_id,
             f"[TEST {test_date.isoformat()}] {p['text']}",
