@@ -119,17 +119,22 @@ def get_or_download_external_image(url: str, external_images_dir: Path):
     path = external_images_dir / name
 
     if path.exists():
+        log.info(f"Фото из кэша: {path.name}")
         return path
 
     url = normalize_drive_url(url)
+    log.info(f"Downloading external image from {url}")
 
     r = requests.get(url, timeout=10)
     r.raise_for_status()
+    log.info(f"Downloaded external image from {url} with content-type {r.headers.get('Content-Type')}")
 
     if not r.headers.get("Content-Type", "").startswith("image/"):
+        log.warning("Ссылка не ведёт на изображение")
         return None
 
     path.write_bytes(r.content)
+    log.info(f"Сохранено внешнее изображение: {path.name}")
     return path
 
 
