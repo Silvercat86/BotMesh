@@ -177,34 +177,6 @@ class BirthdayPlugin(BasePlugin):
             
             self.chat_id = self._load_chat_id_from_file()
 
-        
-
-        
-        if self.dp:
-            @self.dp.message_created(MaxCommand("birthday_test"))
-            async def handle_commands(event: MessageCreated):
-                self.log.info(f"Received message: {event.message}")
-                text = event.message.body.text or ""
-
-                if text.startswith("/birthday_test"):
-                    self.log.info("Running birthday test command")
-                    parts = text.split()
-                    if len(parts) < 2:
-                        self.log.warning("No date provided for birthday test command")
-                        return
-
-                    from datetime import date
-
-                    try:
-                        d = date.fromisoformat(parts[1])
-                        self.log.info(f"Parsed date for test command: {d}")
-                    except:
-                        self.log.warning(f"Failed to parse date from command: {parts[1]}")
-                        return
-                    
-
-
-                    await self._run_test(d, event.chat.chat_id)
 
         self._schedule_task = asyncio.create_task(self._schedule_loop())
 

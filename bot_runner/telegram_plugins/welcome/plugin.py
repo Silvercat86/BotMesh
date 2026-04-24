@@ -1,8 +1,9 @@
 # plugins/welcome/plugin.py
 
+import logging
 import random
 import time
-from typing import List, Dict, Tuple
+from typing import Callable, List, Dict, Tuple
 
 from aiogram.types import ChatMemberUpdated, Message
 from aiogram import F
@@ -28,35 +29,72 @@ class WelcomePlugin(BasePlugin):
         # (chat_id, user_id) -> expires_at_monotonic
         self._dedupe: Dict[Tuple[int, int], float] = {}
 
+    def get_actions(self) -> dict[str, Callable]:
+        return {
+            "handle_chat_member_join": self.handle_chat_member_join,
+        }
+    
+    async def handle_chat_member_join(self, event):
+        if hasattr(event, "new_chat_member"):
+            # Telegram
+            user = event.new_chat_member.user
+            chat_id = event.chat.id
+            user_id = user.id
+
+        elif hasattr(event, "user"):
+            # Max
+            self.log.info(f"Received chat member event: {event}")
+
+            user = event.user
+            chat_id = event.chat_id
+            user_id = user.user_id  # ← ВАЖНО
+
+        else:
+            return
+
+        if getattr(user, "is_bot", False):
+            return
+
+        if not self._mark_once(chat_id, user_id):
+            return
+
+        await self._send_welcome(chat_id=chat_id, user=user)
+
     def setup(self):
-        # 1) Service-message: new_chat_members (может работать без админки)
-        @self.router.message(F.new_chat_members)
-        async def greet_via_new_chat_members(message: Message):
-            if not message.new_chat_members:
-                return
+        self.log = logging.getLogger(f"[{self.bot_name}] birthdays")
+        if not self.log.handlers:
+            logging.basicConfig(
+                level=logging.INFO,
+                format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+            )
+        # # 1) Service-message: new_chat_members (может работать без админки)
+        # @self.router.message(F.new_chat_members)
+        # async def greet_via_new_chat_members(message: Message):
+        #     if not message.new_chat_members:
+        #         return
 
-            for user in message.new_chat_members:
-                if user.is_bot:
-                    continue
-                if not self._mark_once(message.chat.id, user.id):
-                    print(f"Suppressed welcome for {user.id} in chat {message.chat.id}")
-                    continue
-                await self._send_welcome(chat_id=message.chat.id, user=user)
+        #     for user in message.new_chat_members:
+        #         if user.is_bot:
+        #             continue
+        #         if not self._mark_once(message.chat.id, user.id):
+        #             print(f"Suppressed welcome for {user.id} in chat {message.chat.id}")
+        #             continue
+        #         await self._send_welcome(chat_id=message.chat.id, user=user)
 
-        # 2) ChatMemberUpdated (часто требует админку, но более надёжно)
-        @self.router.chat_member()
-        async def greet_via_chat_member(event: ChatMemberUpdated):
-            old = event.old_chat_member.status
-            new = event.new_chat_member.status
+        # # 2) ChatMemberUpdated (часто требует админку, но более надёжно)
+        # @self.router.chat_member()
+        # async def greet_via_chat_member(event: ChatMemberUpdated):
+        #     old = event.old_chat_member.status
+        #     new = event.new_chat_member.status
 
-            if old in ("left", "kicked") and new in ("member", "administrator"):
-                user = event.new_chat_member.user
-                if user.is_bot:
-                    return
-                if not self._mark_once(event.chat.id, user.id):
-                    print(f"Suppressed welcome for {user.id} in chat {event.chat.id}")
-                    return
-                await self._send_welcome(chat_id=event.chat.id, user=user)
+        #     if old in ("left", "kicked") and new in ("member", "administrator"):
+        #         user = event.new_chat_member.user
+        #         if user.is_bot:
+        #             return
+        #         if not self._mark_once(event.chat.id, user.id):
+        #             print(f"Suppressed welcome for {user.id} in chat {event.chat.id}")
+        #             return
+        #         await self._send_welcome(chat_id=event.chat.id, user=user)
 
     # ---------------- DEDUPE ----------------
 
@@ -94,7 +132,7 @@ class WelcomePlugin(BasePlugin):
         )
         text = self._render_template(user, selected_questions)
 
-        await self.bot.send_message(
+        await self._send(
             chat_id=chat_id,
             text=text,
         )

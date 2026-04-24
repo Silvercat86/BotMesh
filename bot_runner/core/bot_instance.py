@@ -17,13 +17,13 @@ from core.base_plugin import BasePlugin
 from aiogram.types import Message
 from aiogram.filters import Command as AiogramCommand
 
-from core.command import Command
+from core.action import Action, ActionType
 
 import maxapi
 class BotInstance:
-    def __init__(self, api_key: str, name: str, plugins: list, services: list, commands: list[Command] = None):
+    def __init__(self, api_key: str, name: str, plugins: list, services: list, actions: list[Action] = None):
         self.name = name
-        self.commands = commands or []
+        self.actions = actions or []
 
         self.http_session = aiohttp.ClientSession()
         self.api = Api(self.http_session, api_key)
@@ -52,16 +52,15 @@ class BotInstance:
         plugin.services = self.services
         plugin.api = self.api
 
-        if hasattr(plugin, "register_commands"):
-            await plugin.register_commands()
+        
 
 
     
 
 class TelegramBotInstance(BotInstance):
-    def __init__(self, token: str,api_key:str, name: str, plugins: list, services: list, commands: list[Command] = None):
+    def __init__(self, token: str,api_key:str, name: str, plugins: list, services: list, actions: list[Action] = None):
 
-        super().__init__(api_key, name, plugins, services, commands)
+        super().__init__(api_key, name, plugins, services, actions)
 
 
         self.dp = Dispatcher()
@@ -87,22 +86,30 @@ class TelegramBotInstance(BotInstance):
             plugin.setup()
 
             self.dp.include_router(plugin.router)
-        self._register_commands()
+        self._register_actions()
 
 
-    def _register_commands(self):
+    def _register_actions(self):
 
 
-        for cmd in self.commands:
-            self._register_telegram_command(cmd)
+        for action in self.actions:
+            self._register_telegram_action(action)
 
-    def _register_telegram_command(self, cmd: Command):
+    def _register_telegram_action(self, action: Action):
         for plugin in self.plugins:
-            action = plugin.get_action(cmd.func_name)
-            if action:
-                self.dp.message.register(action, AiogramCommand(cmd.name))
-                return
-        print(f"Warning: Command '{cmd.name}' with function '{cmd.func_name}' not found in any plugin.")
+            plugin_action = plugin.get_action(action.func_name)
+            if plugin_action:
+                if action.type == ActionType.COMMAND:
+                    self.dp.message.register(plugin_action, AiogramCommand(action.name))
+                    return
+                if action.type == ActionType.CHAT_MEMBER_JOIN:
+                    self.dp.chat_member.register(plugin_action, lambda e: e.new_chat_member.status == "member")
+                    return
+                if action.type == ActionType.CHAT_MEMBER_LEAVE:
+                    self.dp.chat_member.register(plugin_action, lambda e: e.left_chat_member is not None)
+                    return
+
+        print(f"Warning: Command '{action.name}' with function '{action.func_name}' not found in any plugin.")
             
         
 
@@ -117,8 +124,8 @@ class TelegramBotInstance(BotInstance):
 
 
 class MaxBotInstance(BotInstance):
-    def __init__(self, token: str, api_key: str, name: str, plugins: list, services: list, commands: list[Command] = None):
-        super().__init__(api_key, name, plugins, services, commands)
+    def __init__(self, token: str, api_key: str, name: str, plugins: list, services: list, actions: list[Action] = None):
+        super().__init__(api_key, name, plugins, services, actions)
 
         self.bot = maxapi.Bot(token)
         self.dp = maxapi.Dispatcher()
@@ -137,6 +144,33 @@ class MaxBotInstance(BotInstance):
             plugin.dp = self.dp
         
             plugin.setup()
+
+        self._register_actions()
+
+    def _register_actions(self):
+        for action in self.actions:
+            self._register_max_action(action)
+
+    def _register_max_action(self, action: Action):
+        for plugin in self.plugins:
+            plugin_action = plugin.get_action(action.func_name)
+
+            if not plugin_action:
+                continue
+
+            if action.type == ActionType.COMMAND:
+                self.dp.message.register(plugin_action)
+                return
+
+            if action.type == ActionType.CHAT_MEMBER_JOIN:
+                self.dp.user_added.register(plugin_action)
+                return
+
+            if action.type == ActionType.CHAT_MEMBER_LEAVE:
+                self.dp.user_removed.register(plugin_action)
+                return
+
+        print(f"Warning: Action '{action.name}' not found")
 
     async def run(self):
         await self.dp.start_polling(self.bot)

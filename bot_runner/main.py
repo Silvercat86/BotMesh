@@ -37,7 +37,7 @@ from core.templates import RIO_MARCH8_TEMPLATE, THREEIT_MARCH8_TEMPLATE
 
 from services.people_directory import PeopleDirectoryService
 
-from core.command import Command
+from core.action import Action, ActionType
 
 
 
@@ -477,27 +477,32 @@ async def main() -> None:
             api_key=os.getenv("MAX_TEST_API_KEY",""),
             name="MaxTestBot",
             plugins=[
-                # BirthdayPlugin(
-                #     templates=RIO_BIRTHDAY_TEMPLATES,
-                #     storage_dir="data/testing/birthdayMax",
-                #     people_source="rio_people_birthdays",
-                #     hour=7,
-                #     minute=0,
-                #     chat_id="-73548766634171",
-                # ),
-                # WorkExperiencePlugin(
-                #     templates_by_years=RIO_WORK_TEMPLATES,
-                #     storage_dir="data/testing/workMax",
-                #     people_source="rio_people_work",
-                #     hour=7,
-                #     minute=0,
-                #     chat_id="-73548766634171",
-                # ),
+                BirthdayPlugin(
+                    templates=RIO_BIRTHDAY_TEMPLATES,
+                    storage_dir="data/testing/birthdayMax",
+                    people_source="rio_people_birthdays",
+                    hour=7,
+                    minute=0,
+                    chat_id="-73548766634171",
+                ),
+                WorkExperiencePlugin(
+                    templates_by_years=RIO_WORK_TEMPLATES,
+                    storage_dir="data/testing/workMax",
+                    people_source="rio_people_work",
+                    hour=7,
+                    minute=0,
+                    chat_id="-73548766634171",
+                ),
                 EmployeeInfoPlugin(
                     sources=["rio_people"],
                     available_nicknames=["silvercat86","katyalay7","виктор"],
                     available_chats=[""],
-                )
+                ),
+                WelcomePlugin(
+                    base_template=RIO_WELCOME_TEMPLATE,
+                    questions=RIO_WELCOME_QUESTIONS,
+                    
+                ),
             ],
             services=[
                 PeopleDirectoryService(
@@ -585,6 +590,11 @@ async def main() -> None:
                     },
                     cache_ttl=300,
                 )
+            ],
+            actions=[
+                # Action(name="birthday_test", func_name="birthday_test", scope="private", type=ActionType.COMMAND),
+                # Action(name="birthday_chat_status", func_name="birthday_chat_status", scope="private", type=ActionType.COMMAND),
+                Action(name="user_join", func_name="handle_chat_member_join", scope="private", type=ActionType.CHAT_MEMBER_JOIN),
             ]
 
         )
@@ -730,9 +740,10 @@ async def main() -> None:
                     cache_ttl=300,
                 )
             ],
-            commands=[
-                Command(name="birthday_test", func_name="birthday_test", scope="private"),
-                Command(name="birthday_chat_status", func_name="birthday_chat_status", scope="private")
+            actions=[
+                Action(name="birthday_test", func_name="birthday_test", scope="private", type=ActionType.COMMAND),
+                Action(name="birthday_chat_status", func_name="birthday_chat_status", scope="private", type=ActionType.COMMAND),
+                Action(name="user_join", func_name="handle_chat_member_join", scope="private", type=ActionType.CHAT_MEMBER_JOIN),
             ],
 
         )
