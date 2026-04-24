@@ -23,7 +23,6 @@ from maxapi.types import Command as MaxCommand
 class WorkExperiencePlugin(BasePlugin):
     def __init__(
         self,
-        csv_path: str,
         templates_by_years: dict,
         storage_dir: str,
         people_source: str ,
@@ -39,7 +38,6 @@ class WorkExperiencePlugin(BasePlugin):
         self.required_services = ("people",)
 
 
-        self.csv_path = csv_path
         self.templates_by_years = templates_by_years
 
         self.hour = hour

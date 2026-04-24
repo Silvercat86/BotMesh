@@ -33,7 +33,6 @@ from maxapi.types import Command as MaxCommand
 class BirthdayPlugin(BasePlugin):
     def __init__(
         self,
-        csv_path: str,
         templates: list[str],
         storage_dir: str,
         people_source: str,
@@ -50,7 +49,6 @@ class BirthdayPlugin(BasePlugin):
 
         
 
-        self.csv_path = csv_path
         self.templates = templates
 
         self.hour = hour
@@ -78,10 +76,7 @@ class BirthdayPlugin(BasePlugin):
 
         self._schedule_task = None
 
-    def _send(self, chat_id, text, photo=None):
-                asyncio.create_task(
-                    self.adapter.send(chat_id, text, photo)
-                )
+    
     def get_actions(self) -> dict[str, Callable]:
         return {
             "birthday_test": self.birthday_test,
@@ -93,7 +88,7 @@ class BirthdayPlugin(BasePlugin):
             
             args = message.text.split()
             if len(args) < 2:
-                await self.adapter.send(message.chat.id, "Нужна дата YYYY-MM-DD")
+                await self._send(message.chat.id, "Нужна дата YYYY-MM-DD")
                 return
 
             from datetime import date
@@ -101,7 +96,7 @@ class BirthdayPlugin(BasePlugin):
             try:
                 d = date.fromisoformat(args[1])
             except ValueError:
-                await self.adapter.send(message.chat.id, "Неверный формат даты")
+                await self._send(message.chat.id, "Неверный формат даты")
                 return
             
             
@@ -120,7 +115,7 @@ class BirthdayPlugin(BasePlugin):
             return
 
         if not self.chat_id:
-            await self.adapter.send(message.chat.id, "❌ chat_id не задан")
+            await self._send(message.chat.id, "❌ chat_id не задан")
             return
 
         self.log.info(f"Checking bot membership for chat_id={self.chat_id}")
@@ -133,14 +128,14 @@ class BirthdayPlugin(BasePlugin):
             self.log.info(f"getChatMember OK: status={member.status}")
 
             if member.status in ("member", "administrator","restricted"):
-                await self.adapter.send(
+                await self._send(
                     message.chat.id,
                     f"✅ Бот находится в чате\n"
                     f"chat_id: `{self.chat_id}`\n"
                     f"status: `{member.status}`",
                 )
             else:
-                await self.adapter.send(
+                await self._send(
                     message.chat.id,
                     f"❌ Бот НЕ находится в чате\n"
                     f"chat_id: `{self.chat_id}`\n"
@@ -148,7 +143,7 @@ class BirthdayPlugin(BasePlugin):
                 )
 
         except TelegramForbiddenError:
-            await self.adapter.send(
+            await self._send(
                 message.chat.id,
                 f"❌ Нет доступа к чату `{self.chat_id}`\n"
                 f"(бот не добавлен или был удалён)",
@@ -156,7 +151,7 @@ class BirthdayPlugin(BasePlugin):
 
 
         except TelegramBadRequest as e:
-            await self.adapter.send(
+            await self._send(
                 message.chat.id,
                 "❌ Ошибка проверки чата\n"
                 f"chat_id: <code>{self.chat_id}</code>\n"
@@ -184,81 +179,7 @@ class BirthdayPlugin(BasePlugin):
 
         
 
-        # @self.router.message(Command("birthday_chat_status"))
-        # async def birthday_chat_status(message: Message):
-
-            
-
-        #     context = await self.api.get_context(message)
-
-            
-        #     self.log.info(context)
-        #     if message.chat.type != "private":
-        #         return
-
-        #     if not self.chat_id:
-        #         await self.adapter.send(message.chat.id, "❌ chat_id не задан")
-        #         return
-
-        #     self.log.info(f"Checking bot membership for chat_id={self.chat_id}")
-
-        #     bot = self.bot
-        #     try:
-        #         me = await bot.get_me()
-        #         member = await bot.get_chat_member(self.chat_id, me.id)
-
-        #         self.log.info(f"getChatMember OK: status={member.status}")
-
-        #         if member.status in ("member", "administrator","restricted"):
-        #             await self.adapter.send(
-        #                 message.chat.id,
-        #                 f"✅ Бот находится в чате\n"
-        #                 f"chat_id: `{self.chat_id}`\n"
-        #                 f"status: `{member.status}`",
-        #             )
-        #         else:
-        #             await self.adapter.send(
-        #                 message.chat.id,
-        #                 f"❌ Бот НЕ находится в чате\n"
-        #                 f"chat_id: `{self.chat_id}`\n"
-        #                 f"status: `{member.status}`",
-        #             )
-
-        #     except TelegramForbiddenError:
-        #         await self.adapter.send(
-        #             message.chat.id,
-        #             f"❌ Нет доступа к чату `{self.chat_id}`\n"
-        #             f"(бот не добавлен или был удалён)",
-        #         )
-
-
-        #     except TelegramBadRequest as e:
-        #         await self.adapter.send(
-        #             message.chat.id,
-        #             "❌ Ошибка проверки чата\n"
-        #             f"chat_id: <code>{self.chat_id}</code>\n"
-        #             f"<pre>{escape(str(e))}</pre>",
-        #         )
-
-        # @self.router.message(Command("birthday_test"))
-        # async def birthday_test(message: Message):
-            
-        #     args = message.text.split()
-        #     if len(args) < 2:
-        #         await self.adapter.send(message.chat.id, "Нужна дата YYYY-MM-DD")
-        #         return
-
-        #     from datetime import date
-
-        #     try:
-        #         d = date.fromisoformat(args[1])
-        #     except ValueError:
-        #         await self.adapter.send(message.chat.id, "Неверный формат даты")
-        #         return
-            
-            
-
-        #     await self._run_test(d, message.chat.id)
+        
         if self.dp:
             @self.dp.message_created(MaxCommand("birthday_test"))
             async def handle_commands(event: MessageCreated):
@@ -330,7 +251,7 @@ class BirthdayPlugin(BasePlugin):
         )
         for p in payloads:
             self.log.info(f"Birthday отправка в чат {self.chat_id}: photo={bool(p['photo'])}")
-            self._send(self.chat_id, f"{p['text']}", p["photo"])
+            await self._send(self.chat_id, f"{p['text']}", p["photo"])
 
     async def _run_test(self, test_date, chat_id: int):
         
@@ -349,7 +270,7 @@ class BirthdayPlugin(BasePlugin):
         )
         for p in payloads:
             self.log.info(f"TEST отправка в чат {chat_id}: photo={bool(p['photo'])}")
-            self._send(chat_id, f"[TEST {test_date.isoformat()}] {p['text']}", p["photo"])
+            await self._send(chat_id, f"[TEST {test_date.isoformat()}] {p['text']}", p["photo"])
 
     # -------------------- SEND FN --------------------
 

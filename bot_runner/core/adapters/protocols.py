@@ -10,6 +10,13 @@ class BotAdapter(Protocol):
         photo: str | None = None
     ) -> None: ...
 
+    async def reply(
+        self,
+        message,
+        text: str,
+        photo: str | None = None
+    ) -> None: ...
+
     
 
     

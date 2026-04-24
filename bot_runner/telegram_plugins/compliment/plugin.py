@@ -1,5 +1,6 @@
 # plugins/compliment/plugin.py
 import random
+from typing import Callable
 from aiogram.filters import Command
 from aiogram.types import Message
 from core.base_plugin import BasePlugin
@@ -93,7 +94,13 @@ COMPLIMENTS = [
 ]
 
 class ComplimentPlugin(BasePlugin):
+    def get_actions(self) -> dict[str, Callable]:
+        return {
+            "compliment": self.send_compliment,
+        }
     def setup(self):
-        @self.router.message(Command("compliment"))
-        async def compliment_handler(message: Message):
-            await message.reply(random.choice(COMPLIMENTS))
+        pass
+
+    async def send_compliment(self, chat_id: int):
+        compliment = random.choice(COMPLIMENTS)
+        await self._send(chat_id, compliment)

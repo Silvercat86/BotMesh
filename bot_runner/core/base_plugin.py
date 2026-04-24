@@ -1,4 +1,5 @@
-from collections.abc import Callable
+import asyncio
+from typing import Callable
 
 from aiogram import Router
 import maxapi
@@ -17,6 +18,9 @@ class BasePlugin:
         self.router = Router()
         self.dp = None
 
+    async def _send(self, chat_id: str, text: str, photo: str | None = None):
+        await self.adapter.send(chat_id, text, photo)
+    
     def get_actions(self) -> dict[str, Callable]:
         return {}
     

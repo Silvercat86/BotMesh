@@ -67,7 +67,6 @@ async def main() -> None:
             plugins=[
                 ComplimentPlugin(),
                 BirthdayPlugin(
-                    csv_path="https://docs.google.com/spreadsheets/d/1QFdn6iAmc-krAIY75nDvWvn54LZrpjX5TfufZb1sJRg/export?format=csv&gid=0",
                     templates=RIO_BIRTHDAY_TEMPLATES,
                     storage_dir="data/rio/birthday",
                     people_source="rio_people_birthdays",
@@ -77,7 +76,6 @@ async def main() -> None:
                     chat_file="data/rio/birthday/chats.txt",
                 ),
                 WorkExperiencePlugin(
-                    csv_path="https://docs.google.com/spreadsheets/d/1QFdn6iAmc-krAIY75nDvWvn54LZrpjX5TfufZb1sJRg/export?format=csv&gid=1937147644",
                     templates_by_years=RIO_WORK_TEMPLATES,
                     storage_dir="data/rio/work",
                     people_source="rio_people_work",
@@ -322,7 +320,6 @@ async def main() -> None:
             name="RioMaxBot",
             plugins=[
                 BirthdayPlugin(
-                    csv_path="https://docs.google.com/spreadsheets/d/1QFdn6iAmc-krAIY75nDvWvn54LZrpjX5TfufZb1sJRg/export?format=csv&gid=0",
                     templates=RIO_BIRTHDAY_TEMPLATES,
                     storage_dir="data/rio/max/birthday",
                     people_source="rio_people_birthdays",
@@ -332,7 +329,6 @@ async def main() -> None:
                     chat_id="-72336909860345",
                 ),
                 WorkExperiencePlugin(
-                    csv_path="https://docs.google.com/spreadsheets/d/1QFdn6iAmc-krAIY75nDvWvn54LZrpjX5TfufZb1sJRg/export?format=csv&gid=1937147644",
                     templates_by_years=RIO_WORK_TEMPLATES,
                     storage_dir="data/rio/max/work",
                     people_source="rio_people_work",
@@ -482,7 +478,6 @@ async def main() -> None:
             name="MaxTestBot",
             plugins=[
                 # BirthdayPlugin(
-                #     csv_path="https://docs.google.com/spreadsheets/d/1EdBbNp8QLD04-TNl5uIYmk2NJaZCguyzTbGSnhp5ld4/export?format=csv&gid=0",
                 #     templates=RIO_BIRTHDAY_TEMPLATES,
                 #     storage_dir="data/testing/birthdayMax",
                 #     people_source="rio_people_birthdays",
@@ -491,7 +486,6 @@ async def main() -> None:
                 #     chat_id="-73548766634171",
                 # ),
                 # WorkExperiencePlugin(
-                #     csv_path="https://docs.google.com/spreadsheets/d/1EdBbNp8QLD04-TNl5uIYmk2NJaZCguyzTbGSnhp5ld4/export?format=csv&gid=1937147644",
                 #     templates_by_years=RIO_WORK_TEMPLATES,
                 #     storage_dir="data/testing/workMax",
                 #     people_source="rio_people_work",
@@ -603,7 +597,6 @@ async def main() -> None:
                 # CleverShmaPlugin(),
                 ComplimentPlugin(),
                 BirthdayPlugin(
-                    csv_path="https://docs.google.com/spreadsheets/d/1EdBbNp8QLD04-TNl5uIYmk2NJaZCguyzTbGSnhp5ld4/export?format=csv&gid=0",
                     templates=RIO_BIRTHDAY_TEMPLATES,
                     storage_dir="data/testing/birthday",
                     people_source="rio_people_birthdays",
@@ -614,7 +607,6 @@ async def main() -> None:
                     
                 ),
                 WorkExperiencePlugin(
-                    csv_path="https://docs.google.com/spreadsheets/d/1QFdn6iAmc-krAIY75nDvWvn54LZrpjX5TfufZb1sJRg/export?format=csv&gid=1937147644",
                     templates_by_years=RIO_WORK_TEMPLATES,
                     storage_dir="data/testing/work",
                     people_source="rio_people_work",
