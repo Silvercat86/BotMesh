@@ -610,8 +610,8 @@ async def main() -> None:
                     templates=RIO_BIRTHDAY_TEMPLATES,
                     storage_dir="data/testing/birthday",
                     people_source="clera_people",
-                    hour=7,
-                    minute=0,
+                    hour=14,
+                    minute=40,
                     dry_run=False,
                     chat_file="data/testing/birthday/chat.txt",
                     
@@ -619,9 +619,9 @@ async def main() -> None:
                 WorkExperiencePlugin(
                     templates_by_years=RIO_WORK_TEMPLATES,
                     storage_dir="data/testing/work",
-                    people_source="rio_people_work",
-                    hour=9,
-                    minute=0,
+                    people_source="clera_people",
+                    hour=14,
+                    minute=40,
                     dry_run=False,
                     chat_file="data/testing/birthday/chat.txt",
                 
@@ -737,7 +737,7 @@ async def main() -> None:
                         },
                         "clera_people": {
                             "name": "clera_people",
-                            "url": "https://docs.google.com/spreadsheets/d/1YtrOaUOudSsBRT5XDW0U62kE1qSXHdDplaE_xx_4oGM/export?format=csv&gid=1875323650",
+                            "url": "https://docs.google.com/spreadsheets/d/12DHRyjO2tyd90NPlFr1GKKe80hww-pwWMl3eaqEWYPM/export?format=csv&gid=1875323650",
                             "mode": "named",
                             "required_fields": ("fio",),
                             "fields_mapping": {
@@ -772,6 +772,7 @@ async def main() -> None:
                                 "stack": "Стэк",
 
                                 "phone": "Телефон",
+                                "username": "контакт ТГ",
                                 "telegram_contact": "контакт ТГ",
                                 "email": "почта",
                                 "emergency_contact": "контакт эккстреснгой свзяи",
@@ -797,7 +798,10 @@ async def main() -> None:
                 Action(name="birthday_test", func_name="birthday_test", scope="private", type=ActionType.COMMAND),
                 Action(name="birthday_chat_status", func_name="birthday_chat_status", scope="private", type=ActionType.COMMAND),
                 Action(name="user_join", func_name="handle_chat_member_join", scope="private", type=ActionType.CHAT_MEMBER_JOIN),
-                Action(name="register_chat", func_name="birthday_register_chat", scope="private", type=ActionType.COMMAND)
+                Action(name="register_birthday_chat", func_name="birthday_register_chat", scope="private", type=ActionType.COMMAND),
+                Action(name="work_test", func_name="work_test", scope="private", type=ActionType.COMMAND),
+                Action(name="work_chat_status", func_name="work_chat_status", scope="private", type=ActionType.COMMAND),
+                Action(name="register_work_chat", func_name="work_register_chat", scope="private", type=ActionType.COMMAND),
             ],
 
 

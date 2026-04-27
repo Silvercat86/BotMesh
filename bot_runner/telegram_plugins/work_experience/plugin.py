@@ -1,6 +1,8 @@
 # plugins/work_experience/plugin.py
 
 import asyncio
+from typing import Callable
+
 import logging
 from datetime import datetime,date
 from pathlib import Path
@@ -17,6 +19,10 @@ from telegram_plugins.work_experience.service import (
     save_state,
 )
 from maxapi.types import Command as MaxCommand
+
+from aiogram.exceptions import TelegramBadRequest, TelegramForbiddenError
+from html import escape
+
 
 
 
@@ -62,7 +68,100 @@ class WorkExperiencePlugin(BasePlugin):
         self.people_source = people_source
         self.column_map = column_map
 
+    def get_actions(self) -> dict[str, Callable]:
+        return {
+            "work_test": self.work_test,
+            "work_chat_status": self.work_chat_status,
+            "work_register_chat": self.register_chat,
+        }
 
+    async def register_chat(self, message: Message):
+        chat_id = message.chat.id
+
+        if self.chat_id and self.chat_id != chat_id:
+            self.log.warning(f"Received chat_id {chat_id} does not match configured chat_id {self.chat_id}")
+            return
+
+        self.chat_id = chat_id
+
+        if self.chat_file:
+            with open(self.chat_file, "w", encoding="utf-8") as f:
+                f.write(str(chat_id))
+
+        self.log.info(f"Registered chat_id {chat_id} for work notifications")
+    async def work_test(self, message: Message):
+            
+            args = message.text.split()
+            if len(args) < 2:
+                await self._send(message.chat.id, "Нужна дата YYYY-MM-DD")
+                return
+
+            from datetime import date
+
+            try:
+                d = date.fromisoformat(args[1])
+            except ValueError:
+                await self._send(message.chat.id, "Неверный формат даты")
+                return
+            
+            
+
+            await self._run_test(d, message.chat.id)
+
+    async def work_chat_status(self,message: Message):
+
+            
+
+        context = await self.api.get_context(message)
+
+            
+        self.log.info(context)
+        if message.chat.type != "private":
+            return
+
+        if not self.chat_id:
+            await self._send(message.chat.id, "❌ chat_id не задан")
+            return
+
+        self.log.info(f"Checking bot membership for chat_id={self.chat_id}")
+
+        bot = self.bot
+        try:
+            me = await bot.get_me()
+            member = await bot.get_chat_member(self.chat_id, me.id)
+
+            self.log.info(f"getChatMember OK: status={member.status}")
+
+            if member.status in ("member", "administrator","restricted"):
+                await self._send(
+                    message.chat.id,
+                    f"✅ Бот находится в чате\n"
+                    f"chat_id: `{self.chat_id}`\n"
+                    f"status: `{member.status}`",
+                )
+            else:
+                await self._send(
+                    message.chat.id,
+                    f"❌ Бот НЕ находится в чате\n"
+                    f"chat_id: `{self.chat_id}`\n"
+                    f"status: `{member.status}`",
+                )
+
+        except TelegramForbiddenError:
+            await self._send(
+                message.chat.id,
+                f"❌ Нет доступа к чату `{self.chat_id}`\n"
+                f"(бот не добавлен или был удалён)",
+            )
+
+
+        except TelegramBadRequest as e:
+            await self._send(
+                message.chat.id,
+                "❌ Ошибка проверки чата\n"
+                f"chat_id: <code>{self.chat_id}</code>\n"
+                f"<pre>{escape(str(e))}</pre>",
+            )
 
     # ---------------- SETUP ----------------
 
@@ -125,6 +224,7 @@ class WorkExperiencePlugin(BasePlugin):
             images_dir=self.images_dir,
             external_images_dir=self.external_images_dir,
         )
+        self.log.info(f"Built {len(payloads)} payloads for today {date.isoformat()}")
 
         for p in payloads:
             self._send(
@@ -141,6 +241,7 @@ class WorkExperiencePlugin(BasePlugin):
             images_dir=self.images_dir,
             external_images_dir=self.external_images_dir,
         )
+        self.log.info(f"Built {len(payloads)} payloads for test date {test_date.isoformat()}")
 
         for p in payloads:
             self.log.info(f"TEST PAYLOAD for {test_date.isoformat()} (photo: {p['photo']})")

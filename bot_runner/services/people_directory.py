@@ -450,6 +450,10 @@ class PeopleDirectoryService:
         if username.startswith("@"):
 
             return username.lstrip("@")
+        if username.startswith("https://t.me/"):
+
+            return username.split("https://t.me/")[1].rstrip("/")
+            
         
         return username
 

@@ -222,6 +222,7 @@ def build_payloads(
     payloads = []
 
     for p in people:
+        log.info(p.username)
         if not p.start_date:
             continue
         years = _calc_years(p.start_date, for_date)
