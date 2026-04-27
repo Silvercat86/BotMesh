@@ -609,7 +609,7 @@ async def main() -> None:
                 BirthdayPlugin(
                     templates=RIO_BIRTHDAY_TEMPLATES,
                     storage_dir="data/testing/birthday",
-                    people_source="rio_people_birthdays",
+                    people_source="clera_people",
                     hour=7,
                     minute=0,
                     dry_run=False,
@@ -646,7 +646,7 @@ async def main() -> None:
                     photo = "data/testing/march8/image.png"
                 ),
                 EmployeeInfoPlugin(
-                    sources=["rio_people"],
+                    sources=["clera_people"],
                     available_nicknames=["silvercat86","katyalay7"],
                     available_chats=["test"],
                     scope_chats=[-4898624653]
@@ -735,6 +735,59 @@ async def main() -> None:
                                 "photo_url": "фото для поздравления",
                             }
                         },
+                        "clera_people": {
+                            "name": "clera_people",
+                            "url": "https://docs.google.com/spreadsheets/d/1YtrOaUOudSsBRT5XDW0U62kE1qSXHdDplaE_xx_4oGM/export?format=csv&gid=1875323650",
+                            "mode": "named",
+                            "required_fields": ("fio",),
+                            "fields_mapping": {
+
+                                "fio": "ФИО",
+                                "status": "Статус",
+                                "position": "Должность",
+
+                                "employment": "Занятость",
+                                "employment_type": "формат трудоустройства",
+                                "engagement": "Вовлеченность",
+                                "zone": "Зона",
+                                "risk": "Риск ухода",
+                                "comments": "комментарии",
+
+                                "start_date": "дата выхода",
+                                "current_date": "текущая дата",
+                                "probation_end": "окончание ИС",
+                                "birthday": "День рождения",
+
+                                "resume": "Резюме",
+                                "offer": "Оффер",
+                                "employee_card": "Карточка сотрудника",
+
+                                "last_heat": "Дата последней  тепловой с Заботой",
+                                "next_heat": "Дата след тепловой",
+                                "last_1to1": "Дата 1 to 1 с рук",
+                                "next_1to1": "Дата след 1 to 1 с рук",
+                                "one_to_one_notes": "1 to 1",
+
+                                "gender": "пол",
+                                "stack": "Стэк",
+
+                                "phone": "Телефон",
+                                "telegram_contact": "контакт ТГ",
+                                "email": "почта",
+                                "emergency_contact": "контакт эккстреснгой свзяи",
+
+                                "welcome_training": "Вэлком тренинг",
+                                "salary": "Зарплата-ставка",
+                                "social_package": "доступный соц пакет",
+                                "salary_changes": "изменения по зп",
+
+                                "children": "дети",
+                                "address": "адрес проживания",
+
+                                "extra_comments": "Комментарии",
+                            }
+                        },
+
 
                     },
                     cache_ttl=300,
@@ -744,7 +797,9 @@ async def main() -> None:
                 Action(name="birthday_test", func_name="birthday_test", scope="private", type=ActionType.COMMAND),
                 Action(name="birthday_chat_status", func_name="birthday_chat_status", scope="private", type=ActionType.COMMAND),
                 Action(name="user_join", func_name="handle_chat_member_join", scope="private", type=ActionType.CHAT_MEMBER_JOIN),
+                Action(name="register_chat", func_name="birthday_register_chat", scope="private", type=ActionType.COMMAND)
             ],
+
 
         )
         await test_bot_instance.init_plugins()

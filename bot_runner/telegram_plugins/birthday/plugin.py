@@ -81,8 +81,23 @@ class BirthdayPlugin(BasePlugin):
         return {
             "birthday_test": self.birthday_test,
             "birthday_chat_status": self.birthday_chat_status,
+            "birthday_register_chat": self.register_chat,
         }
-    
+    async def register_chat(self, message: Message):
+        chat_id = message.chat.id
+
+        if self.chat_id and self.chat_id != chat_id:
+            self.log.warning(f"Received chat_id {chat_id} does not match configured chat_id {self.chat_id}")
+            return
+
+        self.chat_id = chat_id
+
+        if self.chat_file:
+            with open(self.chat_file, "w", encoding="utf-8") as f:
+                f.write(str(chat_id))
+
+        self.log.info(f"Registered chat_id {chat_id} for birthday notifications")
+
 
     async def birthday_test(self, message: Message):
             

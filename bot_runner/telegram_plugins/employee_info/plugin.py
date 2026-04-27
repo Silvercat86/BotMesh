@@ -49,7 +49,7 @@ class EmployeeInfoPlugin(BasePlugin):
         self.scope_chats = scope_chats
         self.required_services = ("people",)
 
-  
+    
 
     def search_people(self, people, query):
 
@@ -222,29 +222,7 @@ class EmployeeInfoPlugin(BasePlugin):
                     print(f"{p.source} {i} {p.fio} {p.username}")
                 results.extend(result_people)
 
-            # people_threeit = self.services.people.get_people("threeit_people")
-
             
-           
-
-
-            # people_rio = self.services.people.get_people("rio_people")
-
-            # new_rio_people = self.services.people.get_people("rio_people_new")
-
-
-            # for i, p in enumerate(people_threeit):
-            #     print(f"3IT {i}: {p.fio} ({p.username})")
-
-            # for i, p in enumerate(people_rio):
-            #     print(f"RIO {i}: {p.fio} ({p.username})")
-
-           
-
-            # results = (
-            #     self.search_people(people_threeit, query)
-            #     + self.search_people(people_rio, query)
-            # )
 
             
 

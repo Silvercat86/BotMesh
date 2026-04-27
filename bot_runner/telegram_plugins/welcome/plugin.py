@@ -47,7 +47,7 @@ class WelcomePlugin(BasePlugin):
 
             user = event.user
             chat_id = event.chat_id
-            user_id = user.user_id  # ← ВАЖНО
+            user_id = user.user_id 
 
         else:
             return
@@ -67,34 +67,6 @@ class WelcomePlugin(BasePlugin):
                 level=logging.INFO,
                 format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
             )
-        # # 1) Service-message: new_chat_members (может работать без админки)
-        # @self.router.message(F.new_chat_members)
-        # async def greet_via_new_chat_members(message: Message):
-        #     if not message.new_chat_members:
-        #         return
-
-        #     for user in message.new_chat_members:
-        #         if user.is_bot:
-        #             continue
-        #         if not self._mark_once(message.chat.id, user.id):
-        #             print(f"Suppressed welcome for {user.id} in chat {message.chat.id}")
-        #             continue
-        #         await self._send_welcome(chat_id=message.chat.id, user=user)
-
-        # # 2) ChatMemberUpdated (часто требует админку, но более надёжно)
-        # @self.router.chat_member()
-        # async def greet_via_chat_member(event: ChatMemberUpdated):
-        #     old = event.old_chat_member.status
-        #     new = event.new_chat_member.status
-
-        #     if old in ("left", "kicked") and new in ("member", "administrator"):
-        #         user = event.new_chat_member.user
-        #         if user.is_bot:
-        #             return
-        #         if not self._mark_once(event.chat.id, user.id):
-        #             print(f"Suppressed welcome for {user.id} in chat {event.chat.id}")
-        #             return
-        #         await self._send_welcome(chat_id=event.chat.id, user=user)
 
     # ---------------- DEDUPE ----------------
 
