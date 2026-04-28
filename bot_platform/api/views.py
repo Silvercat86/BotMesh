@@ -34,7 +34,6 @@ def get_context(request):
         )
 
         role = None
-        company = chat.company
         admin = user.admin
         admin_level = admin.level if admin else None
 
@@ -48,7 +47,7 @@ def get_context(request):
             "id": user.id,
             "telegram_id": user.telegram_id,
             "username": user.username,
-            "admin" : admin_level if admin else None
+            "admin" : admin_level
 
         },
         "chat": {
@@ -75,13 +74,7 @@ def upsert_user(user_data):
             user.username = username
             changed_fields.append("username")
 
-        if user.first_name != user_data.get("first_name"):
-            user.first_name = user_data.get("first_name")
-            changed_fields.append("first_name")
-
-        if user.last_name != user_data.get("last_name"):
-            user.last_name = user_data.get("last_name")
-            changed_fields.append("last_name")
+       
 
         if changed_fields:
             user.save(update_fields=changed_fields)
@@ -99,14 +92,10 @@ def upsert_user(user_data):
         user.telegram_id = telegram_id
         user.is_placeholder = False
 
-        user.first_name = user_data.get("first_name")
-        user.last_name = user_data.get("last_name")
-
+        
         user.save(update_fields=[
             "telegram_id",
             "is_placeholder",
-            "first_name",
-            "last_name"
         ])
 
         return user, False
@@ -114,6 +103,4 @@ def upsert_user(user_data):
     return TelegramUser.objects.create(
         telegram_id=telegram_id,
         username=username,
-        first_name=user_data.get("first_name"),
-        last_name=user_data.get("last_name"),
     ), True

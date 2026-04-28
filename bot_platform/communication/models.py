@@ -1,12 +1,18 @@
 from django.db import models
 from accounts.models import TelegramUser
 
+class Platform(models.TextChoices):
+    TELEGRAM = "telegram"
+    MAX = "max"
+
 class Chat(models.Model):
     class Type(models.TextChoices):
         PRIVATE = "private"
         GROUP = "group"
 
-    telegram_id = models.BigIntegerField(unique=True)
+    chat_id = models.BigIntegerField(unique=True)
+
+    platform = models.CharField(max_length=20, choices=Platform.choices)
 
     type = models.CharField(max_length=20,choices=Type.choices)
     title = models.CharField(max_length=255, null=True, blank=True)
@@ -14,10 +20,7 @@ class Chat(models.Model):
 
 
 class Notification(models.Model):
-    class Channel(models.TextChoices):
-        TELEGRAM = "telegram"
-        EMAIL = "email"
-        SYSTEM = "system"
+    
 
     class Type(models.TextChoices):
         BIRTHDAY = "birthday"
@@ -29,7 +32,7 @@ class Notification(models.Model):
     type = models.CharField(max_length=50,choices=Type.choices)
     payload = models.JSONField()
 
-    channel = models.CharField(max_length=20, choices=Channel.choices)
+    platform = models.CharField(max_length=20, choices=Platform.choices)
 
     send_at = models.DateTimeField()
 
@@ -47,23 +50,11 @@ class Notification(models.Model):
 
 
 class Template(models.Model):
-    code = models.CharField(max_length=100)  # "offer_send", "birthday_1"
+    code = models.CharField(max_length=100)
 
     text = models.TextField()
 
 
-
-
-
-class BotSession(models.Model):
-    user = models.OneToOneField(TelegramUser, on_delete=models.CASCADE)
-
-    state = models.CharField(max_length=100)
-    data = models.JSONField(default=dict)
-
-    updated_at = models.DateTimeField(auto_now=True)
-
-    
 
 
 class ChatMembership(models.Model):
@@ -77,7 +68,13 @@ class ChatMembership(models.Model):
 
 
 class Bot(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    platform = models.CharField(max_length=20, choices=Platform.choices)
+
+    plugins = models.JSONField(default=list)
+    services = models.JSONField(default=list)
+
     token = models.CharField(max_length=255)
     api_key = models.CharField(max_length=255, unique=True)
 
-    is_active = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=False)
