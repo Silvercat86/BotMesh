@@ -33,7 +33,6 @@ def get_context(request):
             }
         )
 
-        membership = None
         role = None
         company = chat.company
         admin = user.admin
@@ -56,13 +55,7 @@ def get_context(request):
             "id": chat.id,
             "telegram_id": chat.telegram_id,
         },
-        "company": (
-            {
-                "id": company.id,
-                "name": company.name
-            } if company else None
-        ),
-        "role": role,
+        
         "permissions": resolve_permissions(role)
     })
 

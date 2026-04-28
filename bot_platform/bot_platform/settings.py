@@ -62,9 +62,7 @@ INSTALLED_APPS = [
     'rest_framework',
 
     'accounts',
-    'candidates',
     'communication',
-    'companies',
     'events',
     'api',
 ]
