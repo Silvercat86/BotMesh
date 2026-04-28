@@ -24,7 +24,7 @@ from maxapi.types.attachments.buttons.button import Button
 from maxapi.types.attachments.buttons.message_button import MessageButton
 from maxapi.types import CallbackButton, MessageCreated, MessageCallback
 from maxapi.enums.button_type import ButtonType
-from maxapi.utils.inline_keyboard import InlineKeyboardBuilder
+from maxapi.utils.inline_keyboard import InlineKeyboardBuilder as MaxInlineKeyboardBuilder
 from maxapi.context import MemoryContext, StatesGroup as MaxStateGroup, State as MaxState
 from maxapi.types import Command as MaxCommand
 from maxapi.enums.format import Format
@@ -97,6 +97,27 @@ class EmployeeInfoPlugin(BasePlugin):
 
 🔥 Риск ухода: {p.risk or "—"}
 📍 Зона: {p.zone or "—"}
+
+🫱 Последняя тепловая: {p.last_heat or "—"}
+📅 Следующая тепловая: {p.next_heat or "—"}
+
+👥 Последний 1-to-1: {p.last_1to1 or "—"}
+📅 Следующий 1-to-1: {p.next_1to1 or "—"}
+"""
+        elif p.source == "clera_people":
+            return f"""
+Сотрудник найден в базе Clera:
+<b>{p.fio}</b>
+
+📊 Статус: {p.status or "—"}
+💼 Должность: {p.position or "—"}
+
+📞 Телефон: {p.phone or "—"}
+💬 TG: @{p.username if p.username else "—"}
+✉️ Почта: {p.email or "—"}
+
+📅 Дата выхода: {p.start_date or "—"}
+🎂 День рождения: {p.birthday or "—"}
 
 🫱 Последняя тепловая: {p.last_heat or "—"}
 📅 Следующая тепловая: {p.next_heat or "—"}
@@ -219,7 +240,7 @@ class EmployeeInfoPlugin(BasePlugin):
                 people = self.services.people.get_people(source)
                 result_people = self.search_people(people,query)
                 for i,p in enumerate(people):
-                    print(f"{p.source} {i} {p.fio} {p.username}")
+                    self.log.info(f"{p.source} {i} {p.fio} {p.username}")
                 results.extend(result_people)
 
             
@@ -254,9 +275,12 @@ class EmployeeInfoPlugin(BasePlugin):
 
                 birthday = getattr(p, "birthday", None)
 
-                print(p.source)
-
-                source = "3IT" if p.source == "threeit_people" else "RIO"
+                sources = {
+                    "threeit_people": "3IT",
+                    "rio_people": "RIO",
+                    "clera_people": "Clera"
+                }
+                source = sources.get(p.source, p.source)
 
                 button_text = f"{p.fio} {f"— {birthday}" if birthday else ''} ({source})"
 
@@ -379,11 +403,17 @@ class EmployeeInfoPlugin(BasePlugin):
                 
                 results = results[:5]
 
-                builder = InlineKeyboardBuilder()
+                builder = MaxInlineKeyboardBuilder()
 
                 for i, p in enumerate(results):
                     birthday = getattr(p, "birthday", None)
-                    source = "3IT" if p.source == "threeit_people" else "RIO"
+
+                    sources = {
+                        "threeit_people": "3IT",
+                        "rio_people": "RIO",
+                        "clera_people": "Clera"
+                    }
+                    source = sources.get(p.source, p.source)
 
                     text = f"{p.fio} {f'— {birthday}' if birthday else ''} ({source})"
 
