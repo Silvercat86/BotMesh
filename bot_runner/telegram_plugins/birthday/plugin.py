@@ -44,8 +44,6 @@ class BirthdayPlugin(BasePlugin):
     ):
         super().__init__()
 
-        self.name = "birthday"
-
         self.required_services = ("people",)
 
         
@@ -203,6 +201,8 @@ class BirthdayPlugin(BasePlugin):
         if not self.chat_id:
             state = await self._load_state()
             self.chat_id = state.get("chat_id")
+
+        self.log.info(f"Using chat_id {self.chat_id} from config or state")
 
         if self.chat_id:
             self.log.info(f"Using chat_id {self.chat_id} from config or state")

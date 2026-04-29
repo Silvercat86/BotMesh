@@ -143,7 +143,7 @@ class MaxBotInstance(BotInstance):
            
             plugin.dp = self.dp
         
-            plugin.setup()
+            await plugin.setup()
 
         self._register_actions()
 

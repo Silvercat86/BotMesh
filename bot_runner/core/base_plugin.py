@@ -25,6 +25,7 @@ class BasePlugin:
 
     async def _load_state(self) -> dict:
         response = await self.api.load_plugin_state(self.name)
+        self.log.info(f"load_plugin_state response: {self.name}")
         if response.get("status") == "success":
             return response.get("state") or self.default_state.copy()
         else:
@@ -32,6 +33,7 @@ class BasePlugin:
             return self.default_state.copy()
     async def _save_state(self, state: dict):
         response = await self.api.save_plugin_state(self.name, state)
+        self.log.info(f"save_plugin_state response: {self.name}")
         if response.get("status") != "success":
             self.log.error(f"Failed to save state for plugin {self.name}: {response}")
         return response
