@@ -45,6 +45,8 @@ class BirthdayPlugin(BasePlugin):
     ):
         super().__init__()
 
+        self.name = "birthday"
+
         self.required_services = ("people",)
 
         
@@ -124,8 +126,14 @@ class BirthdayPlugin(BasePlugin):
 
         context = await self.api.get_context(message)
 
+        state = load_state(self.state_path)
+
+
+        response = await self.api.save_plugin_state(self.name,state)
+        self.log.info(f"save_plugin_state response: {response}")
+
+
             
-        self.log.info(context)
         if message.chat.type != "private":
             return
 
