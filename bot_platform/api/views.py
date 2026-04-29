@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from django.db import transaction
 
 from accounts.models import TelegramUser
-from communication.models import Bot, Chat, ChatMembership
+from communication.models import Bot, Chat, ChatMembership,PluginState
 
 @api_view(["POST"])
 def save_data(request):
@@ -72,12 +72,24 @@ def save_plugin_state(request):
     state = request.data.get("state")
     bot : Bot | None = getattr(request, "bot", None)
 
-    if not plugin_name or state is None:
-        return Response({"error": "plugin and state required"}, status=400)
+    if not plugin_name:
+        return Response({"error": "plugin required"}, status=400)
 
-    print(f"Saving state for bot {bot.name if bot else 'unknown'} for plugin {plugin_name}: {state}")
+    if state is None:
+        return Response({"error": "state required"}, status=400)
 
-    return Response(state)
+    for key, value in state.items():
+        PluginState.objects.update_or_create(
+            bot=bot,
+            plugin_code=plugin_name,
+            key=key,
+            defaults={"value": value},
+        )
+
+    states = PluginState.objects.filter(bot=bot, plugin_code=plugin_name)
+    state_dict = {state.key: state.value for state in states}
+    print(f"Saved state for bot {bot.name if bot else 'unknown'} for plugin {plugin_name}: {state_dict}")
+    return Response({"status": "success", "state": state_dict})
 
 @api_view(["GET"])
 def load_plugin_state(request):
@@ -89,10 +101,10 @@ def load_plugin_state(request):
 
     print(f"Loading state for bot {bot.name if bot else 'unknown'} for plugin {plugin_name}")
 
-    example_state = {
-        "example_key": "example_value"
-    }
-    return Response(example_state)
+    states = PluginState.objects.filter(bot=bot, plugin_code=plugin_name)
+    state_dict = {state.key: state.value for state in states}
+    print(f"Loaded state for bot {bot.name if bot else 'unknown'} for plugin {plugin_name}: {state_dict}")
+    return Response({"status": "success", "state": state_dict})
 
 def upsert_user(user_data):
     telegram_id = user_data["id"]

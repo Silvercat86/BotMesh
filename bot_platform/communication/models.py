@@ -78,3 +78,21 @@ class Bot(models.Model):
     api_key = models.CharField(max_length=255, unique=True)
 
     is_active = models.BooleanField(default=False)
+
+
+class PluginState(models.Model):
+    bot = models.ForeignKey(Bot, on_delete=models.CASCADE)
+
+    plugin_code = models.CharField(max_length=100)
+
+    key = models.CharField(max_length=255)
+
+    value = models.JSONField(default=dict)
+
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ("bot", "plugin_code", "key")
+        indexes = [
+            models.Index(fields=["bot", "plugin_code", "key"]),
+        ]
