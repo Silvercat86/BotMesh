@@ -20,26 +20,8 @@ log = logging.getLogger("work_experience")
 
 # ================= STATE =================
 
-def load_state(state_path: Path) -> Dict:
-    state_path.parent.mkdir(parents=True, exist_ok=True)
-    if state_path.exists():
-        try:
-            return json.loads(state_path.read_text(encoding="utf-8"))
-        except Exception as e:
-            log.info(f"Error with loading state {e}")
-    else:
-        log.info("state path doesnt exist")
-
-    
-
-    return {
-        "last_sent_for_date": "",
-        "last_image_index": -1,
-    }
 
 
-def save_state(state_path: Path, state: Dict):
-    state_path.write_text(json.dumps(state, ensure_ascii=False, indent=2))
 
 
 # ================= DATA =================
@@ -212,12 +194,11 @@ def load_people(csv_path, column_map: dict) -> List[Person]:
 def build_payloads(
     for_date: date,
     people: List[Person],
-    state_path: Path,
+    state: Dict,
     templates_by_years: Dict,
     images_dir: Path,
     external_images_dir: Path,
 ):
-    state = load_state(state_path)
     log.info(f"Building payloads for {for_date.isoformat()} with {len(people)} people, state: {state}")
     payloads = []
 
@@ -261,7 +242,6 @@ def build_payloads(
             "text": text,
             "photo": str(photo) if photo else None,
         })
-    save_state(state_path, state)
 
     return payloads
 

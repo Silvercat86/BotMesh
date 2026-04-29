@@ -98,7 +98,7 @@ class ComplimentPlugin(BasePlugin):
         return {
             "compliment": self.send_compliment,
         }
-    def setup(self):
+    async def setup(self):
         pass
 
     async def send_compliment(self, chat_id: int):

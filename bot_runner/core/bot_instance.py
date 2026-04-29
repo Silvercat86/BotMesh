@@ -83,7 +83,7 @@ class TelegramBotInstance(BotInstance):
 
             
 
-            plugin.setup()
+            await plugin.setup()
 
             self.dp.include_router(plugin.router)
         self._register_actions()

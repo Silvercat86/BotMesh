@@ -13,7 +13,7 @@ class StartPlugin(BasePlugin):
 
 
 
-    def setup(self):
+    async def setup(self):
         
         self.log = logging.getLogger(f"[{self.bot_name}] work_experience")
         if not self.log.handlers:

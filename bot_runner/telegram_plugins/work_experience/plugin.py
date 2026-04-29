@@ -14,9 +14,7 @@ from aiogram.types import Message, FSInputFile
 from core.base_plugin import BasePlugin
 from telegram_plugins.work_experience.service import (
     today_almaty,
-    load_state,
     build_payloads,
-    save_state,
 )
 from maxapi.types import Command as MaxCommand
 
@@ -63,6 +61,11 @@ class WorkExperiencePlugin(BasePlugin):
 
         self.images_dir.mkdir(parents=True, exist_ok=True)
         self.external_images_dir.mkdir(parents=True, exist_ok=True)
+
+        self.default_state = {
+            "last_sent_for_date": "",
+            "last_image_index": -1,
+        }
 
         
         self.people_source = people_source
@@ -165,7 +168,7 @@ class WorkExperiencePlugin(BasePlugin):
 
     # ---------------- SETUP ----------------
 
-    def setup(self):
+    async def setup(self):
 
         self.log = logging.getLogger(f"[{self.bot_name}] work_experience")
         if not self.log.handlers:
@@ -216,15 +219,17 @@ class WorkExperiencePlugin(BasePlugin):
     async def _run_today(self):
         date = today_almaty()
 
+        state = await self._load_state()
+
         payloads = build_payloads(
             for_date=date,
             people=self.services.people.get_people(self.people_source),
-            state_path=self.state_path,
+            state=state,
             templates_by_years=self.templates_by_years,
             images_dir=self.images_dir,
             external_images_dir=self.external_images_dir,
         )
-        self.log.info(f"Built {len(payloads)} payloads for today {date.isoformat()}")
+        self.log.info(f"Built {len(payloads)} payloads for today {date.isoformat()})")
 
         for p in payloads:
             self._send(
@@ -233,15 +238,16 @@ class WorkExperiencePlugin(BasePlugin):
             p["photo"],
         )
     async def _run_test(self, test_date: date, chat_id: int):
+        state = await self.default_state.copy()
         payloads = build_payloads(
             for_date=test_date,
             people=self.services.people.get_people(self.people_source),
-            state_path=self.state_path,
+            state=state,
             templates_by_years=self.templates_by_years,
             images_dir=self.images_dir,
             external_images_dir=self.external_images_dir,
         )
-        self.log.info(f"Built {len(payloads)} payloads for test date {test_date.isoformat()}")
+        self.log.info(f"Built {len(payloads)} payloads for test date {test_date.isoformat()})")
 
         for p in payloads:
             self.log.info(f"TEST PAYLOAD for {test_date.isoformat()} (photo: {p['photo']})")
@@ -252,7 +258,6 @@ class WorkExperiencePlugin(BasePlugin):
         )
 
 
-    # ---------------- SEND ----------------
 
     
 
@@ -267,7 +272,7 @@ class WorkExperiencePlugin(BasePlugin):
             await asyncio.sleep(60)
 
     async def _catch_up_if_needed(self):
-        state = load_state(self.state_path)
+        state = await self._load_state()
         self.log.info(f"Current state: {state}")
 
         today = today_almaty()
