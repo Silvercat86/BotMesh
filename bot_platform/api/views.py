@@ -1,22 +1,27 @@
+from django.utils import timezone
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from django.db import transaction
 
 from accounts.models import TelegramUser
-from communication.models import Chat
+from communication.models import Bot, Chat, ChatMembership
 
-def resolve_permissions(role):
-    return {
-        "can_manage_company": role in ["hr"],
-        "can_manage_employees": role in ["hr", "manager"],
-        "can_manage_offers": role in ["hr", "manager"],
-    }
+@api_view(["POST"])
+def save_data(request):
+    bot : Bot | None = getattr(request, "bot", None)
+    data = request.data.get("data", {})
+    print(f"Data received from bot {bot.name if bot else 'unknown'}: {data}")
+    return Response({"status": "success"})
 
 
 @api_view(["POST"])
 def get_context(request):
     user_data = request.data.get("user")
     chat_data = request.data.get("chat")
+
+    bot : Bot | None = getattr(request, "bot", None)
+    if bot:
+        print(f"Context request for bot {bot.name} (api_key={bot.api_key})")
 
     if not user_data or not chat_data:
         return Response({"error": "user and chat required"}, status=400)
@@ -25,17 +30,19 @@ def get_context(request):
 
         user, _ = upsert_user(user_data)
 
-        chat, _ = Chat.objects.update_or_create(
-            telegram_id=chat_data["id"],
+        chat, _ = upsert_chat(chat_data)
+        admin_level = user.admin_level
+
+
+        ChatMembership.objects.update_or_create(
+            user=user,
+            chat=chat,
             defaults={
-                "type": chat_data.get("type"),
-                "title": chat_data.get("title"),
+                "joined_at": timezone.now()
             }
         )
 
-        role = None
-        admin = user.admin
-        admin_level = admin.level if admin else None
+        
 
 
 
@@ -52,12 +59,40 @@ def get_context(request):
         },
         "chat": {
             "id": chat.id,
-            "telegram_id": chat.telegram_id,
+            "telegram_id": chat.chat_id,
+            "type": chat.type,
+            "title": chat.title,
         },
-        
-        "permissions": resolve_permissions(role)
     })
 
+
+@api_view(["POST"])
+def save_plugin_state(request):
+    plugin_name = request.data.get("plugin")
+    state = request.data.get("state")
+    bot : Bot | None = getattr(request, "bot", None)
+
+    if not plugin_name or state is None:
+        return Response({"error": "plugin and state required"}, status=400)
+
+    print(f"Saving state for bot {bot.name if bot else 'unknown'} for plugin {plugin_name}: {state}")
+
+    return Response(state)
+
+@api_view(["GET"])
+def load_plugin_state(request):
+    plugin_name = request.query_params.get("plugin")
+    bot : Bot | None = getattr(request, "bot", None)
+
+    if not plugin_name:
+        return Response({"error": "plugin required"}, status=400)
+
+    print(f"Loading state for bot {bot.name if bot else 'unknown'} for plugin {plugin_name}")
+
+    example_state = {
+        "example_key": "example_value"
+    }
+    return Response(example_state)
 
 def upsert_user(user_data):
     telegram_id = user_data["id"]
@@ -104,3 +139,37 @@ def upsert_user(user_data):
         telegram_id=telegram_id,
         username=username,
     ), True
+
+
+def upsert_chat(chat_data):
+    telegram_id = chat_data["id"]
+    chat_type = chat_data.get("type")
+    title = chat_data.get("title")
+
+    chat = Chat.objects.filter(
+        chat_id=telegram_id
+    ).first()
+
+    if chat:
+        changed_fields = []
+
+        if chat.type != chat_type:
+            chat.type = chat_type
+            changed_fields.append("type")
+
+        if chat.title != title:
+            chat.title = title
+            changed_fields.append("title")
+
+        if changed_fields:
+            chat.save(update_fields=changed_fields)
+
+        return chat, False
+    
+    return Chat.objects.create(
+        chat_id=telegram_id,
+        type=chat_type,
+        title=title,
+    ), True
+
+    

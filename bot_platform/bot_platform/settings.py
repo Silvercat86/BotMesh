@@ -168,13 +168,13 @@ LOGGING = {
     "loggers": {
         "django.request": {
             "handlers": ["console"],
-            "level": "DEBUG",
+            "level": "ERROR",
+            "propagate": True,
         },
-    },
-    "loggers": {
         "django.security.csrf": {
             "handlers": ["console"],
             "level": "DEBUG",
+            "propagate": True,
         },
     },
 }

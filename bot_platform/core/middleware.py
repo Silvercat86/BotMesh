@@ -17,7 +17,7 @@ class ApiKeyMiddleware:
             return JsonResponse({"error": "missing api key"}, status=401)
 
         try:
-            bot = Bot.objects.select_related("company").get(
+            bot = Bot.objects.get(
                 api_key=api_key,
                 is_active=True,
             )
@@ -25,6 +25,5 @@ class ApiKeyMiddleware:
             return JsonResponse({"error": "invalid api key"}, status=401)
 
         request.bot = bot
-        request.company = bot.company
 
         return self.get_response(request)
