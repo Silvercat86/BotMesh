@@ -33,9 +33,7 @@ class WorkExperiencePlugin(BasePlugin):
         column_map: dict = None,
         hour: int = 9,
         minute: int = 0,
-        dry_run: bool = False,
         chat_id: int | None = None,
-        chat_file: str | None = None,
     ):
         super().__init__()
 
@@ -46,10 +44,8 @@ class WorkExperiencePlugin(BasePlugin):
 
         self.hour = hour
         self.minute = minute
-        self.dry_run = dry_run
 
         self.chat_id = chat_id
-        self.chat_file = Path(chat_file) if chat_file else None
 
         # --- storage isolation ---
         self.storage_dir = Path(storage_dir)
@@ -87,9 +83,7 @@ class WorkExperiencePlugin(BasePlugin):
 
         self.chat_id = chat_id
 
-        if self.chat_file:
-            with open(self.chat_file, "w", encoding="utf-8") as f:
-                f.write(str(chat_id))
+        await self._save_state({"chat_id": chat_id})
 
         self.log.info(f"Registered chat_id {chat_id} for work notifications")
     async def work_test(self, message: Message):
@@ -177,44 +171,20 @@ class WorkExperiencePlugin(BasePlugin):
                 format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
             )
 
-        if self.chat_file and not self.chat_id:
-            self.chat_id = self._load_chat_id_from_file()
-
-
-        @self.router.message(Command("register_work_chat"))
-        async def register_chat(message: Message):
-            if self.chat_file:
-                self.chat_file.parent.mkdir(parents=True, exist_ok=True)
-                self.chat_file.write_text(str(message.chat.id), encoding="utf-8")
-                await message.reply("Чат зарегистрирован для стажа.")
+        if not self.chat_id:
+            state = await self._load_state()
+            self.chat_id = state.get("chat_id")
+            if self.chat_id:
+                self.log.info(f"Using chat_id {self.chat_id} from server")
             else:
-                await message.reply("Файл чатов не настроен.")
+            
+                self.log.warning("No chat_id configured, birthday notifications will not be sent until a chat is registered")
+
+        else:
+            self.log.info(f"Using chat_id {self.chat_id} from config")
+
 
         
-
-        @self.router.message(Command("work_test"))
-        async def work_test(message: Message):
-            args = message.text.split()
-
-            if len(args) < 2:
-                await message.reply("Нужна дата YYYY-MM-DD")
-                return
-
-            try:
-                d = date.fromisoformat(args[1])
-            except ValueError:
-                await message.reply("Неверный формат даты")
-                return
-            await self._run_test(d, message.chat.id)
-
-        asyncio.create_task(self._schedule_loop())
-
-    def _send(self, chat_id, text, photo=None):
-        asyncio.create_task(
-            self.adapter.send(chat_id, text, photo)
-        )
-
-    # ---------------- RUN ----------------
 
     async def _run_today(self):
         date = today_almaty()
@@ -229,7 +199,8 @@ class WorkExperiencePlugin(BasePlugin):
             images_dir=self.images_dir,
             external_images_dir=self.external_images_dir,
         )
-        self.log.info(f"Built {len(payloads)} payloads for today {date.isoformat()})")
+
+        await self._save_state(state)
 
         for p in payloads:
             self._send(
@@ -247,7 +218,6 @@ class WorkExperiencePlugin(BasePlugin):
             images_dir=self.images_dir,
             external_images_dir=self.external_images_dir,
         )
-        self.log.info(f"Built {len(payloads)} payloads for test date {test_date.isoformat()})")
 
         for p in payloads:
             self.log.info(f"TEST PAYLOAD for {test_date.isoformat()} (photo: {p['photo']})")

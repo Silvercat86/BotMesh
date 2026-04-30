@@ -38,9 +38,7 @@ class BirthdayPlugin(BasePlugin):
 
         hour: int = 9,
         minute: int = 0,
-        dry_run: bool = False,
         chat_id: str | None = None,
-        chat_file: str | None = None,
     ):
         super().__init__()
 
@@ -52,10 +50,8 @@ class BirthdayPlugin(BasePlugin):
 
         self.hour = hour
         self.minute = minute
-        self.dry_run = dry_run
 
         self.chat_id = chat_id
-        self.chat_file = Path(chat_file) if chat_file else None
 
         self.storage_dir = Path(storage_dir)
         self.storage_dir.mkdir(parents=True, exist_ok=True)
@@ -75,6 +71,7 @@ class BirthdayPlugin(BasePlugin):
             "last_template_index": -1,
             "last_sent_for_date": "",
             "last_image_index": -1,
+            "chat_id":-1,
         }
 
         self._schedule_task = None
@@ -96,9 +93,7 @@ class BirthdayPlugin(BasePlugin):
 
         self.chat_id = chat_id
 
-        if self.chat_file:
-            with open(self.chat_file, "w", encoding="utf-8") as f:
-                f.write(str(chat_id))
+        await self._save_state({"chat_id": chat_id})
 
         self.log.info(f"Registered chat_id {chat_id} for birthday notifications")
 
@@ -198,16 +193,25 @@ class BirthdayPlugin(BasePlugin):
         self.log.info(self.chat_id)
        
 
-        if not self.chat_id:
-            state = await self._load_state()
-            self.chat_id = state.get("chat_id")
-
-        self.log.info(f"Using chat_id {self.chat_id} from config or state")
-
+        
+        state = await self._load_state()
+        chat_id_from_server = state.get("chat_id")
         if self.chat_id:
-            self.log.info(f"Using chat_id {self.chat_id} from config or state")
+            self.log.info(f"Using chat_id from config {self.chat_id}")
+            if chat_id_from_server != self.chat_id:
+                self.log.info(f"Server chat id was different,applying new value : {self.chat_id} , old value : {chat_id_from_server}")
+                await self._save_state({"chat_id":self.chat_id})
         else:
-            self.log.warning("No chat_id configured, birthday notifications will not be sent until a chat is registered")
+            if chat_id_from_server != -1:
+                self.chat_id = chat_id_from_server
+                self.log.info(f"Using chat_id from server {chat_id_from_server}")
+            else:
+                self.log.warning("No chat_id configured, birthday notifications will not be sent until a chat is registered")
+
+
+            
+
+        
 
         self._schedule_task = asyncio.create_task(self._schedule_loop())
 
@@ -238,6 +242,7 @@ class BirthdayPlugin(BasePlugin):
             images_dir=self.images_dir,
             external_images_dir=self.external_images_dir,
         )
+
         await self._save_state(state)
 
         for p in payloads:
@@ -246,7 +251,7 @@ class BirthdayPlugin(BasePlugin):
 
     async def _run_test(self, test_date, chat_id: int):
         
-        state = await self.default_state.copy()
+        state = self.default_state.copy()
 
         self.log.info(f"Loaded state: {state}")
 

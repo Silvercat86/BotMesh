@@ -27,7 +27,11 @@ class BasePlugin:
         response = await self.api.load_plugin_state(self.name)
         self.log.info(f"load_plugin_state response: {self.name}")
         if response.get("status") == "success":
-            return response.get("state") or self.default_state.copy()
+            state = response.get("state")
+            if not state:
+                state = self.default_state.copy()
+                await self._save_state(state)
+            return state
         else:
             self.log.error(f"Failed to load state for plugin {self.name} loading default state: {self.default_state.copy()}")
             return self.default_state.copy()
