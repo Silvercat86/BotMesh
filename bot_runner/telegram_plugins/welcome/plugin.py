@@ -60,7 +60,7 @@ class WelcomePlugin(BasePlugin):
 
         await self._send_welcome(chat_id=chat_id, user=user)
 
-    def setup(self):
+    async def setup(self):
         self.log = logging.getLogger(f"[{self.bot_name}] birthdays")
         if not self.log.handlers:
             logging.basicConfig(

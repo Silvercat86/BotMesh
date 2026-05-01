@@ -275,7 +275,6 @@ def build_payloads(
     for_date: date,
     people: List[Employee],
     state: Dict,
-    state_path: Path,
     templates: list[str],
     images_dir: Path,
     external_images_dir: Path,
@@ -324,7 +323,6 @@ def build_payloads(
                 "photo": str(photo) if photo else None,
             }
         )
-    save_state(state_path, state)
 
     return payloads
 

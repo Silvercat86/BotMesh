@@ -83,7 +83,7 @@ class TelegramBotInstance(BotInstance):
 
             
 
-            plugin.setup()
+            await plugin.setup()
 
             self.dp.include_router(plugin.router)
         self._register_actions()
@@ -143,7 +143,7 @@ class MaxBotInstance(BotInstance):
            
             plugin.dp = self.dp
         
-            plugin.setup()
+            await plugin.setup()
 
         self._register_actions()
 

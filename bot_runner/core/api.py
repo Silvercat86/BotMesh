@@ -122,7 +122,28 @@ class Api:
 
         return await self._request("POST", "context/", json=payload)
     
+    async def save_data(self,type: str, data: dict[str, Any]):
+        payload = {
+            "type": type,
+            "data": data
+        }
+        return await self._request("POST", "save_data/", json=payload)
     
+    async def save_plugin_state(self, plugin_name: str,state: dict[str, Any]):
+        payload = {
+            "plugin": plugin_name,
+            "state": state
+        }
+        return await self._request("POST", "save_plugin_state/", json=payload)
+    
+    async def load_plugin_state(self, plugin_name: str) -> dict[str, Any]:
+        params = {"plugin": plugin_name}
+        return await self._request("GET", "load_plugin_state/", params=params)
+    
+    
+    
+    
+
 
     
 
@@ -144,8 +165,3 @@ def build_chat_payload(chat:Chat):
     }
     return payload
 
-class UserContext():
-    pass
-
-class ChatContext():
-    pass

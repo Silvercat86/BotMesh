@@ -1,9 +1,11 @@
+import logging
+
 from core.base_plugin import BasePlugin
 import random
 from typing import List
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, Message
 from aiogram.filters import Command,CommandStart
-
+    
 class StartPlugin(BasePlugin):
     def __init__(self,messages: List[str]):
         super().__init__()
@@ -11,7 +13,16 @@ class StartPlugin(BasePlugin):
 
 
 
-    def setup(self):
+    async def setup(self):
+        
+        self.log = logging.getLogger(f"[{self.bot_name}] work_experience")
+        if not self.log.handlers:
+            logging.basicConfig(
+                level=logging.INFO,
+                format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+            )
+
+
         @self.router.message(CommandStart())
         async def start_command(message: Message):
             print(f"Received /start command from {message.from_user.id}")

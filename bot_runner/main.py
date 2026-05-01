@@ -72,8 +72,6 @@ async def main() -> None:
                     people_source="rio_people_birthdays",
                     hour=6,
                     minute=0,
-                    dry_run=False,
-                    chat_file="data/rio/birthday/chats.txt",
                 ),
                 WorkExperiencePlugin(
                     templates_by_years=RIO_WORK_TEMPLATES,
@@ -81,8 +79,6 @@ async def main() -> None:
                     people_source="rio_people_work",
                     hour=6,
                     minute=0,
-                    dry_run=False,
-                    chat_file="data/rio/birthday/chats.txt",
                 
                 ),
 
@@ -98,7 +94,6 @@ async def main() -> None:
                 # MemePlugin(),
                 March8Plugin(
                     template=RIO_MARCH8_TEMPLATE,
-                    chat_file="data/rio/birthday/chats.txt",
                     storage_dir="data/rio/march8",
                     hour=6,
                     minute=0,
@@ -334,7 +329,6 @@ async def main() -> None:
                     people_source="rio_people_birthdays",
                     hour=6,
                     minute=0,
-                    dry_run=False,
                     chat_id="-72336909860345",
                 ),
                 WorkExperiencePlugin(
@@ -343,7 +337,6 @@ async def main() -> None:
                     people_source="rio_people_work",
                     hour=6,
                     minute=0,
-                    dry_run=False,
                     chat_id="-72336909860345"
                 
                 ),
@@ -526,6 +519,8 @@ async def main() -> None:
                         "rio_people_birthdays": {
                             "name": "rio_people_birthdays",
                             "url": "https://docs.google.com/spreadsheets/d/1EdBbNp8QLD04-TNl5uIYmk2NJaZCguyzTbGSnhp5ld4/export?format=csv&gid=0",
+                            "service_account_b64": os.getenv("RIO_CREDENTIALS_BASE64", ""),
+
                             "mode": "indexed",
                             "required_fields": ("fio",),
                             "fields_mapping": {
@@ -538,6 +533,7 @@ async def main() -> None:
                         "rio_people_work": {
                             "name": "rio_people_work",
                             "url": "https://docs.google.com/spreadsheets/d/1EdBbNp8QLD04-TNl5uIYmk2NJaZCguyzTbGSnhp5ld4/export?format=csv&gid=1937147644",
+                            "service_account_b64": os.getenv("RIO_CREDENTIALS_BASE64", ""),
                             "mode": "indexed",
                             "required_fields": ("fio",),
                             "fields_mapping": {
@@ -624,21 +620,20 @@ async def main() -> None:
                 BirthdayPlugin(
                     templates=RIO_BIRTHDAY_TEMPLATES,
                     storage_dir="data/testing/birthday",
-                    people_source="clera_people",
-                    hour=14,
-                    minute=40,
-                    dry_run=False,
-                    chat_file="data/testing/birthday/chat.txt",
+                    people_source="rio_people_birthdays",
+                    hour=7,
+                    minute=0,
+                    chat_id="-4898624653",
                     
                 ),
                 WorkExperiencePlugin(
                     templates_by_years=RIO_WORK_TEMPLATES,
                     storage_dir="data/testing/work",
-                    people_source="clera_people",
-                    hour=14,
-                    minute=40,
-                    dry_run=False,
-                    chat_file="data/testing/birthday/chat.txt",
+                    people_source="rio_people_birthdays",
+                    hour=7,
+                    minute=0,
+                    chat_id="-4898624653",
+
                 
                 ),
 
@@ -654,7 +649,6 @@ async def main() -> None:
                 MemePlugin(),
                 March8Plugin(
                     template=THREEIT_MARCH8_TEMPLATE,
-                    chat_file="data/testing/birthday/chat.txt",
                     storage_dir="data/testing/march8",
                     hour=0,
                     minute=0,
@@ -676,6 +670,7 @@ async def main() -> None:
                         "rio_people_birthdays": {
                             "name": "rio_people_birthdays",
                             "url": "https://docs.google.com/spreadsheets/d/1EdBbNp8QLD04-TNl5uIYmk2NJaZCguyzTbGSnhp5ld4/export?format=csv&gid=0",
+                            "service_account_b64": os.getenv("RIO_CREDENTIALS_BASE64", ""),
                             "mode": "indexed",
                             "required_fields": ("fio",),
                             "fields_mapping": {
@@ -688,6 +683,7 @@ async def main() -> None:
                         "rio_people_work": {
                             "name": "rio_people_work",
                             "url": "https://docs.google.com/spreadsheets/d/1EdBbNp8QLD04-TNl5uIYmk2NJaZCguyzTbGSnhp5ld4/export?format=csv&gid=1937147644",
+                            "service_account_b64": os.getenv("RIO_CREDENTIALS_BASE64", ""),
                             "mode": "indexed",
                             "required_fields": ("fio",),
                             "fields_mapping": {
