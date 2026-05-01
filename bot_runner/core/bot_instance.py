@@ -159,7 +159,7 @@ class MaxBotInstance(BotInstance):
                 continue
 
             if action.type == ActionType.COMMAND:
-                self.dp.message.register(plugin_action)
+                self.dp.message_created.register(plugin_action)
                 return
 
             if action.type == ActionType.CHAT_MEMBER_JOIN:
