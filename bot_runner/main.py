@@ -478,14 +478,14 @@ async def main() -> None:
                     minute=0,
                     chat_id="-73548766634171",
                 ),
-                # WorkExperiencePlugin(
-                #     templates_by_years=RIO_WORK_TEMPLATES,
-                #     storage_dir="data/testing/workMax",
-                #     people_source="rio_people_work",
-                #     hour=7,
-                #     minute=0,
-                #     chat_id="-73548766634171",
-                # ),
+                WorkExperiencePlugin(
+                    templates_by_years=RIO_WORK_TEMPLATES,
+                    storage_dir="data/testing/workMax",
+                    people_source="rio_people_work",
+                    hour=7,
+                    minute=0,
+                    chat_id="-73548766634171",
+                ),
                 EmployeeInfoPlugin(
                     sources=["rio_people"],
                     available_nicknames=["silvercat86","katyalay7","виктор"],
@@ -605,19 +605,22 @@ async def main() -> None:
                 BirthdayPlugin(
                     templates=RIO_BIRTHDAY_TEMPLATES,
                     storage_dir="data/testing/birthday",
-                    people_source="clera_people",
-                    hour=14,
-                    minute=40,
+                    people_source="rio_people_birthdays",
+                    hour=7,
+                    minute=0,
+                    chat_id="-4898624653",
                     
                 ),
-                # WorkExperiencePlugin(
-                #     templates_by_years=RIO_WORK_TEMPLATES,
-                #     storage_dir="data/testing/work",
-                #     people_source="clera_people",
-                #     hour=14,
-                #     minute=40,
+                WorkExperiencePlugin(
+                    templates_by_years=RIO_WORK_TEMPLATES,
+                    storage_dir="data/testing/work",
+                    people_source="rio_people_birthdays",
+                    hour=7,
+                    minute=0,
+                    chat_id="-4898624653",
+
                 
-                # ),
+                ),
 
                 WelcomePlugin(
                     base_template=RIO_WELCOME_TEMPLATE,

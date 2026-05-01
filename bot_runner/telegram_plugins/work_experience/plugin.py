@@ -171,17 +171,19 @@ class WorkExperiencePlugin(BasePlugin):
                 format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
             )
 
-        if not self.chat_id:
-            state = await self._load_state()
-            self.chat_id = state.get("chat_id")
-            if self.chat_id:
-                self.log.info(f"Using chat_id {self.chat_id} from server")
-            else:
-            
-                self.log.warning("No chat_id configured, birthday notifications will not be sent until a chat is registered")
-
+        state = await self._load_state()
+        chat_id_from_server = state.get("chat_id")
+        if self.chat_id:
+            self.log.info(f"Using chat_id from config {self.chat_id}")
+            if chat_id_from_server != self.chat_id:
+                self.log.info(f"Server chat id was different,applying new value : {self.chat_id} , old value : {chat_id_from_server}")
+                await self._save_state({"chat_id":self.chat_id})
         else:
-            self.log.info(f"Using chat_id {self.chat_id} from config")
+            if chat_id_from_server != -1:
+                self.chat_id = chat_id_from_server
+                self.log.info(f"Using chat_id from server {chat_id_from_server}")
+            else:
+                self.log.warning("No chat_id configured, birthday notifications will not be sent until a chat is registered")
 
 
         
