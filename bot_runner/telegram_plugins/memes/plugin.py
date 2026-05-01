@@ -6,7 +6,7 @@ import random
 from core.base_plugin import BasePlugin
 
 class MemePlugin(BasePlugin):
-    async def setup(self):
+    def setup(self):
         memes_file = Path("data/memes/memes.txt")
         memes_file.parent.mkdir(parents=True, exist_ok=True)
 

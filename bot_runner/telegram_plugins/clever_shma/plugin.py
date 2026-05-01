@@ -18,7 +18,7 @@ class CleverShmaPlugin(BasePlugin):
 
         self.log = None
 
-    async def setup(self):
+    def setup(self):
 
         self.log = logging.getLogger(f"[{self.bot_name}] schma")
         if not self.log.handlers:

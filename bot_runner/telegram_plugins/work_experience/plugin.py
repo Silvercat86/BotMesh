@@ -14,7 +14,9 @@ from aiogram.types import Message, FSInputFile
 from core.base_plugin import BasePlugin
 from telegram_plugins.work_experience.service import (
     today_almaty,
+    load_state,
     build_payloads,
+    save_state,
 )
 from maxapi.types import Command as MaxCommand
 
@@ -33,7 +35,9 @@ class WorkExperiencePlugin(BasePlugin):
         column_map: dict = None,
         hour: int = 9,
         minute: int = 0,
+        dry_run: bool = False,
         chat_id: int | None = None,
+        chat_file: str | None = None,
     ):
         super().__init__()
 
@@ -44,8 +48,10 @@ class WorkExperiencePlugin(BasePlugin):
 
         self.hour = hour
         self.minute = minute
+        self.dry_run = dry_run
 
         self.chat_id = chat_id
+        self.chat_file = Path(chat_file) if chat_file else None
 
         # --- storage isolation ---
         self.storage_dir = Path(storage_dir)
@@ -57,11 +63,6 @@ class WorkExperiencePlugin(BasePlugin):
 
         self.images_dir.mkdir(parents=True, exist_ok=True)
         self.external_images_dir.mkdir(parents=True, exist_ok=True)
-
-        self.default_state = {
-            "last_sent_for_date": "",
-            "last_image_index": -1,
-        }
 
         
         self.people_source = people_source
@@ -83,7 +84,9 @@ class WorkExperiencePlugin(BasePlugin):
 
         self.chat_id = chat_id
 
-        await self._save_state({"chat_id": chat_id})
+        if self.chat_file:
+            with open(self.chat_file, "w", encoding="utf-8") as f:
+                f.write(str(chat_id))
 
         self.log.info(f"Registered chat_id {chat_id} for work notifications")
     async def work_test(self, message: Message):
@@ -162,7 +165,7 @@ class WorkExperiencePlugin(BasePlugin):
 
     # ---------------- SETUP ----------------
 
-    async def setup(self):
+    def setup(self):
 
         self.log = logging.getLogger(f"[{self.bot_name}] work_experience")
         if not self.log.handlers:
@@ -171,38 +174,57 @@ class WorkExperiencePlugin(BasePlugin):
                 format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
             )
 
-        state = await self._load_state()
-        chat_id_from_server = state.get("chat_id")
-        if self.chat_id:
-            self.log.info(f"Using chat_id from config {self.chat_id}")
-            if chat_id_from_server != self.chat_id:
-                self.log.info(f"Server chat id was different,applying new value : {self.chat_id} , old value : {chat_id_from_server}")
-                await self._save_state({"chat_id":self.chat_id})
-        else:
-            if chat_id_from_server != -1:
-                self.chat_id = chat_id_from_server
-                self.log.info(f"Using chat_id from server {chat_id_from_server}")
-            else:
-                self.log.warning("No chat_id configured, birthday notifications will not be sent until a chat is registered")
+        if self.chat_file and not self.chat_id:
+            self.chat_id = self._load_chat_id_from_file()
 
+
+        @self.router.message(Command("register_work_chat"))
+        async def register_chat(message: Message):
+            if self.chat_file:
+                self.chat_file.parent.mkdir(parents=True, exist_ok=True)
+                self.chat_file.write_text(str(message.chat.id), encoding="utf-8")
+                await message.reply("Чат зарегистрирован для стажа.")
+            else:
+                await message.reply("Файл чатов не настроен.")
 
         
+
+        @self.router.message(Command("work_test"))
+        async def work_test(message: Message):
+            args = message.text.split()
+
+            if len(args) < 2:
+                await message.reply("Нужна дата YYYY-MM-DD")
+                return
+
+            try:
+                d = date.fromisoformat(args[1])
+            except ValueError:
+                await message.reply("Неверный формат даты")
+                return
+            await self._run_test(d, message.chat.id)
+
+        asyncio.create_task(self._schedule_loop())
+
+    def _send(self, chat_id, text, photo=None):
+        asyncio.create_task(
+            self.adapter.send(chat_id, text, photo)
+        )
+
+    # ---------------- RUN ----------------
 
     async def _run_today(self):
         date = today_almaty()
 
-        state = await self._load_state()
-
         payloads = build_payloads(
             for_date=date,
             people=self.services.people.get_people(self.people_source),
-            state=state,
+            state_path=self.state_path,
             templates_by_years=self.templates_by_years,
             images_dir=self.images_dir,
             external_images_dir=self.external_images_dir,
         )
-
-        await self._save_state(state)
+        self.log.info(f"Built {len(payloads)} payloads for today {date.isoformat()}")
 
         for p in payloads:
             self._send(
@@ -211,15 +233,15 @@ class WorkExperiencePlugin(BasePlugin):
             p["photo"],
         )
     async def _run_test(self, test_date: date, chat_id: int):
-        state = await self.default_state.copy()
         payloads = build_payloads(
             for_date=test_date,
             people=self.services.people.get_people(self.people_source),
-            state=state,
+            state_path=self.state_path,
             templates_by_years=self.templates_by_years,
             images_dir=self.images_dir,
             external_images_dir=self.external_images_dir,
         )
+        self.log.info(f"Built {len(payloads)} payloads for test date {test_date.isoformat()}")
 
         for p in payloads:
             self.log.info(f"TEST PAYLOAD for {test_date.isoformat()} (photo: {p['photo']})")
@@ -230,6 +252,7 @@ class WorkExperiencePlugin(BasePlugin):
         )
 
 
+    # ---------------- SEND ----------------
 
     
 
@@ -244,7 +267,7 @@ class WorkExperiencePlugin(BasePlugin):
             await asyncio.sleep(60)
 
     async def _catch_up_if_needed(self):
-        state = await self._load_state()
+        state = load_state(self.state_path)
         self.log.info(f"Current state: {state}")
 
         today = today_almaty()

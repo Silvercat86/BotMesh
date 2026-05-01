@@ -43,7 +43,7 @@ class March8Plugin(BasePlugin):
 
     # -------------------- SETUP --------------------
 
-    async def setup(self):
+    def setup(self):
 
         self.log = logging.getLogger(f"[{self.bot_name}] march8")
 

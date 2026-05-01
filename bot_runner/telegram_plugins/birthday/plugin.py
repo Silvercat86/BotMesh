@@ -15,6 +15,7 @@ from aiogram.types import FSInputFile
 
 from core.base_plugin import BasePlugin
 from telegram_plugins.birthday.service import (
+    load_state,
     today_almaty,
     build_payloads,
 )
@@ -38,7 +39,9 @@ class BirthdayPlugin(BasePlugin):
 
         hour: int = 9,
         minute: int = 0,
+        dry_run: bool = False,
         chat_id: str | None = None,
+        chat_file: str | None = None,
     ):
         super().__init__()
 
@@ -50,8 +53,10 @@ class BirthdayPlugin(BasePlugin):
 
         self.hour = hour
         self.minute = minute
+        self.dry_run = dry_run
 
         self.chat_id = chat_id
+        self.chat_file = Path(chat_file) if chat_file else None
 
         self.storage_dir = Path(storage_dir)
         self.storage_dir.mkdir(parents=True, exist_ok=True)
@@ -67,17 +72,11 @@ class BirthdayPlugin(BasePlugin):
 
         self.people_source = people_source
 
-        self.default_state = {
-            "last_template_index": -1,
-            "last_sent_for_date": "",
-            "last_image_index": -1,
-            "chat_id":-1,
-        }
+        
 
         self._schedule_task = None
 
-
-
+    
     def get_actions(self) -> dict[str, Callable]:
         return {
             "birthday_test": self.birthday_test,
@@ -93,7 +92,9 @@ class BirthdayPlugin(BasePlugin):
 
         self.chat_id = chat_id
 
-        await self._save_state({"chat_id": chat_id})
+        if self.chat_file:
+            with open(self.chat_file, "w", encoding="utf-8") as f:
+                f.write(str(chat_id))
 
         self.log.info(f"Registered chat_id {chat_id} for birthday notifications")
 
@@ -120,14 +121,6 @@ class BirthdayPlugin(BasePlugin):
     async def birthday_chat_status(self,message: Message):
 
             
-
-
-        state = await self._load_state()
-
-        self.log.info(f"Loaded state: {state}")
-        state["last_chat_status_check"] = datetime.now().isoformat()
-        response = await self._save_state(state)
-        self.log.info(f"save_plugin_state response: {response}")
 
 
             
@@ -179,7 +172,7 @@ class BirthdayPlugin(BasePlugin):
             )
     # -------------------- SETUP --------------------
 
-    async def setup(self):
+    def setup(self):
 
         
         self.log = logging.getLogger(f"[{self.bot_name}] birthdays")
@@ -193,25 +186,10 @@ class BirthdayPlugin(BasePlugin):
         self.log.info(self.chat_id)
        
 
-        
-        state = await self._load_state()
-        chat_id_from_server = state.get("chat_id")
-        if self.chat_id:
-            self.log.info(f"Using chat_id from config {self.chat_id}")
-            if chat_id_from_server != self.chat_id:
-                self.log.info(f"Server chat id was different,applying new value : {self.chat_id} , old value : {chat_id_from_server}")
-                await self._save_state({"chat_id":self.chat_id})
-        else:
-            if chat_id_from_server != -1:
-                self.chat_id = chat_id_from_server
-                self.log.info(f"Using chat_id from server {chat_id_from_server}")
-            else:
-                self.log.warning("No chat_id configured, birthday notifications will not be sent until a chat is registered")
-
-
+        if self.chat_file and not self.chat_id:
             
+            self.chat_id = self._load_chat_id_from_file()
 
-        
 
         self._schedule_task = asyncio.create_task(self._schedule_loop())
 
@@ -220,7 +198,20 @@ class BirthdayPlugin(BasePlugin):
     
         
 
-    
+    def _load_chat_id_from_file(self) -> int | None:
+        if not self.chat_file or not self.chat_file.exists():
+            self.log.warning("BirthdayPlugin: chat file not found, no chat_id loaded")
+            return None
+
+        with open(self.chat_file, "r", encoding="utf-8") as f:
+            line = f.readline().strip()
+            try:
+                chat_id = int(line)
+                self.log.info(f"BirthdayPlugin: loaded chat_id {chat_id} from file")
+                return chat_id
+            except ValueError:
+                self.log.error(f"BirthdayPlugin: invalid chat_id in file: {line}")
+                return None
 
     # -------------------- RUN --------------------
 
@@ -229,7 +220,7 @@ class BirthdayPlugin(BasePlugin):
         date = today_almaty()
         self.log.info(f"Today's date in Almaty: {date.isoformat()}")
         
-        state = await self._load_state()
+        state = load_state(self.state_path)
         self.log.info(f"Loaded state: {state}")
 
         
@@ -238,22 +229,18 @@ class BirthdayPlugin(BasePlugin):
             for_date=date,
             people=self.services.people.get_people(self.people_source),
             state=state,
+            state_path=self.state_path,
             templates=self.templates,
             images_dir=self.images_dir,
             external_images_dir=self.external_images_dir,
         )
-
-        await self._save_state(state)
-
         for p in payloads:
             self.log.info(f"Birthday отправка в чат {self.chat_id}: photo={bool(p['photo'])}")
             await self._send(self.chat_id, f"{p['text']}", p["photo"])
 
     async def _run_test(self, test_date, chat_id: int):
         
-        state = self.default_state.copy()
-
-        self.log.info(f"Loaded state: {state}")
+        state = load_state(self.state_path)
 
         
 
@@ -261,12 +248,11 @@ class BirthdayPlugin(BasePlugin):
             for_date=test_date,
             people=self.services.people.get_people(self.people_source),
             state=state,
+            state_path=self.state_path,
             templates=self.templates,
             images_dir=self.images_dir,
             external_images_dir=self.external_images_dir,
         )
-
-
         for p in payloads:
             self.log.info(f"TEST отправка в чат {chat_id}: photo={bool(p['photo'])}")
             await self._send(chat_id, f"[TEST {test_date.isoformat()}] {p['text']}", p["photo"])
@@ -278,7 +264,7 @@ class BirthdayPlugin(BasePlugin):
     # -------------------- SCHEDULE --------------------
 
     async def _catch_up_if_needed(self):
-        state = await self._load_state()
+        state = load_state(self.state_path)
         self.log.info(state)
         today = today_almaty()
 
