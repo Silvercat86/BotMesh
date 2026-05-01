@@ -122,10 +122,8 @@ class BirthdayPlugin(BasePlugin):
 
             
 
-        context = await self.api.get_context(message)
 
             
-        self.log.info(context)
         if message.chat.type != "private":
             return
 
