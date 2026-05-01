@@ -344,6 +344,12 @@ async def main() -> None:
                     available_chats=["Забота Рио🧡","Ы"],
                 
                 ),
+                WelcomePlugin(
+                    base_template=RIO_WELCOME_TEMPLATE,
+                    questions=RIO_WELCOME_QUESTIONS,
+                    n_questions=3,
+                ),
+
                 
             ],
             services=[
