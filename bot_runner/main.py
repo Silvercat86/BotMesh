@@ -588,8 +588,8 @@ async def main() -> None:
                 )
             ],
             actions=[
-                # Action(name="birthday_test", func_name="birthday_test", scope="private", type=ActionType.COMMAND),
-                # Action(name="birthday_chat_status", func_name="birthday_chat_status", scope="private", type=ActionType.COMMAND),
+                Action(name="birthday_test", func_name="birthday_test", scope="private", type=ActionType.COMMAND),
+                Action(name="birthday_chat_status", func_name="birthday_chat_status", scope="private", type=ActionType.COMMAND),
                 Action(name="user_join", func_name="handle_chat_member_join", scope="private", type=ActionType.CHAT_MEMBER_JOIN),
             ]
 

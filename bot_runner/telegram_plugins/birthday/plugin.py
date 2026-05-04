@@ -1,16 +1,12 @@
 # plugins/birthday/plugin.py
 
 import asyncio
-from email.mime import message
 import logging
 from datetime import datetime
 from pathlib import Path
 from typing import Callable
 
 import schedule
-from aiogram.filters import Command
-from aiogram.types import Message
-from aiogram.types import FSInputFile
 
 
 from core.base_plugin import BasePlugin
@@ -22,11 +18,7 @@ from telegram_plugins.birthday.service import (
 from aiogram.exceptions import TelegramBadRequest, TelegramForbiddenError
 from html import escape
 
-from maxapi.types import MessageCreated
-
-from services.people_directory import Employee
-
-from maxapi.types import Command as MaxCommand
+from core.models import UniversalMessage
 
 
 class BirthdayPlugin(BasePlugin):
@@ -84,8 +76,10 @@ class BirthdayPlugin(BasePlugin):
             "birthday_chat_status": self.birthday_chat_status,
             "birthday_register_chat": self.register_chat,
         }
-    async def register_chat(self, message: Message):
-        chat_id = message.chat.id
+    async def register_chat(self, message: UniversalMessage):
+
+
+        chat_id = message.chat_id
 
         if self.chat_id and self.chat_id != chat_id:
             self.log.warning(f"Received chat_id {chat_id} does not match configured chat_id {self.chat_id}")
@@ -98,7 +92,7 @@ class BirthdayPlugin(BasePlugin):
         self.log.info(f"Registered chat_id {chat_id} for birthday notifications")
 
 
-    async def birthday_test(self, message: Message):
+    async def birthday_test(self, message: UniversalMessage):
             
             args = message.text.split()
             if len(args) < 2:
@@ -117,7 +111,7 @@ class BirthdayPlugin(BasePlugin):
 
             await self._run_test(d, message.chat.id)
 
-    async def birthday_chat_status(self,message: Message):
+    async def birthday_chat_status(self,message: UniversalMessage):
 
             
 
@@ -131,11 +125,11 @@ class BirthdayPlugin(BasePlugin):
 
 
             
-        if message.chat.type != "private":
+        if message.chat_type != "private":
             return
 
         if not self.chat_id:
-            await self._send(message.chat.id, "❌ chat_id не задан")
+            await self._send(message.chat_id, "❌ chat_id не задан")
             return
 
         self.log.info(f"Checking bot membership for chat_id={self.chat_id}")
@@ -149,14 +143,14 @@ class BirthdayPlugin(BasePlugin):
 
             if member.status in ("member", "administrator","restricted"):
                 await self._send(
-                    message.chat.id,
+                    message.chat_id,
                     f"✅ Бот находится в чате\n"
                     f"chat_id: `{self.chat_id}`\n"
                     f"status: `{member.status}`",
                 )
             else:
                 await self._send(
-                    message.chat.id,
+                    message.chat_id,
                     f"❌ Бот НЕ находится в чате\n"
                     f"chat_id: `{self.chat_id}`\n"
                     f"status: `{member.status}`",
@@ -164,7 +158,7 @@ class BirthdayPlugin(BasePlugin):
 
         except TelegramForbiddenError:
             await self._send(
-                message.chat.id,
+                message.chat_id,
                 f"❌ Нет доступа к чату `{self.chat_id}`\n"
                 f"(бот не добавлен или был удалён)",
             )
@@ -172,7 +166,7 @@ class BirthdayPlugin(BasePlugin):
 
         except TelegramBadRequest as e:
             await self._send(
-                message.chat.id,
+                message.chat_id,
                 "❌ Ошибка проверки чата\n"
                 f"chat_id: <code>{self.chat_id}</code>\n"
                 f"<pre>{escape(str(e))}</pre>",
