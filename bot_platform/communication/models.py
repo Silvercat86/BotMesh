@@ -17,6 +17,9 @@ class Chat(models.Model):
     type = models.CharField(max_length=20,choices=Type.choices)
     title = models.CharField(max_length=255, null=True, blank=True)
 
+    def __str__(self):
+        return f"{self.type.capitalize()} : {self.title if self.title else "No title"} ({self.platform if self.platform else "No platform"}) "
+
 
 
 class Notification(models.Model):
@@ -79,6 +82,9 @@ class Bot(models.Model):
 
     is_active = models.BooleanField(default=False)
 
+    def __str__(self):
+        return f"{self.name} ({"active" if self.is_active else "not active"})"
+
 
 class PluginState(models.Model):
     bot = models.ForeignKey(Bot, on_delete=models.CASCADE)
@@ -96,3 +102,6 @@ class PluginState(models.Model):
         indexes = [
             models.Index(fields=["bot", "plugin_code", "key"]),
         ]
+
+    def __str__(self):
+        return f"({self.bot.name}) {self.plugin_code} : {self.key} ({self.value})"
