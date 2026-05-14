@@ -135,7 +135,7 @@ async def main() -> None:
                         }
                         },
                         "rio_people": {
-                            "url": "https://docs.google.com/spreadsheets/d/18jBpO_kBRp1mMnomexdEb3z7YXfNvWWUr4vnX8qaGrY/export?format=csv",
+                            "url": "https://docs.google.com/spreadsheets/d/11xOQjQxoYvfbyOAu5oPtR0SE6xkgCFJY7Q0_Zt1ShuY/export?format=csv",
                             "service_account_b64": os.getenv("RIO_CREDENTIALS_BASE64", ""),
                             "mode": "named",
                             "required_fields": ("fio",),
@@ -367,7 +367,7 @@ async def main() -> None:
                         }
                         },
                         "rio_people": {
-                            "url": "https://docs.google.com/spreadsheets/d/18jBpO_kBRp1mMnomexdEb3z7YXfNvWWUr4vnX8qaGrY/export?format=csv",
+                            "url": "https://docs.google.com/spreadsheets/d/11xOQjQxoYvfbyOAu5oPtR0SE6xkgCFJY7Q0_Zt1ShuY/export?format=csv",
                             "service_account_b64": os.getenv("RIO_CREDENTIALS_BASE64", ""),
                             "mode": "named",
                             "required_fields": ("fio",),
@@ -503,7 +503,7 @@ async def main() -> None:
                        
                         "rio_people_birthdays": {
                             "name": "rio_people_birthdays",
-                            "url": "https://docs.google.com/spreadsheets/d/1EdBbNp8QLD04-TNl5uIYmk2NJaZCguyzTbGSnhp5ld4/export?format=csv&gid=0",
+                            "url": "https://docs.google.com/spreadsheets/d/1QFdn6iAmc-krAIY75nDvWvn54LZrpjX5TfufZb1sJRg/export?format=csv&gid=0",
                             "service_account_b64": os.getenv("RIO_CREDENTIALS_BASE64", ""),
 
                             "mode": "indexed",
@@ -517,7 +517,7 @@ async def main() -> None:
                         },
                         "rio_people_work": {
                             "name": "rio_people_work",
-                            "url": "https://docs.google.com/spreadsheets/d/1EdBbNp8QLD04-TNl5uIYmk2NJaZCguyzTbGSnhp5ld4/export?format=csv&gid=1937147644",
+                            "url": "https://docs.google.com/spreadsheets/d/1QFdn6iAmc-krAIY75nDvWvn54LZrpjX5TfufZb1sJRg/export?format=csv&gid=1937147644",
                             "service_account_b64": os.getenv("RIO_CREDENTIALS_BASE64", ""),
                             "mode": "indexed",
                             "required_fields": ("fio",),
@@ -529,7 +529,7 @@ async def main() -> None:
                         }
                         },
                         "rio_people": {
-                            "url": "https://docs.google.com/spreadsheets/d/18jBpO_kBRp1mMnomexdEb3z7YXfNvWWUr4vnX8qaGrY/export?format=csv",
+                            "url": "https://docs.google.com/spreadsheets/d/11xOQjQxoYvfbyOAu5oPtR0SE6xkgCFJY7Q0_Zt1ShuY/export?format=csv",
                             "service_account_b64": os.getenv("RIO_CREDENTIALS_BASE64", ""),
                             "mode": "named",
                             "required_fields": ("fio",),
@@ -614,7 +614,7 @@ async def main() -> None:
                 WorkExperiencePlugin(
                     templates_by_years=RIO_WORK_TEMPLATES,
                     storage_dir="data/testing/work",
-                    people_source="rio_people_birthdays",
+                    people_source="rio_people_work",
                     hour=7,
                     minute=0,
                     chat_id="-4898624653",
@@ -654,7 +654,7 @@ async def main() -> None:
                        
                         "rio_people_birthdays": {
                             "name": "rio_people_birthdays",
-                            "url": "https://docs.google.com/spreadsheets/d/1EdBbNp8QLD04-TNl5uIYmk2NJaZCguyzTbGSnhp5ld4/export?format=csv&gid=0",
+                            "url": "https://docs.google.com/spreadsheets/d/1QFdn6iAmc-krAIY75nDvWvn54LZrpjX5TfufZb1sJRg/export?format=csv&gid=0",
                             "service_account_b64": os.getenv("RIO_CREDENTIALS_BASE64", ""),
                             "mode": "indexed",
                             "required_fields": ("fio",),
@@ -667,7 +667,7 @@ async def main() -> None:
                         },
                         "rio_people_work": {
                             "name": "rio_people_work",
-                            "url": "https://docs.google.com/spreadsheets/d/1EdBbNp8QLD04-TNl5uIYmk2NJaZCguyzTbGSnhp5ld4/export?format=csv&gid=1937147644",
+                            "url": "https://docs.google.com/spreadsheets/d/1QFdn6iAmc-krAIY75nDvWvn54LZrpjX5TfufZb1sJRg/export?format=csv&gid=1937147644",
                             "service_account_b64": os.getenv("RIO_CREDENTIALS_BASE64", ""),
                             "mode": "indexed",
                             "required_fields": ("fio",),
@@ -679,7 +679,7 @@ async def main() -> None:
                         }
                         },
                         "rio_people": {
-                            "url": "https://docs.google.com/spreadsheets/d/18jBpO_kBRp1mMnomexdEb3z7YXfNvWWUr4vnX8qaGrY/export?format=csv",
+                            "url": "https://docs.google.com/spreadsheets/d/11xOQjQxoYvfbyOAu5oPtR0SE6xkgCFJY7Q0_Zt1ShuY/export?format=csv",
                             "service_account_b64": os.getenv("RIO_CREDENTIALS_BASE64", ""),
                             "mode": "named",
                             "required_fields": ("fio",),

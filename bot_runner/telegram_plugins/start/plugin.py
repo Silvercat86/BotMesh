@@ -5,13 +5,19 @@ import random
 from typing import List
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, Message
 from aiogram.filters import Command,CommandStart
+from core.models import UniversalMessage
     
 class StartPlugin(BasePlugin):
     def __init__(self,messages: List[str]):
         super().__init__()
         self.messages = messages
 
+    async def start(self,message:UniversalMessage):
+        chat_id = message.chat_id
 
+        text = random.choice(self.messages)
+
+        await self._send(chat_id=chat_id,text=text)
 
     async def setup(self):
         
@@ -21,6 +27,8 @@ class StartPlugin(BasePlugin):
                 level=logging.INFO,
                 format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
             )
+
+        
 
 
         @self.router.message(CommandStart())

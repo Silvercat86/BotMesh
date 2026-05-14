@@ -29,9 +29,9 @@ class TelegramAdapter:
             sender_username=tg_message.from_user.username,
             date=tg_message.date,
             has_media=bool(tg_message.photo or tg_message.video or tg_message.document),
-            media_type=self._get_media_type(tg_message),
-            media_data=self._get_media_data(tg_message),
-            reply_to=self._convert_reply(tg_message.reply_to_message) if tg_message.reply_to_message else None,
+            media_type=None,
+            media_data=None,
+            reply_to=None,
             raw=tg_message,
             extra={
                 "entities": tg_message.entities,

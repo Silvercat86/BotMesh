@@ -22,7 +22,7 @@ from aiogram.exceptions import TelegramBadRequest, TelegramForbiddenError
 from html import escape
 
 from core.models import UniversalMessage
-
+from maxapi.exceptions import MaxApiError
 
 
 
@@ -108,12 +108,8 @@ class WorkExperiencePlugin(BasePlugin):
             await self._run_test(d, message.chat_id)
 
     async def work_chat_status(self,message: UniversalMessage):
-
-            
-
-
-            
         if message.chat_type != "private":
+            self.log.info(f"Not private chat {message.chat_type}")
             return
 
         if not self.chat_id:
@@ -125,7 +121,35 @@ class WorkExperiencePlugin(BasePlugin):
         bot = self.bot
         try:
             me = await bot.get_me()
-            member = await bot.get_chat_member(self.chat_id, me.id)
+            id = getattr(me,"id","")
+            if (id == ""):
+                self.log.info("No telegram bot id")
+                id = getattr(me,"user_id","")
+                if (id == ""):
+                    self.log.info("No max bot id")
+                    
+            if (id == ""):
+                self.log.info("No id")
+                return
+            try:
+                member = await bot.get_chat_member(self.chat_id, id)
+                await self._send(
+                    message.chat_id,
+                    f"Чат доступен\n"
+                )
+                if 1 == 1:
+                    return
+            except MaxApiError as e:
+                self.log.info("Нет доступа к чату (403)")
+                await self._send(
+                    message.chat_id,
+                    f"❌ Нет доступа к чату `{self.chat_id}`\n"
+                    f"code: {e.code}\n"
+                    f"{e.raw.get('message')}"
+                )
+                return
+
+            self.log.info(member)
 
             self.log.info(f"getChatMember OK: status={member.status}")
 
@@ -211,7 +235,7 @@ class WorkExperiencePlugin(BasePlugin):
             p["photo"],
         )
     async def _run_test(self, test_date: date, chat_id: int):
-        state = await self.default_state.copy()
+        state = self.default_state.copy()
         payloads = build_payloads(
             for_date=test_date,
             people=self.services.people.get_people(self.people_source),
@@ -220,6 +244,7 @@ class WorkExperiencePlugin(BasePlugin):
             images_dir=self.images_dir,
             external_images_dir=self.external_images_dir,
         )
+        self.log.info(len(payloads))
 
         for p in payloads:
             self.log.info(f"TEST PAYLOAD for {test_date.isoformat()} (photo: {p['photo']})")

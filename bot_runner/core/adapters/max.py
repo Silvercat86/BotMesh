@@ -20,25 +20,26 @@ class MaxAdapter:
         # text = getattr(max_message.body, 'text', '') if max_message.body else ''
         text = max_message.message.body.text
 
+        message = max_message.message
         chat = max_message.chat
         user = max_message.from_user
         
         return UniversalMessage(
-            message_id=str(max_message.message.url),
-            chat_id=str(max_message.chat.chat_id),
-            chat_type=str(max_message.chat.type),
+            message_id=str(message.url),
+            chat_id=str(chat.chat_id),
+            chat_type="private" if chat.type == "dialog" else "group" if chat.type == "chat" else "channel" if chat.type == "channel" else "unknown",
             text=text,
             raw_text=text,
-            sender_id=str(max_message.from_user.user_id or max_message.from_user.chat_id),
-            sender_name = max_message.from_user.full_name,
+            sender_id=str(user.user_id or user.chat_id),
+            sender_name = user.full_name,
             sender_username=getattr(max_message, 'sender_username', None),
-            date=datetime.fromtimestamp(max_message.timestamp) if hasattr(max_message, 'timestamp') else datetime.now(),
+            date=datetime.now(),
             has_media=bool(getattr(max_message, 'media', None)),
-            media_type=self._get_media_type(max_message),
+            media_type=None,
             media_data=getattr(max_message, 'media', None),
             raw=max_message,
             extra={
-                "body": max_message.body,
+                "body": message.body,
                 "platform": "max"
             }
         )

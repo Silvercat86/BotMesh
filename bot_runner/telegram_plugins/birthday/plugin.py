@@ -20,6 +20,9 @@ from html import escape
 
 from core.models import UniversalMessage
 
+from maxapi.exceptions import MiddlewareException
+from maxapi.exceptions import MaxApiError
+
 
 class BirthdayPlugin(BasePlugin):
     def __init__(
@@ -96,7 +99,7 @@ class BirthdayPlugin(BasePlugin):
             
             args = message.text.split()
             if len(args) < 2:
-                await self._send(message.chat.id, "Нужна дата YYYY-MM-DD")
+                await self._send(message.chat_id, "Нужна дата YYYY-MM-DD")
                 return
 
             from datetime import date
@@ -104,28 +107,16 @@ class BirthdayPlugin(BasePlugin):
             try:
                 d = date.fromisoformat(args[1])
             except ValueError:
-                await self._send(message.chat.id, "Неверный формат даты")
+                await self._send(message.chat_id, "Неверный формат даты")
                 return
             
             
 
-            await self._run_test(d, message.chat.id)
+            await self._run_test(d, message.chat_id)
 
     async def birthday_chat_status(self,message: UniversalMessage):
-
-            
-
-
-        state = await self._load_state()
-
-        self.log.info(f"Loaded state: {state}")
-        state["last_chat_status_check"] = datetime.now().isoformat()
-        response = await self._save_state(state)
-        self.log.info(f"save_plugin_state response: {response}")
-
-
-            
         if message.chat_type != "private":
+            self.log.info(f"Not private chat {message.chat_type}")
             return
 
         if not self.chat_id:
@@ -137,7 +128,35 @@ class BirthdayPlugin(BasePlugin):
         bot = self.bot
         try:
             me = await bot.get_me()
-            member = await bot.get_chat_member(self.chat_id, me.id)
+            id = getattr(me,"id","")
+            if (id == ""):
+                self.log.info("No telegram bot id")
+                id = getattr(me,"user_id","")
+                if (id == ""):
+                    self.log.info("No max bot id")
+                    
+            if (id == ""):
+                self.log.info("No id")
+                return
+            try:
+                member = await bot.get_chat_member(self.chat_id, id)
+                await self._send(
+                    message.chat_id,
+                    f"Чат доступен\n"
+                )
+                if 1 == 1:
+                    return
+            except MaxApiError as e:
+                self.log.info("Нет доступа к чату (403)")
+                await self._send(
+                    message.chat_id,
+                    f"❌ Нет доступа к чату `{self.chat_id}`\n"
+                    f"code: {e.code}\n"
+                    f"{e.raw.get('message')}"
+                )
+                return
+
+            self.log.info(member)
 
             self.log.info(f"getChatMember OK: status={member.status}")
 
@@ -171,6 +190,8 @@ class BirthdayPlugin(BasePlugin):
                 f"chat_id: <code>{self.chat_id}</code>\n"
                 f"<pre>{escape(str(e))}</pre>",
             )
+        
+
     # -------------------- SETUP --------------------
 
     async def setup(self):

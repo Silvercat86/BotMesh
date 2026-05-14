@@ -134,7 +134,6 @@ class EmployeeInfoPlugin(BasePlugin):
 👤 Статус: {p.status or "—"}
 💼 Должность: {p.position or "—"}
 🧠 Специализация: {p.stack or "—"}
-Карточка сотрудника : {p.employee_card or "—"}
 
 👨‍💼 Руководитель: {p.manager or "—"}
 📞 Телефон: +{p.phone or "—"}

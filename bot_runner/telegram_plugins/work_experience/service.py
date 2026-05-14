@@ -14,7 +14,7 @@ import requests
 from io import StringIO
 from dateutil.relativedelta import relativedelta
 
-
+import logging
 
 @dataclass
 class Person:
@@ -31,6 +31,7 @@ def today_almaty() -> date:
 
 
 def _calc_years(start_date: date, today: date) -> float | None:
+    
     if today == start_date + relativedelta(months=6):
         return 1/2
 
@@ -44,6 +45,9 @@ def _calc_years(start_date: date, today: date) -> float | None:
         return 1/12
 
     years = today.year - start_date.year
+
+    logging.info(f"{start_date} - {start_date+relativedelta(years=years)} ({years})")
+
     if years > 0 and today == start_date + relativedelta(years=years):
         return float(years)
 
@@ -123,6 +127,7 @@ def build_payloads(
     for p in people:
         if not p.start_date:
             continue
+        logging.info(p.source)
         years = _calc_years(p.start_date, for_date)
         if years is None:
             continue
