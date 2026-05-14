@@ -72,6 +72,7 @@ async def main() -> None:
                     people_source="rio_people_birthdays",
                     hour=6,
                     minute=0,
+                    chat_id="-1001712668166"
                 ),
                 WorkExperiencePlugin(
                     templates_by_years=RIO_WORK_TEMPLATES,
@@ -79,7 +80,7 @@ async def main() -> None:
                     people_source="rio_people_work",
                     hour=6,
                     minute=0,
-                
+                    chat_id="-1001712668166"
                 ),
 
                 WelcomePlugin(
@@ -97,7 +98,9 @@ async def main() -> None:
                     storage_dir="data/rio/march8",
                     hour=6,
                     minute=0,
-                    photo = "data/rio/march8/image.jpg"
+                    photo = "data/rio/march8/image.jpg",
+                    chat_id="-1001712668166"
+
                 ),
 
                 EmployeeInfoPlugin(
@@ -200,94 +203,13 @@ async def main() -> None:
             api_key=os.getenv("KEEPCAT_API_KEY",""),
             name="KeepCatBot",
             plugins=[
-                EmployeeInfoPlugin(),
                 StartPlugin(
                     messages=RIO_START_TEMPLATES
                 ),
             ],
             services=[
                 PeopleDirectoryService(
-                    sources={
-                        "threeit_people": {
-                            "url": "https://docs.google.com/spreadsheets/d/1w3KMR_4cRlpG_qdsmdCOJ30ZCiAGtKItLmHHsLIYsqI/export?format=csv",
-                            "mode": "named",
-                            "required_fields": ("fio",),
-                            "fields_mapping": {
-
-                                "fio": "ФИО",
-                                "status": "Статус",
-                                "position": "Должность",
-                                "workload": "Занятость",
-                                "employment_type": "формат трудоустройства",
-                                "format": "Форма",
-                                "engagement": "Вовлеченность",
-                                "zone": "Зона",
-                                "risk": "Риск ухода",
-                                "comments": "комментарии",
-
-                                "start_date": "дата выхода",
-                                "current_date": "текущая дата",
-                                "probation_end": "окончание ИС",
-
-                                "resume": "Резюме",
-                                "offer": "Оффер",
-                                "employee_card": "Карточка сотрудника",
-
-                                "last_heat": "Дата последней  тепловой с Заботой",
-                                "next_heat": "Дата след тепловой",
-
-                                "last_1to1": "Дата 1 to 1 с рук",
-                                "next_1to1": "Дата след 1 to 1 с рук",
-
-                                "gender": "пол",
-                                "stack": "Стэк",
-                                "project": "Проект",
-                                "project_description": "Описание проекта",
-
-                                "manager": "Руководитель",
-
-                                "phone": "Телефон",
-
-                                "welcome_training": "Вэлком тренинг",
-
-                                "salary": "Зарплата-ставка",
-                                "social_package": "доступный соц пакет",
-                                "salary_changes": "изменения по зп",
-
-                                "children": "дети",
-                                "address": "адрес проживания",
-
-                                "telegram_contact": "контакт ТГ",
-                                "username": "контакт ТГ",
-
-                                "email": "почта",
-
-                                "birthday": "День рождения",
-
-                                "emergency_contact": "контакт эккстреснгой свзяи",
-                        },},
-                        "rio_people_birthdays": {
-                            "url": "https://docs.google.com/spreadsheets/d/1QFdn6iAmc-krAIY75nDvWvn54LZrpjX5TfufZb1sJRg/export?format=csv&gid=0",
-                            "mode": "indexed",
-                            "required_fields": ("fio",),
-                            "fields_mapping": {
-                                "fio": 0,
-                                "username": 1,
-                                "birthday": 2,
-                                "photo_url": 3
-                        }
-                        },
-                        "rio_people_work": {
-                            "url": "https://docs.google.com/spreadsheets/d/1QFdn6iAmc-krAIY75nDvWvn54LZrpjX5TfufZb1sJRg/export?format=csv&gid=1937147644",
-                            "mode": "indexed",
-                            "required_fields": ("fio",),
-                            "fields_mapping": {
-                                "fio": 0,
-                                "username": 1,
-                                "start_date": 2,
-                                "photo_url": 3
-                        }
-                        },},
+                    sources={},
                         
                     cache_ttl=300,
                         
