@@ -1,6 +1,6 @@
 # core/bot_instance.py
 import aiogram
-from aiogram import Bot, Dispatcher
+from aiogram import Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 
@@ -14,10 +14,15 @@ from core.adapters.max import MaxAdapter
 from core.adapters.telegram import TelegramAdapter
 from core.base_plugin import BasePlugin
 
-from aiogram.types import Message
-from aiogram.filters import Command as AiogramCommand
+from aiogram.types import Message as TelegramMessage
+from aiogram.filters import Command as TelegramCommand
+
+from maxapi.types import Command as MaxCommand,Message as MaxMessage,MessageCreated as MaxMessageCreated
+
 
 from core.action import Action, ActionType
+
+
 
 import maxapi
 class BotInstance:
@@ -100,7 +105,11 @@ class TelegramBotInstance(BotInstance):
             plugin_action = plugin.get_action(action.func_name)
             if plugin_action:
                 if action.type == ActionType.COMMAND:
-                    self.dp.message.register(plugin_action, AiogramCommand(action.name))
+                    async def wrapper(message: TelegramMessage):
+                        universal_msg = self.adapter.convert_message(message)
+                        return await plugin_action(universal_msg)
+                    
+                    self.dp.message.register(wrapper, TelegramCommand(action.name))
                     return
                 if action.type == ActionType.CHAT_MEMBER_JOIN:
                     self.dp.chat_member.register(plugin_action, lambda e: e.new_chat_member.status == "member")
@@ -159,7 +168,11 @@ class MaxBotInstance(BotInstance):
                 continue
 
             if action.type == ActionType.COMMAND:
-                self.dp.message_created.register(plugin_action)
+                async def wrapper(event: MaxMessageCreated):
+                    universal_msg = self.adapter.convert_message(event)
+                    return await plugin_action(universal_msg)
+                
+                self.dp.message_created.register(wrapper, MaxCommand(action.name))
                 return
 
             if action.type == ActionType.CHAT_MEMBER_JOIN:
