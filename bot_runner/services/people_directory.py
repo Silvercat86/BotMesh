@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from datetime import date
+import logging
 from typing import Optional
 
 import base64
@@ -265,9 +266,26 @@ class PeopleDirectoryService:
 
             service = build("sheets", "v4", credentials=credentials)
 
+            import re
+            gid_match = re.search(r'[&?]gid=(\d+)', url)
+            sheet_title = None  # или можно получить по gid
+
+            if gid_match:
+                gid = gid_match.group(1)
+                sheet_metadata = service.spreadsheets().get(spreadsheetId=sheet_id).execute()
+                for sheet in sheet_metadata.get('sheets', []):
+                    if str(sheet.get('properties', {}).get('sheetId')) == gid:
+                        sheet_title = sheet.get('properties', {}).get('title')
+                        break
+
+            if sheet_title:
+                range_name = f"'{sheet_title}'!A1:ZZ"
+            else:
+                range_name = "A1:ZZ"  # fallback на первый лист
+
             result = service.spreadsheets().values().get(
                 spreadsheetId=sheet_id,
-                range="A1:ZZ"
+                range=range_name
             ).execute()
 
             rows = result.get("values", [])
@@ -356,7 +374,6 @@ class PeopleDirectoryService:
             fio = get_field_value(row, "fio") or ""
             if not fio.strip():
                 continue
-
 
 
             people.append(

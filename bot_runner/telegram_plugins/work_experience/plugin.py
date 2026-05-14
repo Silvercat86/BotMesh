@@ -229,7 +229,7 @@ class WorkExperiencePlugin(BasePlugin):
         await self._save_state(state)
 
         for p in payloads:
-            self._send(
+            await self._send(
             self.chat_id,
             f"{p['text']}",
             p["photo"],
@@ -248,7 +248,7 @@ class WorkExperiencePlugin(BasePlugin):
 
         for p in payloads:
             self.log.info(f"TEST PAYLOAD for {test_date.isoformat()} (photo: {p['photo']})")
-            self._send(
+            await self._send(
             chat_id,
             f"[TEST {test_date.isoformat()}] {p['text']}",
             p["photo"],
