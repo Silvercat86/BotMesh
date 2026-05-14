@@ -171,7 +171,7 @@ class EmployeeInfoPlugin(BasePlugin):
 
         return
 
-    def setup(self):
+    async def setup(self):
 
         self.log = logging.getLogger(f"[{self.bot_name}] birthdays")
         if not self.log.handlers:
