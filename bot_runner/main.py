@@ -237,7 +237,16 @@ async def main() -> None:
                 StartPlugin(CLERA_START_TEMPLATES),
             ],
             services=[
-                ]
+                ],
+            actions=[
+                # Action(name="birthday_test", func_name="birthday_test", scope="private", type=ActionType.COMMAND),
+                # Action(name="birthday_chat_status", func_name="birthday_chat_status", scope="private", type=ActionType.COMMAND),
+                Action(name="user_join", func_name="handle_chat_member_join", scope="private", type=ActionType.CHAT_MEMBER_JOIN),
+                # Action(name="register_birthday_chat", func_name="birthday_register_chat", scope="private", type=ActionType.COMMAND),
+                # Action(name="work_test", func_name="work_test", scope="private", type=ActionType.COMMAND),
+                # Action(name="work_chat_status", func_name="work_chat_status", scope="private", type=ActionType.COMMAND),
+                # Action(name="register_work_chat", func_name="work_register_chat", scope="private", type=ActionType.COMMAND),
+            ],
         )
 
         rio_max_bot_instance = MaxBotInstance(
@@ -362,13 +371,13 @@ async def main() -> None:
                 )
             ],
             actions=[
-                # Action(name="birthday_test", func_name="birthday_test", scope="private", type=ActionType.COMMAND),
-                # Action(name="birthday_chat_status", func_name="birthday_chat_status", scope="private", type=ActionType.COMMAND),
+                Action(name="birthday_test", func_name="birthday_test", scope="private", type=ActionType.COMMAND),
+                Action(name="birthday_chat_status", func_name="birthday_chat_status", scope="private", type=ActionType.COMMAND),
                 Action(name="user_join", func_name="handle_chat_member_join", scope="private", type=ActionType.CHAT_MEMBER_JOIN),
-                # Action(name="register_birthday_chat", func_name="birthday_register_chat", scope="private", type=ActionType.COMMAND),
-                # Action(name="work_test", func_name="work_test", scope="private", type=ActionType.COMMAND),
-                # Action(name="work_chat_status", func_name="work_chat_status", scope="private", type=ActionType.COMMAND),
-                # Action(name="register_work_chat", func_name="work_register_chat", scope="private", type=ActionType.COMMAND),
+                Action(name="register_birthday_chat", func_name="birthday_register_chat", scope="private", type=ActionType.COMMAND),
+                Action(name="work_test", func_name="work_test", scope="private", type=ActionType.COMMAND),
+                Action(name="work_chat_status", func_name="work_chat_status", scope="private", type=ActionType.COMMAND),
+                Action(name="register_work_chat", func_name="work_register_chat", scope="private", type=ActionType.COMMAND),
             ],
         )
 
