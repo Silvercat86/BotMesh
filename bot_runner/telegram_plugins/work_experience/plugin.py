@@ -208,7 +208,7 @@ class WorkExperiencePlugin(BasePlugin):
                 self.log.info(f"Using chat_id from server {chat_id_from_server}")
             else:
                 self.log.warning("No chat_id configured, birthday notifications will not be sent until a chat is registered")
-
+        self._schedule_task = asyncio.create_task(self._schedule_loop())
 
         
 
