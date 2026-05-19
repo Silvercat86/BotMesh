@@ -30,7 +30,7 @@ from core.templates import RIO_BIRTHDAY_TEMPLATES, THREEIT_BIRTHDAY_TEMPLATES
 from core.templates import RIO_WORK_TEMPLATES, THREEIT_WORK_TEMPLATES
 from core.templates import THREEIT_WELCOME_TEMPLATE, THREEIT_WELCOME_QUESTIONS
 from core.templates import RIO_WELCOME_TEMPLATE, RIO_WELCOME_QUESTIONS
-from core.templates import CLERA_WELCOME_TEMPLATE,CLERA_WELCOME_QUESTIONS
+from core.templates import CLERA_WELCOME_TEMPLATE,CLERA_WELCOME_QUESTIONS,CLERA_WORK_TEMPLATES,CLERA_BIRTHDAY_TEMPLATES
 from core.templates import RIO_START_TEMPLATES, THREEIT_START_TEMPLATES,CLERA_START_TEMPLATES
 from core.templates import RIO_MARCH8_TEMPLATE, THREEIT_MARCH8_TEMPLATE
 
@@ -235,17 +235,86 @@ async def main() -> None:
                               CLERA_WELCOME_QUESTIONS,
                               ),
                 StartPlugin(CLERA_START_TEMPLATES),
+                BirthdayPlugin(
+                    templates=CLERA_BIRTHDAY_TEMPLATES,
+                    storage_dir="data/clera/birthday",
+                    people_source="clera_people",
+                    hour=7,
+                    minute=0,
+                ),
+
             ],
             services=[
+                PeopleDirectoryService(
+                    sources={
+                       
+                        "clera_people": {
+                            "url": "https://docs.google.com/spreadsheets/d/1YtrOaUOudSsBRT5XDW0U62kE1qSXHdDplaE_xx_4oGM/export?format=csv&gid=1875323650",
+                            "service_account_b64": os.getenv("KEEPCAT_CREDENTIALS_BASE64", ""),
+                            "mode": "named",
+                            "required_fields": ("fio",),
+                            "fields_mapping": {
+
+                                # база
+                                "fio": "ФИО",
+                                "status": "Статус",
+                                "position": "Должность",
+
+                                # занятость / hr
+                                "employment_type": "формат трудоустройства",
+                                "zone": "Зона",
+                                # "risk": "Риск ухода",
+                                "comments": "комментарии",
+
+                                # даты
+                                "start_date": "дата выхода",
+                                "birthday": "день рождения",
+                                "probation_end": "окончание ИС",
+
+                                # тепловые / встречи (исправлены названия)
+                                "last_heat": "Дата посл  тепловой с Заботой",
+                                "next_heat": "Дата след тепловой",
+
+                                "last_1to1": "Дата посл 1 to 1 с рук",
+                                "next_1to1": "Дата след 1 to 1 с рук",
+
+                                # hr данные
+                                "employee_card": "Карточка сотрдуника",
+
+                                # человек
+                                "gender": "пол",
+                                "stack": "Специализация",
+
+                                # орг структура
+                                "manager": "Руководитель",
+                                "project": "Точка",  # тут спорно, но лучше чем терять поле
+
+                                # контакты
+                                "phone": "Телефон",
+                                "telegram_contact": "Телеграм",
+
+                                # доп
+                                "children": "дети",
+                                "address": "адрес проживания",
+
+                                # медиа
+                                "photo_url": "фото для поздравления",
+                            }
+                        },
+                        
+                        
+                    },
+                    cache_ttl=300,
+                )
                 ],
             actions=[
-                # Action(name="birthday_test", func_name="birthday_test", scope="private", type=ActionType.COMMAND),
-                # Action(name="birthday_chat_status", func_name="birthday_chat_status", scope="private", type=ActionType.COMMAND),
+                Action(name="birthday_test", func_name="birthday_test", scope="private", type=ActionType.COMMAND),
+                Action(name="birthday_chat_status", func_name="birthday_chat_status", scope="private", type=ActionType.COMMAND),
                 Action(name="user_join", func_name="handle_chat_member_join", scope="private", type=ActionType.CHAT_MEMBER_JOIN),
-                # Action(name="register_birthday_chat", func_name="birthday_register_chat", scope="private", type=ActionType.COMMAND),
-                # Action(name="work_test", func_name="work_test", scope="private", type=ActionType.COMMAND),
-                # Action(name="work_chat_status", func_name="work_chat_status", scope="private", type=ActionType.COMMAND),
-                # Action(name="register_work_chat", func_name="work_register_chat", scope="private", type=ActionType.COMMAND),
+                Action(name="register_birthday_chat", func_name="birthday_register_chat", scope="private", type=ActionType.COMMAND),
+                Action(name="work_test", func_name="work_test", scope="private", type=ActionType.COMMAND),
+                Action(name="work_chat_status", func_name="work_chat_status", scope="private", type=ActionType.COMMAND),
+                Action(name="register_work_chat", func_name="work_register_chat", scope="private", type=ActionType.COMMAND),
             ],
         )
 
@@ -426,66 +495,38 @@ async def main() -> None:
             name="MaxTestBot",
             plugins=[
                 BirthdayPlugin(
-                    templates=RIO_BIRTHDAY_TEMPLATES,
+                    templates=CLERA_BIRTHDAY_TEMPLATES,
                     storage_dir="data/testing/birthdayMax",
-                    people_source="rio_people_birthdays",
+                    people_source="clera_people",
                     hour=7,
                     minute=0,
                     chat_id="-73548766634171",
                 ),
                 WorkExperiencePlugin(
-                    templates_by_years=RIO_WORK_TEMPLATES,
+                    templates_by_years=CLERA_WORK_TEMPLATES,
                     storage_dir="data/testing/workMax",
-                    people_source="rio_people_work",
+                    people_source="clera_people",
                     hour=7,
                     minute=0,
                     chat_id="-73548766634171",
                 ),
                 EmployeeInfoPlugin(
-                    sources=["rio_people"],
+                    sources=["clera_people"],
                     available_nicknames=["silvercat86","katyalay7","виктор"],
                     available_chats=[""],
                 ),
                 WelcomePlugin(
-                    base_template=RIO_WELCOME_TEMPLATE,
-                    questions=RIO_WELCOME_QUESTIONS,
+                    base_template=CLERA_WELCOME_TEMPLATE,
+                    questions=CLERA_WELCOME_QUESTIONS,
                     
                 ),
             ],
             services=[
                 PeopleDirectoryService(
                     sources={
-                       
-                        "rio_people_birthdays": {
-                            "name": "rio_people_birthdays",
-                            "url": "https://docs.google.com/spreadsheets/d/1QFdn6iAmc-krAIY75nDvWvn54LZrpjX5TfufZb1sJRg/export?format=csv&gid=0",
-                            "service_account_b64": os.getenv("RIO_CREDENTIALS_BASE64", ""),
-
-                            "mode": "indexed",
-                            "required_fields": ("fio",),
-                            "fields_mapping": {
-                                "fio": 0,
-                                "username": 1,
-                                "birthday": 2,
-                                "photo_url": 3
-                        }
-                        },
-                        "rio_people_work": {
-                            "name": "rio_people_work",
-                            "url": "https://docs.google.com/spreadsheets/d/1QFdn6iAmc-krAIY75nDvWvn54LZrpjX5TfufZb1sJRg/export?format=csv&gid=1937147644",
-                            "service_account_b64": os.getenv("RIO_CREDENTIALS_BASE64", ""),
-                            "mode": "indexed",
-                            "required_fields": ("fio",),
-                            "fields_mapping": {
-                                "fio": 0,
-                                "username": 1,
-                                "start_date": 2,
-                                "photo_url": 3
-                        }
-                        },
-                        "rio_people": {
-                            "url": "https://docs.google.com/spreadsheets/d/11xOQjQxoYvfbyOAu5oPtR0SE6xkgCFJY7Q0_Zt1ShuY/export?format=csv",
-                            "service_account_b64": os.getenv("RIO_CREDENTIALS_BASE64", ""),
+                        "clera_people": {
+                            "url": "https://docs.google.com/spreadsheets/d/1YtrOaUOudSsBRT5XDW0U62kE1qSXHdDplaE_xx_4oGM/export?format=csv&gid=1875323650",
+                            "service_account_b64": os.getenv("KEEPCAT_CREDENTIALS_BASE64", ""),
                             "mode": "named",
                             "required_fields": ("fio",),
                             "fields_mapping": {
@@ -498,7 +539,7 @@ async def main() -> None:
                                 # занятость / hr
                                 "employment_type": "формат трудоустройства",
                                 "zone": "Зона",
-                                "risk": "Риск ухода",
+                                # "risk": "Риск ухода",
                                 "comments": "комментарии",
 
                                 # даты
@@ -546,7 +587,11 @@ async def main() -> None:
                 Action(name="birthday_test", func_name="birthday_test", scope="private", type=ActionType.COMMAND),
                 Action(name="birthday_chat_status", func_name="birthday_chat_status", scope="private", type=ActionType.COMMAND),
                 Action(name="user_join", func_name="handle_chat_member_join", scope="private", type=ActionType.CHAT_MEMBER_JOIN),
-            ]
+                Action(name="register_birthday_chat", func_name="birthday_register_chat", scope="private", type=ActionType.COMMAND),
+                Action(name="work_test", func_name="work_test", scope="private", type=ActionType.COMMAND),
+                Action(name="work_chat_status", func_name="work_chat_status", scope="private", type=ActionType.COMMAND),
+                Action(name="register_work_chat", func_name="work_register_chat", scope="private", type=ActionType.COMMAND),
+            ],
 
         )
 
@@ -558,18 +603,18 @@ async def main() -> None:
                 # CleverShmaPlugin(),
                 ComplimentPlugin(),
                 BirthdayPlugin(
-                    templates=RIO_BIRTHDAY_TEMPLATES,
+                    templates=CLERA_BIRTHDAY_TEMPLATES,
                     storage_dir="data/testing/birthday",
-                    people_source="rio_people_birthdays",
+                    people_source="clera_people",
                     hour=7,
                     minute=0,
                     chat_id="-4898624653",
                     
                 ),
                 WorkExperiencePlugin(
-                    templates_by_years=RIO_WORK_TEMPLATES,
+                    templates_by_years=CLERA_WORK_TEMPLATES,
                     storage_dir="data/testing/work",
-                    people_source="rio_people_work",
+                    people_source="clera_people",
                     hour=7,
                     minute=0,
                     chat_id="-4898624653",
@@ -578,13 +623,13 @@ async def main() -> None:
                 ),
 
                 WelcomePlugin(
-                    base_template=RIO_WELCOME_TEMPLATE,
-                    questions=RIO_WELCOME_QUESTIONS,
+                    base_template=CLERA_WELCOME_TEMPLATE,
+                    questions=CLERA_WELCOME_QUESTIONS,
                     n_questions=3,
                     ),
 
                 StartPlugin(
-                    messages=RIO_START_TEMPLATES
+                    messages=CLERA_START_TEMPLATES
                 ),
                 MemePlugin(),
                 March8Plugin(
@@ -606,36 +651,10 @@ async def main() -> None:
             services=[
                 PeopleDirectoryService(
                     sources={
-                       
-                        "rio_people_birthdays": {
-                            "name": "rio_people_birthdays",
-                            "url": "https://docs.google.com/spreadsheets/d/1QFdn6iAmc-krAIY75nDvWvn54LZrpjX5TfufZb1sJRg/export?format=csv&gid=0",
-                            "service_account_b64": os.getenv("RIO_CREDENTIALS_BASE64", ""),
-                            "mode": "indexed",
-                            "required_fields": ("fio",),
-                            "fields_mapping": {
-                                "fio": 0,
-                                "username": 1,
-                                "birthday": 2,
-                                "photo_url": 3
-                        }
-                        },
-                        "rio_people_work": {
-                            "name": "rio_people_work",
-                            "url": "https://docs.google.com/spreadsheets/d/1QFdn6iAmc-krAIY75nDvWvn54LZrpjX5TfufZb1sJRg/export?format=csv&gid=1937147644",
-                            "service_account_b64": os.getenv("RIO_CREDENTIALS_BASE64", ""),
-                            "mode": "indexed",
-                            "required_fields": ("fio",),
-                            "fields_mapping": {
-                                "fio": 0,
-                                "username": 1,
-                                "start_date": 2,
-                                "photo_url": 3
-                        }
-                        },
-                        "rio_people": {
-                            "url": "https://docs.google.com/spreadsheets/d/11xOQjQxoYvfbyOAu5oPtR0SE6xkgCFJY7Q0_Zt1ShuY/export?format=csv",
-                            "service_account_b64": os.getenv("RIO_CREDENTIALS_BASE64", ""),
+                        "clera_people": {
+                            "name": "clera_people",
+                            "url": "https://docs.google.com/spreadsheets/d/1YtrOaUOudSsBRT5XDW0U62kE1qSXHdDplaE_xx_4oGM/export?format=csv&gid=1875323650",
+                            "service_account_b64": os.getenv("KEEPCAT_CREDENTIALS_BASE64", ""),
                             "mode": "named",
                             "required_fields": ("fio",),
                             "fields_mapping": {
@@ -648,7 +667,7 @@ async def main() -> None:
                                 # занятость / hr
                                 "employment_type": "формат трудоустройства",
                                 "zone": "Зона",
-                                "risk": "Риск ухода",
+                                # "risk": "Риск ухода",
                                 "comments": "комментарии",
 
                                 # даты
@@ -684,59 +703,6 @@ async def main() -> None:
 
                                 # медиа
                                 "photo_url": "фото для поздравления",
-                            }
-                        },
-                        "clera_people": {
-                            "name": "clera_people",
-                            "url": "https://docs.google.com/spreadsheets/d/12DHRyjO2tyd90NPlFr1GKKe80hww-pwWMl3eaqEWYPM/export?format=csv&gid=1875323650",
-                            "mode": "named",
-                            "required_fields": ("fio",),
-                            "fields_mapping": {
-
-                                "fio": "ФИО",
-                                "status": "Статус",
-                                "position": "Должность",
-
-                                "employment": "Занятость",
-                                "employment_type": "формат трудоустройства",
-                                "engagement": "Вовлеченность",
-                                "zone": "Зона",
-                                "risk": "Риск ухода",
-                                "comments": "комментарии",
-
-                                "start_date": "дата выхода",
-                                "current_date": "текущая дата",
-                                "probation_end": "окончание ИС",
-                                "birthday": "День рождения",
-
-                                "resume": "Резюме",
-                                "offer": "Оффер",
-                                "employee_card": "Карточка сотрудника",
-
-                                "last_heat": "Дата последней  тепловой с Заботой",
-                                "next_heat": "Дата след тепловой",
-                                "last_1to1": "Дата 1 to 1 с рук",
-                                "next_1to1": "Дата след 1 to 1 с рук",
-                                "one_to_one_notes": "1 to 1",
-
-                                "gender": "пол",
-                                "stack": "Стэк",
-
-                                "phone": "Телефон",
-                                "username": "контакт ТГ",
-                                "telegram_contact": "контакт ТГ",
-                                "email": "почта",
-                                "emergency_contact": "контакт эккстреснгой свзяи",
-
-                                "welcome_training": "Вэлком тренинг",
-                                "salary": "Зарплата-ставка",
-                                "social_package": "доступный соц пакет",
-                                "salary_changes": "изменения по зп",
-
-                                "children": "дети",
-                                "address": "адрес проживания",
-
-                                "extra_comments": "Комментарии",
                             }
                         },
 
