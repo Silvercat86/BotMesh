@@ -241,7 +241,16 @@ async def main() -> None:
                     people_source="clera_people",
                     hour=7,
                     minute=0,
+                    chat_id="-1003815976443",
                 ),
+                WorkExperiencePlugin(
+                    templates_by_years=CLERA_WORK_TEMPLATES,
+                    storage_dir="data/clera/work",
+                    people_source="clera_people",
+                    hour=7,
+                    minute=0,
+                    chat_id="-1003815976443",
+                )
 
             ],
             services=[
