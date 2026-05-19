@@ -300,7 +300,7 @@ async def main() -> None:
 
                                 # контакты
                                 "phone": "Телефон",
-                                "telegram_contact": "контакт ТГ",
+                                "username": "контакт ТГ",
 
                                 # доп
                                 "children": "дети",
@@ -576,7 +576,7 @@ async def main() -> None:
 
                                 # контакты
                                 "phone": "Телефон",
-                                "telegram_contact": "Телеграм",
+                                "username": "контакт ТГ",
 
                                 # доп
                                 "children": "дети",
@@ -704,7 +704,7 @@ async def main() -> None:
 
                                 # контакты
                                 "phone": "Телефон",
-                                "telegram_contact": "Телеграм",
+                                "username": "контакт ТГ",
 
                                 # доп
                                 "children": "дети",
