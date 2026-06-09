@@ -34,6 +34,8 @@ from core.templates import CLERA_WELCOME_TEMPLATE,CLERA_WELCOME_QUESTIONS,CLERA_
 from core.templates import RIO_START_TEMPLATES, THREEIT_START_TEMPLATES,CLERA_START_TEMPLATES
 from core.templates import RIO_MARCH8_TEMPLATE, THREEIT_MARCH8_TEMPLATE
 
+from core.templates import USADBA_BIRTHDAY_TEMPLATES,USADBA_WORK_TEMPLATES,USADBA_WELCOME_TEMPLATE,USADBA_WELCOME_QUESTIONS
+
 
 from services.people_directory import PeopleDirectoryService
 
@@ -459,6 +461,64 @@ async def main() -> None:
             ],
         )
 
+        usadba_max_bot_instance = MaxBotInstance(
+            token=os.getenv("USADBA_MAX_BOT_TOKEN", ""),
+            api_key=os.getenv("USADBA_MAX_API_KEY",""),
+            name="UsadbaMaxBot",
+            plugins=[
+                BirthdayPlugin(
+                    templates=USADBA_BIRTHDAY_TEMPLATES,
+                    storage_dir="data/usadba/max/birthday",
+                    people_source="usadba_people",
+                    hour=7,
+                    minute=0,
+                ),
+                WorkExperiencePlugin(
+                    templates_by_years=USADBA_WORK_TEMPLATES,
+                    storage_dir="data/usadba/max/work",
+                    people_source="usadba_people",
+                    hour=7,
+                    minute=0,
+                ),
+                
+                WelcomePlugin(
+                    base_template=USADBA_WELCOME_TEMPLATE,
+                    questions=USADBA_WELCOME_QUESTIONS,
+                    
+                ),
+            ],
+            services=[
+                PeopleDirectoryService(
+                    sources={
+                        "usadba_people": {
+                            "url": "https://docs.google.com/spreadsheets/d/15bkV3IaDeIY9eoEZPR43PdMeEhNqd4atZND-GijAT8s/export?format=csv&gid=105816593",
+                            "service_account_b64": os.getenv("KEEPCAT_CREDENTIALS_BASE64", ""),
+                            "mode": "named",
+                            "required_fields": ("fio",),
+                            "fields_mapping": {
+
+                                "fio": "Сотрудник",
+                                "start_date": "Дата приема",
+                                "birthday": "День рождения",
+
+                            }
+                        },
+                        
+                        
+                    },
+                    cache_ttl=300,
+                )
+            ],
+            actions=[
+                Action(name="birthday_test", func_name="birthday_test", scope="private", type=ActionType.COMMAND),
+                Action(name="birthday_chat_status", func_name="birthday_chat_status", scope="private", type=ActionType.COMMAND),
+                Action(name="user_join", func_name="handle_chat_member_join", scope="private", type=ActionType.CHAT_MEMBER_JOIN),
+                Action(name="register_birthday_chat", func_name="birthday_register_chat", scope="private", type=ActionType.COMMAND),
+                Action(name="work_test", func_name="work_test", scope="private", type=ActionType.COMMAND),
+                Action(name="work_chat_status", func_name="work_chat_status", scope="private", type=ActionType.COMMAND),
+                Action(name="register_work_chat", func_name="work_register_chat", scope="private", type=ActionType.COMMAND),
+            ],
+        )
 
         await rio_bot_instance.init_plugins()
         await rio_max_bot_instance.init_plugins()
@@ -467,6 +527,8 @@ async def main() -> None:
         await keepcat_bot_instance.init_plugins()
         await clera_bot_instance.init_plugins()
         await not_shma_bot_instance.init_plugins()
+        await usadba_max_bot_instance.init_plugins()
+
 
         tasks = [
             asyncio.create_task(rio_bot_instance.run()),
@@ -475,6 +537,7 @@ async def main() -> None:
             asyncio.create_task(clera_bot_instance.run()),
             asyncio.create_task(not_shma_bot_instance.run()),
             asyncio.create_task(rio_max_bot_instance.run()),
+            asyncio.create_task(usadba_max_bot_instance.run()),
             
         ]
 
@@ -494,6 +557,7 @@ async def main() -> None:
             await clera_bot_instance.shutdown()
             await not_shma_bot_instance.shutdown()
             await rio_max_bot_instance.shutdown()
+            await usadba_max_bot_instance.shutdown()
 
     else:
         logging.info("Running in testing mode.")
@@ -504,29 +568,29 @@ async def main() -> None:
             name="MaxTestBot",
             plugins=[
                 BirthdayPlugin(
-                    templates=CLERA_BIRTHDAY_TEMPLATES,
+                    templates=USADBA_BIRTHDAY_TEMPLATES,
                     storage_dir="data/testing/birthdayMax",
-                    people_source="clera_people",
+                    people_source="usadba_people",
                     hour=7,
                     minute=0,
                     chat_id="-73548766634171",
                 ),
                 WorkExperiencePlugin(
-                    templates_by_years=CLERA_WORK_TEMPLATES,
+                    templates_by_years=USADBA_WORK_TEMPLATES,
                     storage_dir="data/testing/workMax",
-                    people_source="clera_people",
+                    people_source="usadba_people",
                     hour=7,
                     minute=0,
                     chat_id="-73548766634171",
                 ),
                 EmployeeInfoPlugin(
-                    sources=["clera_people"],
+                    sources=["usadba_people"],
                     available_nicknames=["silvercat86","katyalay7","виктор"],
                     available_chats=[""],
                 ),
                 WelcomePlugin(
-                    base_template=CLERA_WELCOME_TEMPLATE,
-                    questions=CLERA_WELCOME_QUESTIONS,
+                    base_template=USADBA_WELCOME_TEMPLATE,
+                    questions=USADBA_WELCOME_QUESTIONS,
                     
                 ),
             ],
@@ -584,6 +648,19 @@ async def main() -> None:
 
                                 # медиа
                                 "photo_url": "фото для поздравления",
+                            }
+                        },
+                        "usadba_people": {
+                            "url": "https://docs.google.com/spreadsheets/d/15bkV3IaDeIY9eoEZPR43PdMeEhNqd4atZND-GijAT8s/export?format=csv&gid=105816593",
+                            "service_account_b64": os.getenv("KEEPCAT_CREDENTIALS_BASE64", ""),
+                            "mode": "named",
+                            "required_fields": ("fio",),
+                            "fields_mapping": {
+
+                                "fio": "Сотрудник",
+                                "start_date": "Дата приема",
+                                "birthday": "День рождения",
+
                             }
                         },
                         
