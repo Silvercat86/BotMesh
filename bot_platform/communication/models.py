@@ -76,6 +76,7 @@ class Bot(models.Model):
 
     plugins = models.JSONField(default=list)
     services = models.JSONField(default=list)
+    actions = models.JSONField(default=list)
 
     token = models.CharField(max_length=255)
     api_key = models.CharField(max_length=255, unique=True)
