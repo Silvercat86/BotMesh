@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from django.db import transaction
 
 from accounts.models import TelegramUser
-from communication.models import Bot, Chat, ChatMembership,PluginState
+from communication.models import Bot, Chat, ChatMembership,PluginState,BotRunnerToken
 
 @api_view(["POST"])
 def save_data(request):
@@ -184,4 +184,34 @@ def upsert_chat(chat_data):
         title=title,
     ), True
 
-    
+
+@api_view(["GET"])
+def get_active_bots(request):
+    api_key = request.headers.get("X-API-KEY")
+
+    try:
+        BotRunnerToken.objects.get(
+            token=api_key,
+            is_active=True,
+        )
+    except BotRunnerToken.DoesNotExist:
+        return Response({"error": "forbidden"}, status=403)
+
+
+    active_bots = Bot.objects.filter(is_active=True)
+
+    bot_list = [
+        {
+            "name": bot.name,
+            "platform": bot.platform,
+            "plugins": bot.plugins,
+            "services": bot.services,
+            "actions": bot.actions,
+            "token": bot.token,
+            "api_key": bot.api_key,
+
+        }
+        for bot in active_bots
+    ]
+
+    return Response({"active_bots": bot_list})

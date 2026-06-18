@@ -1,7 +1,7 @@
 # core/middleware.py
 
 from django.http import JsonResponse
-from communication.models import Bot
+from communication.models import Bot,BotRunnerToken
 
 
 class ApiKeyMiddleware:
@@ -14,16 +14,22 @@ class ApiKeyMiddleware:
 
         api_key = request.headers.get("X-API-KEY")
         if not api_key:
-            return JsonResponse({"error": "missing api key"}, status=401)
+            return JsonResponse({"error": "forbidden"}, status=403)
 
-        try:
-            bot = Bot.objects.get(
-                api_key=api_key,
-                is_active=True,
-            )
-        except Bot.DoesNotExist:
-            return JsonResponse({"error": "invalid api key"}, status=401)
+        
+        if api_key.startswith("bot_runner_"):
+            return self.get_response(request)
+        else:
+            try:
+                bot = Bot.objects.get(
+                    api_key=api_key,
+                    is_active=True,
+                )
+            except Bot.DoesNotExist:
+                return JsonResponse({"error": "forbidden"}, status=403)
 
-        request.bot = bot
+            request.bot = bot
 
-        return self.get_response(request)
+            return self.get_response(request)
+
+        

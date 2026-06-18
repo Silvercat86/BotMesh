@@ -85,6 +85,10 @@ class Bot(models.Model):
 
     def __str__(self):
         return f"{self.name} ({"active" if self.is_active else "not active"})"
+    
+class BotRunnerToken(models.Model):
+    token = models.CharField(max_length=255, unique=True)
+    is_active = models.BooleanField(default=False)
 
 
 class PluginState(models.Model):
