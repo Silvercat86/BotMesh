@@ -209,6 +209,7 @@ def get_active_bots(request):
             "actions": bot.actions,
             "token": bot.token,
             "api_key": bot.api_key,
+            "version": bot.version,
 
         }
         for bot in active_bots

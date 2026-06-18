@@ -81,7 +81,18 @@ class Bot(models.Model):
     token = models.CharField(max_length=255)
     api_key = models.CharField(max_length=255, unique=True)
 
+    version = models.IntegerField(default=1)
+
     is_active = models.BooleanField(default=False)
+
+    def save(self, *args, **kwargs):
+        if not self.version:
+            self.version = 1
+        else:
+            self.version += 1
+            if self.version > 10:
+                self.version = 1
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.name} ({"active" if self.is_active else "not active"})"
