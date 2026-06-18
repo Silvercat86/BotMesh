@@ -6,6 +6,8 @@ import aiohttp
 
 from core.api import Api
 
+from core.bot_instance import BotInstance, TelegramBotInstance,MaxBotInstance
+
 
 log = logging.getLogger("bot.runner")
 
@@ -19,6 +21,11 @@ class BotRunner:
         self.api: Api | None = None
 
         self._running = False
+
+        self.bot_instances: dict[str, BotInstance] = {}
+
+
+
 
     async def init(self):
         if self.session is not None and not self.session.closed:
@@ -44,6 +51,7 @@ class BotRunner:
 
             try:
                 result = await self.api.get_active_bots()
+
                 log.info("Backend ping ok: %s", result)
 
             except asyncio.CancelledError:
@@ -54,6 +62,10 @@ class BotRunner:
 
             elapsed = time.monotonic() - started_at
             sleep_time = max(0.0, self.ping_interval - elapsed)
+
+            active_bots = result["active_bots"] if result else []
+            await self.init_bot_instances(active_bots)
+
 
             await asyncio.sleep(sleep_time)
 
@@ -67,3 +79,24 @@ class BotRunner:
         self.session = None
 
         log.info("BotRunner stopped")
+
+
+    async def init_bot_instances(self, bot_data_list):
+        for bot_data in bot_data_list:
+            token = bot_data["token"]
+            api_key = bot_data["api_key"]
+            name = bot_data["name"]
+            platform = bot_data["platform"]
+            plugins = bot_data["plugins"]
+            services = bot_data["services"]
+            actions = bot_data["actions"]
+            version = bot_data.get("version", 1)
+
+            if platform == "telegram":
+                for plugin in plugins:
+                    log.info(plugin)
+
+            
+
+        
+

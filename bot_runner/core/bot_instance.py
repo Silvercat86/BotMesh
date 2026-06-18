@@ -26,9 +26,11 @@ from core.action import Action, ActionType
 
 import maxapi
 class BotInstance:
-    def __init__(self, api_key: str, name: str, plugins: list, services: list, actions: list[Action] = None):
+    def __init__(self, api_key: str, name: str, plugins: list, services: list, actions: list[Action] = None,version: int = 1):
         self.name = name
         self.actions = actions or []
+
+        self.version = version
 
         self.http_session = aiohttp.ClientSession()
         self.api = Api(self.http_session, api_key)

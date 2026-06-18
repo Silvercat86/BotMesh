@@ -10,7 +10,7 @@ import schedule
 
 
 from core.base_plugin import BasePlugin
-from telegram_plugins.birthday.service import (
+from plugins.birthday.service import (
     today_almaty,
     build_payloads,
 )

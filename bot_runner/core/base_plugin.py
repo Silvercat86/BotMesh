@@ -47,6 +47,9 @@ class BasePlugin:
     
     def get_action(self, action_name: str) -> Callable:
         return self.get_actions().get(action_name)
+    
+    def setup_from_config(self, config: dict):
+        raise NotImplementedError()
 
     async def setup(self):
         raise NotImplementedError()

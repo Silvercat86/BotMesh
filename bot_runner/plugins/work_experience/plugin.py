@@ -12,7 +12,7 @@ from aiogram.filters import Command
 from aiogram.types import Message, FSInputFile
 
 from core.base_plugin import BasePlugin
-from telegram_plugins.work_experience.service import (
+from plugins.work_experience.service import (
     today_almaty,
     build_payloads,
 )

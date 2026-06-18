@@ -15,15 +15,15 @@ from aiogram import Router
 from core.bot_instance import TelegramBotInstance
 from core.bot_instance import MaxBotInstance
 
-from telegram_plugins.compliment.plugin import ComplimentPlugin
-from telegram_plugins.birthday.plugin import BirthdayPlugin
-from telegram_plugins.work_experience.plugin import WorkExperiencePlugin
-from telegram_plugins.welcome.plugin import WelcomePlugin
-from telegram_plugins.start.plugin import StartPlugin
-from telegram_plugins.memes.plugin import MemePlugin
-from telegram_plugins.march8.plugin import March8Plugin
-from telegram_plugins.employee_info.plugin import EmployeeInfoPlugin
-from telegram_plugins.clever_shma.plugin import CleverShmaPlugin
+from plugins.compliment.plugin import ComplimentPlugin
+from plugins.birthday.plugin import BirthdayPlugin
+from plugins.work_experience.plugin import WorkExperiencePlugin
+from plugins.welcome.plugin import WelcomePlugin
+from plugins.start.plugin import StartPlugin
+from plugins.memes.plugin import MemePlugin
+from plugins.march8.plugin import March8Plugin
+from plugins.employee_info.plugin import EmployeeInfoPlugin
+from plugins.clever_shma.plugin import CleverShmaPlugin
 
 
 from core.templates import RIO_BIRTHDAY_TEMPLATES, THREEIT_BIRTHDAY_TEMPLATES
