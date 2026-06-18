@@ -140,6 +140,9 @@ class Api:
         params = {"plugin": plugin_name}
         return await self._request("GET", "load_plugin_state/", params=params)
     
+    async def get_active_bots(self):
+        return await self._request("GET", "active_bots/")
+    
     
     
     
