@@ -23,6 +23,8 @@ from core.models import UniversalMessage
 from maxapi.exceptions import MiddlewareException
 from maxapi.exceptions import MaxApiError
 
+from core.templates import RIO_BIRTHDAY_TEMPLATES, THREEIT_BIRTHDAY_TEMPLATES
+
 
 class BirthdayPlugin(BasePlugin):
     def __init__(
@@ -70,6 +72,26 @@ class BirthdayPlugin(BasePlugin):
         }
 
         self._schedule_task = None
+
+    @classmethod
+    def from_config(cls, config: dict):
+        template_name = config["templates"]
+
+        if template_name == "RIO_BIRTHDAY_TEMPLATES":
+            templates = RIO_BIRTHDAY_TEMPLATES
+        elif template_name == "THREEIT_BIRTHDAY_TEMPLATES":
+            templates = THREEIT_BIRTHDAY_TEMPLATES
+        else:
+            raise ValueError(f"Unknown birthday templates: {template_name}")
+
+        return cls(
+            templates=templates,
+            storage_dir=str(config["storage_dir"]),
+            people_source=str(config["people_source"]),
+            hour=int(config.get("hour", 6)),
+            minute=int(config.get("minute", 0)),
+            chat_id=str(config["chat_id"]),
+        )
 
 
 

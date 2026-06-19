@@ -1,8 +1,7 @@
-import asyncio
 from typing import Callable
+from typing import  Self
 
 from aiogram import Router
-import maxapi
 from core.api import Api
 from core.adapters.protocols import BotAdapter
 
@@ -48,7 +47,8 @@ class BasePlugin:
     def get_action(self, action_name: str) -> Callable:
         return self.get_actions().get(action_name)
     
-    def setup_from_config(self, config: dict):
+    @classmethod
+    def from_config(cls, config: dict) -> Self:
         raise NotImplementedError()
 
     async def setup(self):

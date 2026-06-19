@@ -74,8 +74,10 @@ from pathlib import Path
 from io import StringIO
 from typing import List, Optional, Dict
 
+from core.base_service import BaseService
 
-class PeopleDirectoryService:
+
+class PeopleDirectoryService(BaseService): 
 
     name = "people"
 
@@ -474,4 +476,10 @@ class PeopleDirectoryService:
         
         return username
 
+    @classmethod
+    def from_config(cls, config):
+        sources = config.get("sources", {})
+        cache_ttl = config.get("cache_ttl", 300)
+
+        return cls(sources, cache_ttl)
         
