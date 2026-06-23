@@ -49,6 +49,16 @@ class EmployeeInfoPlugin(BasePlugin):
         self.scope_chats = scope_chats
         self.required_services = ("people",)
 
+    @classmethod
+    def from_config(cls, config):
+        sources = config.get("sources",[])
+        available_nicknames = config.get("available_nicknames",[])
+        available_chats = config.get("available_chats",[])
+        scope_chats = config.get("scope_chats",[])
+
+        return cls(sources,available_nicknames,available_chats,scope_chats)
+        
+
     
 
     def search_people(self, people, query):

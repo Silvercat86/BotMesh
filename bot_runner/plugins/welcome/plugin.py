@@ -10,6 +10,9 @@ from aiogram import F
 
 from core.base_plugin import BasePlugin
 
+DEFAULT_BASE_TEMPLATE = "Привет"
+DEFAULT_QUESTIONS = ["Да?"]
+
 
 class WelcomePlugin(BasePlugin):
     def __init__(
@@ -28,6 +31,15 @@ class WelcomePlugin(BasePlugin):
 
         # (chat_id, user_id) -> expires_at_monotonic
         self._dedupe: Dict[Tuple[int, int], float] = {}
+
+
+    @classmethod
+    def from_config(cls, config):
+        base_template = config.get("base_template",DEFAULT_BASE_TEMPLATE)
+        questions = config.get("questions", DEFAULT_QUESTIONS)
+
+        return cls(base_template,questions)
+        
 
     def get_actions(self) -> dict[str, Callable]:
         return {

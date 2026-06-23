@@ -10,6 +10,8 @@ from aiogram.types import Message, FSInputFile
 
 from core.base_plugin import BasePlugin
 
+DEFAULT_TEMPLATE = "С 8 марта!"
+
 
 class March8Plugin(BasePlugin):
     def __init__(
@@ -20,7 +22,6 @@ class March8Plugin(BasePlugin):
         hour: int = 9,
         minute: int = 0,
         chat_id: int | None = None,
-        chat_file: str | None = None,
     ):
         super().__init__()
 
@@ -31,7 +32,6 @@ class March8Plugin(BasePlugin):
         self.minute = minute
 
         self.chat_id = chat_id
-        self.chat_file = Path(chat_file) if chat_file else None
 
         self.storage_dir = Path(storage_dir)
         self.storage_dir.mkdir(parents=True, exist_ok=True)
@@ -42,48 +42,54 @@ class March8Plugin(BasePlugin):
         self.log = None
 
     # -------------------- SETUP --------------------
+    @classmethod
+    def from_config(cls, config: dict):
+        templates = config["template"]
+
+        
+        if not templates:
+            templates = DEFAULT_TEMPLATE
+            
+
+        return cls(
+            template=templates,
+            storage_dir=str(config["storage_dir"]),
+            hour=int(config.get("hour", 6)),
+            minute=int(config.get("minute", 0)),
+            chat_id=str(config["chat_id"]),
+        )
+    
 
     async def setup(self):
-
         self.log = logging.getLogger(f"[{self.bot_name}] march8")
 
-        if self.chat_file:
-            self.chat_id = self._load_chat_id_from_file()
+        if not self.log.handlers:
+            logging.basicConfig(
+                level=logging.INFO,
+                format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+            )
 
-        path = Path(self.photo)
+        if self.photo:
+            path = Path(self.photo)
 
-        if not path.exists():
-            self.log.error(f"Photo not found: {path}")
+            if not path.exists():
+                self.log.error(f"Photo not found: {path}")
+        else:
+            self.log.info("March8Plugin: photo is not configured, will send text only")
 
-        @self.router.message(Command("march8_test"))
-        async def march8_test(message: Message):
+            @self.router.message(Command("march8_test"))
+            async def march8_test(message: Message):
 
-            if not self.chat_id:
-                await message.reply("❌ chat_id не задан")
-                return
+                if not self.chat_id:
+                    await message.reply("❌ chat_id не задан")
+                    return
 
-            await self._send()
+                await self._send()
 
-        self._schedule_task = asyncio.create_task(self._schedule_loop())
+            self._schedule_task = asyncio.create_task(self._schedule_loop())
 
     # -------------------- CHAT LOAD --------------------
 
-    def _load_chat_id_from_file(self) -> int | None:
-
-        if not self.chat_file or not self.chat_file.exists():
-            self.log.warning("March8Plugin: chat file not found, no chat_id loaded")
-            return None
-
-        with open(self.chat_file, "r", encoding="utf-8") as f:
-            line = f.readline().strip()
-
-            try:
-                chat_id = int(line)
-                self.log.info(f"March8Plugin: loaded chat_id {chat_id} from file")
-                return chat_id
-            except ValueError:
-                self.log.error(f"March8Plugin: invalid chat_id in file: {line}")
-                return None
 
     # -------------------- STATE --------------------
 

@@ -24,7 +24,11 @@ from html import escape
 from core.models import UniversalMessage
 from maxapi.exceptions import MaxApiError
 
-
+DEFAULT_WORK_TEMPLATES = {
+    1 : [
+        "С годом работы!"
+    ]
+}
 
 class WorkExperiencePlugin(BasePlugin):
     def __init__(
@@ -32,7 +36,6 @@ class WorkExperiencePlugin(BasePlugin):
         templates_by_years: dict,
         storage_dir: str,
         people_source: str ,
-        column_map: dict = None,
         hour: int = 9,
         minute: int = 0,
         chat_id: int | None = None,
@@ -67,7 +70,28 @@ class WorkExperiencePlugin(BasePlugin):
 
         
         self.people_source = people_source
-        self.column_map = column_map
+
+    @classmethod
+    def from_config(cls, config: dict):
+        templates_by_years = config["templates_by_years"]
+        
+        templates_by_years = {
+            int(year): template
+            for year, template in config["templates_by_years"].items()
+        }
+        
+        if not templates_by_years:
+            templates_by_years = DEFAULT_WORK_TEMPLATES
+            
+
+        return cls(
+            templates_by_years=templates_by_years,
+            storage_dir=str(config["storage_dir"]),
+            people_source=str(config["people_source"]),
+            hour=int(config.get("hour", 6)),
+            minute=int(config.get("minute", 0)),
+            chat_id=str(config["chat_id"]),
+        )
 
     def get_actions(self) -> dict[str, Callable]:
         return {

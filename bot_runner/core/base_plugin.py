@@ -49,7 +49,7 @@ class BasePlugin:
     
     @classmethod
     def from_config(cls, config: dict) -> Self:
-        raise NotImplementedError()
+        return cls()
 
     async def setup(self):
         raise NotImplementedError()

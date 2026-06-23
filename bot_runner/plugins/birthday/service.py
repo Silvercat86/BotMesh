@@ -46,123 +46,16 @@ class Person:
     photo_url: Optional[str] = None
 
 
-# ===================== CSV =====================
 
-def _open_csv_any(csv_path_or_url):
-    p = str(csv_path_or_url)
-
-    if p.startswith("http://") or p.startswith("https://"):
-        log.info(f"Загружаю CSV по URL: {p}")
-        r = requests.get(p, timeout=15)
-        r.raise_for_status()
-        text = r.content.decode("utf-8")
-        log.info(f"CSV загружен, {len(text)} байт")
-        return StringIO(text)
-
-    return open(Path(p), "r", encoding="utf-8-sig", newline="")
-
-
-def _parse_date(cell: str) -> Tuple[int, int]:
-    cell = (cell or "").strip()
-    for fmt in ("%d.%m.%Y", "%d.%m", "%Y-%m-%d"):
-        try:
-            dt = datetime.strptime(cell, fmt)
-            return dt.month, dt.day
-        except ValueError:
-            continue
-    raise ValueError(cell)
-
-
-def load_people(csv_path) -> List[Person]:
-    people: List[Person] = []
-
-    try:
-        f = _open_csv_any(csv_path)
-        reader = csv.reader(f)
-        rows = list(reader)
-    except Exception as e:
-        log.error(f"Ошибка чтения CSV: {e}")
-        return []
-
-    if not rows:
-        log.warning("CSV пустой")
-        return []
-
-    header = [h.lower() for h in rows[0]]
-
-    has_real_header = any(
-        h in ("фио", "fio", "name", "username", "user", "ник", "дата", "date")
-        for h in header
-    )
-
-    if has_real_header:
-        rows = rows[1:]
-    else:
-        log.warning("Первая строка не является заголовком — используется как данные")
-
-    def idx(*names):
-        for n in names:
-            if n in header:
-                return header.index(n)
-        return None
-
-    i_fio = idx("фио", "fio", "name")
-    i_user = idx("контакт тг", "user", "ник")
-    i_date = idx("день рождения", "дата")
-    i_photo = 3  # всегда 4-я колонка, если есть
-
-    if i_fio is None and i_date is None:
-        log.warning(
-            "Заголовки не распознаны, используется позиционный режим: "
-            "ФИО | USERNAME | ДАТА | (ФОТО)"
-        )
-        i_fio = 0
-        i_user = 1
-        i_date = 2
-
-
-    for r in rows:
-        try:
-            fio = r[i_fio].strip() if i_fio is not None and len(r) > i_fio else ""
-            date_cell = r[i_date].strip() if i_date is not None and len(r) > i_date else ""
-            username = (
-                r[i_user].strip().lstrip("@")
-                if i_user is not None and len(r) > i_user
-                else None
-            )
-            photo_url = r[i_photo].strip() if len(r) > i_photo and r[i_photo].strip() else None
-
-            if not fio or not date_cell:
-                continue
-
-            m, d = _parse_date(date_cell)
-
-            people.append(
-                Person(
-                    fio=fio,
-                    username=username,
-                    month=m,
-                    day=d,
-                    photo_url=photo_url,
-                )
-            )
-        except Exception as e:
-            pass
-    log.info(f"Загружено людей: {len(people)}")
-    return people
 
 
 # ===================== STATE =====================
 
 def today_almaty() -> date:
-    log.info("startingtoday")
     from datetime import datetime
-    log.info("imported datetime")
     try:
         from zoneinfo import ZoneInfo
-        log.info("imported zoneinfo")
         result = datetime.now(ZoneInfo("Asia/Almaty")).date()
-        log.info(result)
         return result
     except Exception as e:
         log.info(e)
@@ -220,7 +113,6 @@ def pick_next_image(state: Dict, images_dir: Path) -> Optional[Path]:
     idx = (state.get("last_image_index", -1) + 1) % len(imgs)
     state["last_image_index"] = idx
     img = imgs[idx]
-    log.info(f"Выбрано дефолтное изображение: {img.name}")
     return img
 
 
@@ -249,7 +141,6 @@ def get_or_download_external_image(url: str, external_images_dir: Path) -> Optio
     path = external_images_dir / name
 
     if path.exists():
-        log.info(f"Фото из кэша: {path.name}")
         return path
 
     try:
@@ -257,15 +148,12 @@ def get_or_download_external_image(url: str, external_images_dir: Path) -> Optio
         r.raise_for_status()
 
         if not r.headers.get("Content-Type", "").startswith("image/"):
-            log.warning("Ссылка не ведёт на изображение")
             return None
 
         path.write_bytes(r.content)
-        log.info(f"Фото скачано из таблицы: {path.name}")
         return path
 
     except Exception as e:
-        log.warning(f"Не удалось скачать фото: {e}")
         return None
 
 
@@ -295,7 +183,6 @@ def build_payloads(
     log.info(f"Именинники на {for_date}: {len(todays)}")
 
     for p in todays:
-        log.info(f"{p.fio} (tg: @{p.username if p.username else 'нет'}, фото: {'есть' if p.photo_url else 'нет'})")
         tpl = pick_next_template(state, templates)
 
         name = ""
@@ -309,7 +196,6 @@ def build_payloads(
 
         photo = None
         if p.photo_url:
-            log.info(f"Пробуем фото из таблицы для {p.fio}")
             photo = get_or_download_external_image(p.photo_url, external_images_dir)
 
         if photo is None:

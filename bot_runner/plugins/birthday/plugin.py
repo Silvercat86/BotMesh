@@ -23,7 +23,76 @@ from core.models import UniversalMessage
 from maxapi.exceptions import MiddlewareException
 from maxapi.exceptions import MaxApiError
 
-from core.templates import RIO_BIRTHDAY_TEMPLATES, THREEIT_BIRTHDAY_TEMPLATES
+DEFAULT_BIRTHDAY_TEMPLATES = [
+    "{mention}, от всего сердца поздравляем с Днем рождения! 🎉\n"
+    "От всего нашего дружного коллектива желаем крепкого здоровья, внутреннего спокойствия, "
+    "ярких событий и уверенности в завтрашнем дне. Пусть каждый новый день приносит больше радости, "
+    "тепла, вдохновения и приятных поводов для улыбки. Пусть рядом будут надежные люди, "
+    "а в доме всегда царят уют, гармония и душевное равновесие!",
+
+    "{mention}, поздравляем с Днем рождения! 🎂\n"
+    "Желаем, чтобы этот год был наполнен удачными решениями, хорошими новостями и важными победами. "
+    "Пусть дела складываются легко, планы реализуются вовремя, а сил хватает не только на работу, "
+    "но и на отдых, близких, мечты и все, что приносит настоящую радость.",
+
+    "{mention}, от всего нашего коллектива — самые искренние поздравления с Днем рождения! 🌟\n"
+    "Пусть впереди будет много светлых дней, интересных возможностей и приятных перемен. "
+    "Желаем здоровья, стабильности, душевного тепла и уверенности в собственных силах. "
+    "Пусть каждый этап жизни приносит ценный опыт, вдохновение и ощущение, что все движется в правильном направлении.",
+
+    "{mention}, поздравляем с Днем рождения! 🎈\n"
+    "Желаем, чтобы в жизни всегда находилось место для радости, спокойствия и новых впечатлений. "
+    "Пусть работа приносит достойные результаты, отдых действительно восстанавливает силы, "
+    "а рядом будут люди, с которыми легко, надежно и тепло. Крепкого здоровья, удачи и благополучия!",
+
+    "{mention}, с Днем рождения! 🌺\n"
+    "От всего коллектива желаем, чтобы жизнь радовала яркими красками, добрыми встречами "
+    "и приятными событиями. Пусть каждый день приносит ощущение гармонии, а все важные цели "
+    "постепенно становятся реальностью. Желаем уверенности, внутренней силы и много поводов для счастья.",
+
+    "{mention}, поздравляем с Днем рождения! ✨\n"
+    "Пусть удача сопровождает во всех начинаниях, а каждый новый день открывает что-то хорошее. "
+    "Желаем крепкого здоровья, стабильного благополучия, интересных задач и теплых моментов, "
+    "которые хочется вспоминать с улыбкой. Пусть в жизни будет больше свободы, вдохновения и радости.",
+
+    "{mention}, с Днем рождения! 🎊\n"
+    "От всей команды желаем, чтобы все вложенные усилия возвращались достойными результатами, "
+    "уважением и внутренним удовлетворением. Пусть вдохновение приходит легко, дела спорятся, "
+    "а в расписании всегда находится место для отдыха, близких и личного пространства. "
+    "Береги себя, свое здоровье и душевное тепло.",
+
+    "{mention}, поздравляем с Днем рождения! 🌸\n"
+    "Желаем идеального баланса между делами, отдыхом и тем, что по-настоящему наполняет энергией. "
+    "Пусть новые цели достигаются спокойно и уверенно, а дома всегда ждут тепло, уют и поддержка. "
+    "Пусть в жизни будет больше простых радостей, приятных сюрпризов и счастливых моментов.",
+
+    "{mention}, с Днем рождения! 💼✨\n"
+    "От лица всей команды желаем уверенности в своих силах, финансовой стабильности, "
+    "интересных возможностей и надежной поддержки рядом. Пусть каждый новый год жизни становится "
+    "более осознанным, насыщенным и благополучным. Пусть мечты превращаются в планы, "
+    "а планы — в реальные достижения.",
+
+    "{mention}, от всего нашего дружного коллектива — поздравляем с Днем рождения! 🎁\n"
+    "Пусть добро, внимание и энергия, которые ты вкладываешь в каждый день, возвращаются вдвойне. "
+    "Желаем крепкого здоровья, спокойствия в душе, удачи в делах и исполнения личных желаний. "
+    "Пусть впереди будет много хороших новостей, теплых встреч и моментов, которые делают жизнь счастливее.",
+
+    "{mention}, с праздником! 🌈\n"
+    "Желаем, чтобы жизнь складывалась в гармоничную, цельную и светлую картину. "
+    "Пусть сложности решаются легче, планы становятся понятнее, а каждый день приносит что-то доброе. "
+    "Новых побед, внутренней уверенности, крепкого здоровья и много счастливых моментов в наступающем году!",
+
+    "{mention}, в День рождения от всего коллектива желаем, "
+    "чтобы вся положительная энергия, вложенная в дела, отношения и важные цели, "
+    "возвращалась добром, здоровьем и благополучием. 🌞\n"
+    "Пусть каждый день приносит ощущение смысла, а дома ждут любовь, поддержка и спокойствие. "
+    "Желаем вдохновения, стабильности и светлого настроения!",
+
+    "{mention}, от всей души поздравляем с Днем рождения! 💖\n"
+    "Пусть этот год будет ярким, насыщенным хорошими событиями, новыми открытиями и приятными переменами. "
+    "Желаем легкости в начинаниях, порядка в делах, тепла в сердце и уверенности в будущем. "
+    "Пусть рядом будут люди, с которыми спокойно и радостно, а каждый день дает повод улыбнуться."
+]
 
 
 class BirthdayPlugin(BasePlugin):
@@ -75,14 +144,12 @@ class BirthdayPlugin(BasePlugin):
 
     @classmethod
     def from_config(cls, config: dict):
-        template_name = config["templates"]
+        templates = config["templates"]
 
-        if template_name == "RIO_BIRTHDAY_TEMPLATES":
-            templates = RIO_BIRTHDAY_TEMPLATES
-        elif template_name == "THREEIT_BIRTHDAY_TEMPLATES":
-            templates = THREEIT_BIRTHDAY_TEMPLATES
-        else:
-            raise ValueError(f"Unknown birthday templates: {template_name}")
+        
+        if not templates:
+            templates = DEFAULT_BIRTHDAY_TEMPLATES
+            
 
         return cls(
             templates=templates,
@@ -226,22 +293,17 @@ class BirthdayPlugin(BasePlugin):
                 format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
             )
 
-        self.log.info(self.api.api_url)
-        self.log.info(self.chat_id)
        
 
         
         state = await self._load_state()
         chat_id_from_server = state.get("chat_id")
         if self.chat_id:
-            self.log.info(f"Using chat_id from config {self.chat_id}")
             if chat_id_from_server != self.chat_id:
-                self.log.info(f"Server chat id was different,applying new value : {self.chat_id} , old value : {chat_id_from_server}")
                 await self._save_state({"chat_id":self.chat_id})
         else:
             if chat_id_from_server != -1:
                 self.chat_id = chat_id_from_server
-                self.log.info(f"Using chat_id from server {chat_id_from_server}")
             else:
                 self.log.warning("No chat_id configured, birthday notifications will not be sent until a chat is registered")
 
@@ -262,12 +324,9 @@ class BirthdayPlugin(BasePlugin):
     # -------------------- RUN --------------------
 
     async def _run_today(self):
-        self.log.info("Running daily birthday check")
         date = today_almaty()
-        self.log.info(f"Today's date in Almaty: {date.isoformat()}")
         
         state = await self._load_state()
-        self.log.info(f"Loaded state: {state}")
 
         
 
@@ -283,14 +342,12 @@ class BirthdayPlugin(BasePlugin):
         await self._save_state(state)
 
         for p in payloads:
-            self.log.info(f"Birthday отправка в чат {self.chat_id}: photo={bool(p['photo'])}")
             await self._send(self.chat_id, f"{p['text']}", p["photo"])
 
     async def _run_test(self, test_date, chat_id: int):
         
         state = self.default_state.copy()
 
-        self.log.info(f"Loaded state: {state}")
 
         
 
@@ -305,7 +362,6 @@ class BirthdayPlugin(BasePlugin):
 
 
         for p in payloads:
-            self.log.info(f"TEST отправка в чат {chat_id}: photo={bool(p['photo'])}")
             await self._send(chat_id, f"[TEST {test_date.isoformat()}] {p['text']}", p["photo"])
 
     # -------------------- SEND FN --------------------
@@ -316,25 +372,20 @@ class BirthdayPlugin(BasePlugin):
 
     async def _catch_up_if_needed(self):
         state = await self._load_state()
-        self.log.info(state)
         today = today_almaty()
 
         if state.get("last_sent_for_date") == today.isoformat():
-            self.log.info("BirthdayPlugin: already sent for today, no catch-up needed")
             return
 
         now = datetime.now()
 
         if (now.hour, now.minute) >= (self.hour, self.minute):
             if not self.chat_id:
-                self.log.info("BirthdayPlugin: no chat_id configured, skipping catch-up")
                 return
 
             
-            self.log.info("BirthdayPlugin: catch-up needed, running daily_birthday_run for today")
             await self._run_today()
-        else:
-            self.log.info("No need because time")
+       
 
     async def _schedule_loop(self):
         try:
