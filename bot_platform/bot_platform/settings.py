@@ -17,7 +17,6 @@ if SECRET_KEY == "unsafe-dev-secret":
 
 DEBUG = os.getenv("DEBUG", "0") == "1"
 
-BOT_API_KEY = os.getenv("BOT_API_KEY")
 
 
 
@@ -34,20 +33,7 @@ CSRF_TRUSTED_ORIGINS = [
     "http://localhost:8080",
 ]
 
-PEOPLE_SOURCES = {
-    "rio_people": {
-        "name": "rio_people",
-        "service_account_b64": os.getenv("RIO_CREDENTIALS_BASE64", ""),
-        "mode": "named",
-        "url": "https://docs.google.com/spreadsheets/d/1-5BsFz-i9jnAy-CP_1w7IeBt8IzRDCneaj-EbECADOs/export?format=csv&gid=1875323650",
-        "fields_mapping": {
-            "fio": "ФИО",
-            "username": "Телеграм",
-            "birthday": "день рождения",
-            "start_date": "дата выхода",
-        },
-    },
-}
+
 
 # APPS
 
@@ -65,6 +51,7 @@ INSTALLED_APPS = [
     'communication',
     'events',
     'api',
+    'bot_templates'
 ]
 
 

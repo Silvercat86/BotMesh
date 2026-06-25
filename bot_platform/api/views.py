@@ -5,6 +5,7 @@ from django.db import transaction
 
 from accounts.models import TelegramUser
 from communication.models import Bot, Chat, ChatMembership,PluginState,BotRunnerToken
+from bot_templates.models import TemplatePack
 
 @api_view(["POST"])
 def save_data(request):
@@ -216,3 +217,33 @@ def get_active_bots(request):
     ]
 
     return Response({"active_bots": bot_list})
+
+
+@api_view(["GET"])
+def get_template_pack(request):
+    plugin = request.query_params.get("plugin")
+    template = request.query_params.get("template")
+    bot : Bot | None = getattr(request, "bot", None)
+
+    if (plugin == None or template == None):
+        return Response({"error" : "plugin name and template name are required"},status=400)
+    
+    template_pack = TemplatePack.objects.filter(plugin_name = plugin,key = template,bot = bot).first()
+
+    if (template_pack):
+        
+
+
+        return Response({
+            "template_pack": {
+                "plugin_name": template_pack.plugin_name,
+                "key": template_pack.key,
+                "data": template_pack.data,
+                "variables_schema": template_pack.variables_schema,
+                "version": template_pack.version,
+                "type": template_pack.data_type,
+                }
+            }
+        )
+    else:
+        return Response({"error" : "template_pack_not_found"} , status=404)
