@@ -30,3 +30,13 @@ PLUGIN_REGISTRY : dict[str, type[BasePlugin]] = {
 SERVICE_REGISTRY : dict[str,type[BaseService]] = {
     "people_directory_service": PeopleDirectoryService,
 }
+
+PLUGIN_NAMES_REGISTRY: dict[type[BasePlugin], str] = {
+    plugin_class: plugin_name
+    for plugin_name, plugin_class in PLUGIN_REGISTRY.items()
+}
+
+SERVICE_NAMES_REGISTRY: dict[type[BaseService], str] = {
+    service_class : service_name
+    for service_name,service_class in SERVICE_REGISTRY.items()
+}

@@ -13,11 +13,13 @@ class BasePlugin:
         self.bot = None
         self.services = None
         self.api : Api = None
-        self.name : str = self.__class__.__name__
+        self.name : str = None
         self.default_state = {}
         self.bot_name = None
         self.router = Router()
         self.dp = None
+
+        
 
     async def _send(self, chat_id: str, text: str, photo: str | None = None):
         await self.adapter.send(chat_id, text, photo)
@@ -50,6 +52,12 @@ class BasePlugin:
     @classmethod
     def from_config(cls, config: dict) -> Self:
         return cls()
+        
+    
+    async def get_template(self,template_name):
+        template = await self.api.get_template(template_name=template_name)
+
+        return template
 
     async def setup(self):
         raise NotImplementedError()

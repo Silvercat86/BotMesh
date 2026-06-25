@@ -143,6 +143,12 @@ class Api:
     async def get_active_bots(self):
         return await self._request("GET", "active_bots/")
     
+    async def get_template(self,template_name):
+        params = {
+            "template" : template_name
+        }
+        return await self._request("GET","get_template/",params=params)
+    
     
     
     

@@ -13,7 +13,7 @@ class Services:
 
     @property
     def people(self):
-        return self._c.get("people")
+        return self._c.get("people_directory_service")
 
     @property
     def users(self):

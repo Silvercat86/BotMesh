@@ -47,7 +47,7 @@ class EmployeeInfoPlugin(BasePlugin):
         self.available_nicknames = available_nicknames
         self.available_chats = available_chats
         self.scope_chats = scope_chats
-        self.required_services = ("people",)
+        self.required_services = ("people_directory_service",)
 
     @classmethod
     def from_config(cls, config):

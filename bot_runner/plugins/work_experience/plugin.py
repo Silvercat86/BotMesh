@@ -42,7 +42,7 @@ class WorkExperiencePlugin(BasePlugin):
     ):
         super().__init__()
 
-        self.required_services = ("people",)
+        self.required_services = ("people_directory_service",)
 
 
         self.templates_by_years = templates_by_years

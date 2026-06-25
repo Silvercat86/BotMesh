@@ -108,7 +108,7 @@ class BirthdayPlugin(BasePlugin):
     ):
         super().__init__()
 
-        self.required_services = ("people",)
+        self.required_services = ("people_directory_service",)
 
         
 

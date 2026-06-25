@@ -171,6 +171,7 @@ class BotRunner:
                 continue
             else:
                 plugin_instance = plugin_class.from_config(plugin_data)
+                plugin_instance.name = plugin_data["name"]
                 plugin_instances.append(plugin_instance)
 
         return plugin_instances
@@ -184,6 +185,7 @@ class BotRunner:
                 continue
             else:
                 service_instance = service_class.from_config(service_data)
+                service_instance.name = service_data["name"]
                 service_instances.append(service_instance)
 
         return service_instances

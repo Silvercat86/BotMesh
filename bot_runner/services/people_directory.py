@@ -79,8 +79,6 @@ from core.base_service import BaseService
 
 class PeopleDirectoryService(BaseService): 
 
-    name = "people"
-
     def __init__(self, sources: Dict[str, dict], cache_ttl: int = 300):
 
         """
