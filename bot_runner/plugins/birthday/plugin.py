@@ -98,7 +98,7 @@ DEFAULT_BIRTHDAY_TEMPLATES = [
 class BirthdayPlugin(BasePlugin):
     def __init__(
         self,
-        templates: list[str],
+        templates_name: str,
         storage_dir: str,
         people_source: str,
 
@@ -111,8 +111,9 @@ class BirthdayPlugin(BasePlugin):
         self.required_services = ("people_directory_service",)
 
         
+        self.templates_name = templates_name
 
-        self.templates = templates
+        self.templates : list[str] = None
 
         self.hour = hour
         self.minute = minute
@@ -144,15 +145,9 @@ class BirthdayPlugin(BasePlugin):
 
     @classmethod
     def from_config(cls, config: dict):
-        templates = config["templates"]
-
-        
-        if not templates:
-            templates = DEFAULT_BIRTHDAY_TEMPLATES
-            
-
+        templates_name = config["templates"]
         return cls(
-            templates=templates,
+            templates_name=templates_name,
             storage_dir=str(config["storage_dir"]),
             people_source=str(config["people_source"]),
             hour=int(config.get("hour", 6)),
@@ -307,6 +302,20 @@ class BirthdayPlugin(BasePlugin):
             else:
                 self.log.warning("No chat_id configured, birthday notifications will not be sent until a chat is registered")
 
+        try :
+
+            template_pack = await self.get_template_pack(self.templates_name)
+            data = template_pack.get("data")
+            if (data):
+                self.templates = data
+            else:
+                self.log.warning(f"Templates for {self.name} {self.bot_name} were empty")
+                self.templates = DEFAULT_BIRTHDAY_TEMPLATES
+
+
+        except Exception as e:
+            self.log.warning(f"Couldnt find templates for {self.name} {self.bot_name}")
+            self.templates = DEFAULT_BIRTHDAY_TEMPLATES
 
             
 

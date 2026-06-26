@@ -114,7 +114,7 @@ class Api:
 
         raise APINetworkError(str(last_error))
 
-    async def get_context(self, message: Message):
+    async def get_context(self, message: Message) -> dict[str, Any]:
         payload = {
             "user": build_user_payload(message.from_user),
             "chat": build_chat_payload(message.chat)
@@ -122,14 +122,14 @@ class Api:
 
         return await self._request("POST", "context/", json=payload)
     
-    async def save_data(self,type: str, data: dict[str, Any]):
+    async def save_data(self,type: str, data: dict[str, Any]) -> dict[str, Any]:
         payload = {
             "type": type,
             "data": data
         }
         return await self._request("POST", "save_data/", json=payload)
     
-    async def save_plugin_state(self, plugin_name: str,state: dict[str, Any]):
+    async def save_plugin_state(self, plugin_name: str,state: dict[str, Any]) -> dict[str, Any]:
         payload = {
             "plugin": plugin_name,
             "state": state
@@ -143,11 +143,13 @@ class Api:
     async def get_active_bots(self):
         return await self._request("GET", "active_bots/")
     
-    async def get_template(self,template_name):
+    async def get_template_pack(self,plugin_name,template_name) -> dict[str, Any]:
         params = {
-            "template" : template_name
+            "template" : template_name,
+            "plugin" : plugin_name
         }
-        return await self._request("GET","get_template/",params=params)
+        log.info(f"asking for template {template_name} {plugin_name}")
+        return await self._request("GET","get_template_pack/",params=params)
     
     
     

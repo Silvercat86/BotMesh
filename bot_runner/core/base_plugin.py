@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Any, Callable
 from typing import  Self
 
 from aiogram import Router
@@ -54,10 +54,12 @@ class BasePlugin:
         return cls()
         
     
-    async def get_template(self,template_name):
-        template = await self.api.get_template(template_name=template_name)
+    async def get_template_pack(self,template_name)  -> dict[str, Any]:
+        response = await self.api.get_template_pack(plugin_name=self.name,template_name=template_name)
+        template_pack = response.get("template_pack")
 
-        return template
+
+        return template_pack
 
     async def setup(self):
         raise NotImplementedError()
