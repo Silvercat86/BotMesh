@@ -1,6 +1,7 @@
 from django import forms
 
 from communication.models import Chat, Template
+from bot_templates.models import TemplatePack
 
 
 class PluginConfigForm(forms.Form):
@@ -57,11 +58,13 @@ class PluginConfigForm(forms.Form):
                 )
 
             elif field_type == "template_group":
+
                 codes = (
-                    Template.objects
+                    TemplatePack.objects
                     .values_list("code", flat=True)
                     .distinct()
                     .order_by("code")
+                    .filter(bot = bot)
                 )
 
                 self.fields[key] = forms.ChoiceField(

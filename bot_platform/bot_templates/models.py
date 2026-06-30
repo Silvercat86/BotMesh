@@ -20,7 +20,7 @@ class TemplatePack(models.Model):
 
 
     plugin_name = models.CharField(max_length=100, db_index=True)
-    key = models.CharField(max_length=100, db_index=True)
+    code = models.CharField(max_length=100, db_index=True)
 
     data_type = models.CharField(
         max_length=50,
@@ -39,7 +39,7 @@ class TemplatePack(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        unique_together = ("bot", "plugin_name", "key")
+        unique_together = ("bot", "plugin_name", "code")
 
     def __str__(self):
         bot_name = self.bot.name if self.bot else "GLOBAL"
