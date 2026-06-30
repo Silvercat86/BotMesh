@@ -1,6 +1,6 @@
 from django.db import models
 
-from communication.models import Bot
+from bot_management.models import Bot
 
 class TemplatePack(models.Model):
     DATA_TYPES = [

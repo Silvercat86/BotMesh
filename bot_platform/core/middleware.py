@@ -1,7 +1,7 @@
 # core/middleware.py
 
 from django.http import JsonResponse
-from communication.models import Bot,BotRunnerToken
+from bot_management.models import Bot,BotRunnerToken
 
 
 class ApiKeyMiddleware:

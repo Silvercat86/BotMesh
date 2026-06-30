@@ -51,7 +51,8 @@ INSTALLED_APPS = [
     'communication',
     'events',
     'api',
-    'bot_templates'
+    'bot_templates',
+    'bot_management'
 ]
 
 

@@ -4,7 +4,8 @@ from rest_framework.response import Response
 from django.db import transaction
 
 from accounts.models import TelegramUser
-from communication.models import Bot, Chat, ChatMembership,PluginState,BotRunnerToken
+from communication.models import Chat, ChatMembership
+from bot_management.models import Bot, PluginState,BotRunnerToken
 from bot_templates.models import TemplatePack
 
 @api_view(["POST"])
