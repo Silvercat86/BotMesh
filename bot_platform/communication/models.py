@@ -17,8 +17,9 @@ class Chat(models.Model):
     title = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
-        return f"{self.type.capitalize()} : {self.title if self.title else "No title"} ({self.platform if self.platform else "No platform"}) "
-
+        title = self.title or "No title"
+        platform = self.platform or "No platform"
+        return f"{self.type.capitalize()} : {title} ({platform})"
 
 
 class Notification(models.Model):

@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <title>Bot Dashboard</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #111827;
+            color: #e5e7eb;
+        }
+
+        a {
+            color: #60a5fa;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .topbar {
+            background: #020617;
+            padding: 14px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #1f2937;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 24px auto;
+            padding: 0 16px;
+        }
+
+        .card {
+            background: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 12px;
+            padding: 18px;
+            margin-bottom: 16px;
+        }
+
+        .muted {
+            color: #9ca3af;
+        }
+
+        .button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 9px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: inline-block;
+            font-size: 14px;
+        }
+
+        .button:hover {
+            text-decoration: none;
+        }
+
+        .button.danger {
+            background: #dc2626;
+        }
+
+        .button.secondary {
+            background: #374151;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            box-sizing: border-box;
+            background: #111827;
+            color: #e5e7eb;
+            border: 1px solid #4b5563;
+            border-radius: 8px;
+            padding: 9px;
+        }
+
+        textarea {
+            min-height: 220px;
+            font-family: monospace;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            color: #d1d5db;
+        }
+
+        form p {
+            margin-bottom: 18px;
+        }
+
+        pre {
+            background: #020617;
+            padding: 12px;
+            border-radius: 8px;
+            overflow: auto;
+            border: 1px solid #374151;
+        }
+
+        .row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .error {
+            background: #7f1d1d;
+            border: 1px solid #ef4444;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        .logout-button {
+            background: none;
+            border: none;
+            color: #60a5fa;
+            cursor: pointer;
+            padding: 0;
+            font: inherit;
+        }
+
+        .logout-button:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <div>
+            {% if request.user.is_authenticated %}
+                <a href="{% url 'dashboard_bot_list' %}">Bot Dashboard</a>
+            {% else %}
+                <span>Bot Dashboard</span>
+            {% endif %}
+        </div>
+
+        <div>
+            {% if request.user.is_authenticated %}
+                <span class="muted">{{ request.user.username }}</span>
+                |
+                <form method="post" action="{% url 'dashboard_logout' %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button class="logout-button" type="submit">
+                        Выйти
+                    </button>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="container">
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>

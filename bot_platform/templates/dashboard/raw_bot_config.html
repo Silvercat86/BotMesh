@@ -1,0 +1,46 @@
+{% extends "dashboard/base.html" %}
+
+{% block content %}
+<h1>Raw JSON: {{ bot.name }}</h1>
+
+<p class="muted">
+    Здесь можно вручную править plugins/services/actions.
+</p>
+
+{% if error %}
+    <div class="error">
+        {{ error }}
+    </div>
+{% endif %}
+
+<div class="card">
+    <form method="post">
+        {% csrf_token %}
+
+        <p>
+            <label>plugins</label>
+            <textarea name="plugins">{{ plugins_json }}</textarea>
+        </p>
+
+        <p>
+            <label>services</label>
+            <textarea name="services">{{ services_json }}</textarea>
+        </p>
+
+        <p>
+            <label>actions</label>
+            <textarea name="actions">{{ actions_json }}</textarea>
+        </p>
+
+        <div class="row">
+            <button class="button" type="submit">
+                Сохранить
+            </button>
+
+            <a class="button secondary" href="{% url 'dashboard_bot_plugins' bot.id %}">
+                Назад
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends "dashboard/base.html" %}
+
+{% block content %}
+<h1>{{ plugin_definition.title }}</h1>
+
+<p class="muted">
+    Бот: {{ bot.name }} |
+    Плагин: {{ plugin_definition.code }} |
+    Индекс: {{ plugin_index }}
+</p>
+
+<div class="card">
+    <form method="post">
+        {% csrf_token %}
+
+        {{ form.as_p }}
+
+        <div class="row">
+            <button class="button" type="submit">
+                Сохранить
+            </button>
+
+            <a class="button secondary" href="{% url 'dashboard_bot_plugins' bot.id %}">
+                Назад
+            </a>
+        </div>
+    </form>
+</div>
+
+<h2>Текущий JSON</h2>
+
+<pre>{{ plugin_item }}</pre>
+{% endblock %}

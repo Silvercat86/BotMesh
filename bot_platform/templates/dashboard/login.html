@@ -1,0 +1,29 @@
+{% extends "dashboard/base.html" %}
+
+{% block content %}
+<div class="card" style="max-width: 420px; margin: 80px auto;">
+    <h1>Вход</h1>
+
+    {% if form.errors %}
+        <div class="error">
+            Неверный логин или пароль.
+        </div>
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+
+        <p>
+            <label for="{{ form.username.id_for_label }}">Логин</label>
+            {{ form.username }}
+        </p>
+
+        <p>
+            <label for="{{ form.password.id_for_label }}">Пароль</label>
+            {{ form.password }}
+        </p>
+
+        <button class="button" type="submit">Войти</button>
+    </form>
+</div>
+{% endblock %}

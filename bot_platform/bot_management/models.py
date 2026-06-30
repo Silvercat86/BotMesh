@@ -45,7 +45,8 @@ class Bot(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.name} ({"active" if self.is_active else "not active"})"
+        status = "active" if self.is_active else "not active"
+        return f"{self.name} ({status})"
     
 class BotRunnerToken(models.Model):
     token = models.CharField(max_length=255, unique=True)
