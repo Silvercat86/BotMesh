@@ -193,7 +193,7 @@ def get_active_bots(request):
 
     try:
         BotRunner.objects.get(
-            token=api_key,
+            api_key=api_key,
             is_active=True,
         )
     except BotRunner.DoesNotExist:

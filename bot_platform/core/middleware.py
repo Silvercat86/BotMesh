@@ -20,11 +20,12 @@ class ApiKeyMiddleware:
         if api_key.startswith("bot_runner_"):
             try:
                 bot_runner = BotRunner.objects.get(
-                    token=api_key,
+                    api_key=api_key,
                     is_active=True,
                 )
             except BotRunner.DoesNotExist:
                 return JsonResponse({"error": "forbidden"}, status=403)
+            request.bot_runner = bot_runner
             return self.get_response(request)
         else:
             try:

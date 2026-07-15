@@ -50,7 +50,7 @@ class Bot(models.Model):
     
 class BotRunner(models.Model):
     name = models.CharField(max_length=100, unique=True)
-    token = models.CharField(max_length=255, unique=True)
+    api_key = models.CharField(max_length=255, unique=True)
     is_active = models.BooleanField(default=False)
 
 
