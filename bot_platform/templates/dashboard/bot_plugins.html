@@ -1,71 +1,46 @@
-{% extends "dashboard/base.html" %}
+<h1>Плагины бота {{ bot.name }}</h1>
 
-{% block content %}
-<h1>Плагины: {{ bot.name }}</h1>
-
-<p class="muted">
-    Версия: {{ bot.version }}
+<p>
+    <a href="{% url 'dashboard_bot_list' %}">
+        Назад к ботам
+    </a>
 </p>
 
-<div class="row" style="margin-bottom: 20px;">
-    <a class="button secondary" href="{% url 'dashboard_bot_list' %}">
-        Назад
-    </a>
-
-    <a class="button secondary" href="{% url 'dashboard_raw_bot_config' bot.id %}">
-        Raw JSON
-    </a>
-</div>
-
-<h2>Подключённые</h2>
+<h2>Подключённые плагины</h2>
 
 {% for plugin in plugins %}
-    <div class="card">
+    <div style="border: 1px solid #ccc; padding: 16px; margin-bottom: 12px;">
         <h3>{{ plugin.name }}</h3>
 
         <pre>{{ plugin }}</pre>
 
-        <div class="row">
-            <a class="button" href="{% url 'dashboard_edit_bot_plugin' bot.id forloop.counter0 %}">
-                Редактировать
-            </a>
-
-            <form method="post" action="{% url 'dashboard_delete_bot_plugin' bot.id forloop.counter0 %}">
-                {% csrf_token %}
-                <button class="button danger" type="submit">
-                    Удалить
-                </button>
-            </form>
-        </div>
+        <a href="{% url 'dashboard_edit_bot_plugin' bot.id forloop.counter0 %}">
+            Редактировать
+        </a>
     </div>
 {% empty %}
-    <div class="card">
-        Плагины не подключены.
-    </div>
+    <p>Плагины не подключены.</p>
 {% endfor %}
+
+<hr>
 
 <h2>Добавить плагин</h2>
 
 {% for plugin in available_plugins %}
-    <div class="card">
+    <div style="border: 1px solid #ccc; padding: 16px; margin-bottom: 12px;">
         <h3>{{ plugin.title }}</h3>
-
-        <p class="muted">{{ plugin.code }}</p>
-
-        {% if plugin.description %}
-            <p>{{ plugin.description }}</p>
-        {% endif %}
+        <p>{{ plugin.code }}</p>
+        <p>{{ plugin.description }}</p>
 
         <form method="post" action="{% url 'dashboard_add_plugin_to_bot' bot.id plugin.code %}">
             {% csrf_token %}
-            <button class="button" type="submit">
-                Добавить
-            </button>
+            <button type="submit">Добавить</button>
         </form>
+        <form method="post" action="{% url 'dashboard_delete_bot_plugin' bot.id forloop.counter0 %}">
+            {% csrf_token %}
+            <button type="submit">Удалить</button>
+</form>
     </div>
 {% empty %}
-    <div class="card">
-        Нет доступных PluginDefinition.
-    </div>
+    <p>Нет PluginDefinition.</p>
 {% endfor %}
-{% endblock %}

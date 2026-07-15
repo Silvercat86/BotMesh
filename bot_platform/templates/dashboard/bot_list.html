@@ -1,31 +1,17 @@
-{% extends "dashboard/base.html" %}
-
-{% block content %}
 <h1>Боты</h1>
 
 {% for bot in bots %}
-    <div class="card">
+    <div style="border: 1px solid #ccc; padding: 16px; margin-bottom: 12px;">
         <h2>{{ bot.name }}</h2>
 
-        <p class="muted">
-            Платформа: {{ bot.platform }} |
-            Активен: {{ bot.is_active }} |
-            Версия: {{ bot.version }}
-        </p>
+        <p>Платформа: {{ bot.platform }}</p>
+        <p>Активен: {{ bot.is_active }}</p>
+        <p>Версия: {{ bot.version }}</p>
 
-        <div class="row">
-            <a class="button" href="{% url 'dashboard_bot_plugins' bot.id %}">
-                Плагины
-            </a>
-
-            <a class="button secondary" href="{% url 'dashboard_raw_bot_config' bot.id %}">
-                Raw JSON
-            </a>
-        </div>
+        <a href="{% url 'dashboard_bot_plugins' bot.id %}">
+            Плагины
+        </a>
     </div>
 {% empty %}
-    <div class="card">
-        Ботов пока нет.
-    </div>
+    <p>Ботов нет.</p>
 {% endfor %}
-{% endblock %}

@@ -229,7 +229,7 @@ def get_template_pack(request):
     if (plugin == None or template == None):
         return Response({"error" : "plugin name and template name are required"},status=400)
     
-    template_pack = TemplatePack.objects.filter(plugin_name = plugin,key = template,bot = bot).first()
+    template_pack = TemplatePack.objects.filter(plugin_name = plugin,code = template,bot = bot).first()
 
     if (template_pack):
         
@@ -238,7 +238,7 @@ def get_template_pack(request):
         return Response({
             "template_pack": {
                 "plugin_name": template_pack.plugin_name,
-                "key": template_pack.key,
+                "key": template_pack.code,
                 "data": template_pack.data,
                 "variables_schema": template_pack.variables_schema,
                 "version": template_pack.version,

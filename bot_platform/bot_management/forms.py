@@ -1,7 +1,6 @@
 from django import forms
 
-from communication.models import Chat, Template
-from bot_templates.models import TemplatePack
+from communication.models import Chat
 
 
 class PluginConfigForm(forms.Form):
@@ -11,14 +10,15 @@ class PluginConfigForm(forms.Form):
         self.plugin_definition = plugin_definition
         self.current_config = current_config or {}
         self.bot = bot
-        self.schema = plugin_definition.config_schema or {}
+
+        schema = plugin_definition.config_schema or {}
 
         merged_config = {
             **(plugin_definition.default_config or {}),
             **self.current_config,
         }
 
-        for key, field_schema in self.schema.items():
+        for key, field_schema in schema.items():
             field_type = field_schema.get("type")
             label = field_schema.get("label", key)
             value = merged_config.get(key)
@@ -29,13 +29,6 @@ class PluginConfigForm(forms.Form):
                     min_value=field_schema.get("min"),
                     max_value=field_schema.get("max"),
                     initial=value,
-                    required=False,
-                )
-
-            elif field_type == "bool":
-                self.fields[key] = forms.BooleanField(
-                    label=label,
-                    initial=bool(value),
                     required=False,
                 )
 
@@ -57,34 +50,10 @@ class PluginConfigForm(forms.Form):
                     required=False,
                 )
 
-            elif field_type == "template_group":
-
-                codes = (
-                    TemplatePack.objects
-                    .values_list("code", flat=True)
-                    .distinct()
-                    .order_by("code")
-                    .filter(bot = bot)
-                )
-
-                self.fields[key] = forms.ChoiceField(
+            elif field_type == "bool":
+                self.fields[key] = forms.BooleanField(
                     label=label,
-                    choices=[("", "Не выбрано")] + [(code, code) for code in codes],
-                    initial=value or "",
-                    required=False,
-                )
-
-            elif field_type == "data_source":
-                self.fields[key] = forms.CharField(
-                    label=label,
-                    initial=value or "",
-                    required=False,
-                )
-
-            elif field_type == "str":
-                self.fields[key] = forms.CharField(
-                    label=label,
-                    initial=value or "",
+                    initial=bool(value),
                     required=False,
                 )
 
@@ -96,27 +65,22 @@ class PluginConfigForm(forms.Form):
                 )
 
     def apply_to_config(self):
-        """
-        Берём старый dict плагина и меняем только поля из schema.
-        Так не теряются поля вроде name/storage_dir, которых нет в config_schema.
-        """
         result = dict(self.current_config)
 
-        for key, field_schema in self.schema.items():
+        schema = self.plugin_definition.config_schema or {}
+
+        for key, field_schema in schema.items():
             field_type = field_schema.get("type")
             value = self.cleaned_data.get(key)
 
             if field_type == "int":
                 result[key] = value
 
+            elif field_type == "chat":
+                result[key] = int(value) if value else ""
+
             elif field_type == "bool":
                 result[key] = bool(value)
-
-            elif field_type == "chat":
-                result[key] = int(value) if value else None
-
-            elif field_type in ("template_group", "data_source", "str"):
-                result[key] = value or None
 
             else:
                 result[key] = value

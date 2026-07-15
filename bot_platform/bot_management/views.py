@@ -66,8 +66,8 @@ def add_plugin_to_bot(request, bot_id, plugin_code):
     )
 
     plugin_item = {
-        "name": plugin_definition.code,
         **(plugin_definition.default_config or {}),
+        "name": plugin_definition.code,
     }
 
     plugins = list(bot.plugins or [])
@@ -152,112 +152,3 @@ def delete_bot_plugin(request, bot_id, plugin_index):
     bot.save()
 
     return redirect("dashboard_bot_plugins", bot_id=bot.id)
-
-
-@staff_required
-def raw_bot_config(request, bot_id):
-    bot = get_object_or_404(Bot, id=bot_id)
-
-    if request.method == "POST":
-        plugins_raw = request.POST.get("plugins", "[]")
-        services_raw = request.POST.get("services", "[]")
-        actions_raw = request.POST.get("actions", "[]")
-
-        try:
-            plugins = json.loads(plugins_raw)
-            services = json.loads(services_raw)
-            actions = json.loads(actions_raw)
-        except json.JSONDecodeError as error:
-            return render(request, "dashboard/raw_bot_config.html", {
-                "bot": bot,
-                "plugins_json": plugins_raw,
-                "services_json": services_raw,
-                "actions_json": actions_raw,
-                "error": f"JSON ошибка: {error}",
-            })
-
-        if not isinstance(plugins, list):
-            return render(request, "dashboard/raw_bot_config.html", {
-                "bot": bot,
-                "plugins_json": plugins_raw,
-                "services_json": services_raw,
-                "actions_json": actions_raw,
-                "error": "plugins должен быть списком JSON.",
-            })
-
-        if not isinstance(services, list):
-            return render(request, "dashboard/raw_bot_config.html", {
-                "bot": bot,
-                "plugins_json": plugins_raw,
-                "services_json": services_raw,
-                "actions_json": actions_raw,
-                "error": "services должен быть списком JSON.",
-            })
-
-        if not isinstance(actions, list):
-            return render(request, "dashboard/raw_bot_config.html", {
-                "bot": bot,
-                "plugins_json": plugins_raw,
-                "services_json": services_raw,
-                "actions_json": actions_raw,
-                "error": "actions должен быть списком JSON.",
-            })
-
-        bot.plugins = plugins
-        bot.services = services
-        bot.actions = actions
-        bot.save()
-
-        return redirect("dashboard_bot_plugins", bot_id=bot.id)
-
-    return render(request, "dashboard/raw_bot_config.html", {
-        "bot": bot,
-        "plugins_json": json.dumps(bot.plugins or [], ensure_ascii=False, indent=4),
-        "services_json": json.dumps(bot.services or [], ensure_ascii=False, indent=4),
-        "actions_json": json.dumps(bot.actions or [], ensure_ascii=False, indent=4),
-        "error": None,
-    })
-
-
-def build_runner_plugins(bot):
-    result = []
-
-    for plugin in bot.plugins or []:
-        if plugin.get("enabled") is False:
-            continue
-
-        if not plugin.get("name"):
-            continue
-
-        result.append(plugin)
-
-    return result
-
-
-def runner_bot_version(request, api_key):
-    bot = get_object_or_404(Bot, api_key=api_key)
-
-    return JsonResponse({
-        "is_active": bot.is_active,
-        "version": bot.version,
-    })
-
-
-def runner_bot_config(request, api_key):
-    bot = get_object_or_404(
-        Bot,
-        api_key=api_key,
-        is_active=True,
-    )
-
-    return JsonResponse({
-        "bot": {
-            "name": bot.name,
-            "platform": bot.platform,
-            "version": bot.version,
-            "is_active": bot.is_active,
-        },
-        "plugins": build_runner_plugins(bot),
-        "services": bot.services or [],
-        "actions": bot.actions or [],
-    })
