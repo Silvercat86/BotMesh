@@ -5,7 +5,7 @@ from django.db import transaction
 
 from accounts.models import TelegramUser
 from communication.models import Chat, ChatMembership
-from bot_management.models import Bot, PluginState,BotRunnerToken
+from bot_management.models import Bot, PluginState,BotRunner
 from bot_templates.models import TemplatePack
 
 @api_view(["POST"])
@@ -192,11 +192,11 @@ def get_active_bots(request):
     api_key = request.headers.get("X-API-KEY")
 
     try:
-        BotRunnerToken.objects.get(
+        BotRunner.objects.get(
             token=api_key,
             is_active=True,
         )
-    except BotRunnerToken.DoesNotExist:
+    except BotRunner.DoesNotExist:
         return Response({"error": "forbidden"}, status=403)
 
 

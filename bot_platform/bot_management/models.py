@@ -48,7 +48,8 @@ class Bot(models.Model):
         status = "active" if self.is_active else "not active"
         return f"{self.name} ({status})"
     
-class BotRunnerToken(models.Model):
+class BotRunner(models.Model):
+    name = models.CharField(max_length=100, unique=True)
     token = models.CharField(max_length=255, unique=True)
     is_active = models.BooleanField(default=False)
 

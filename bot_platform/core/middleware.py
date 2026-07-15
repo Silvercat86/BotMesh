@@ -1,7 +1,7 @@
 # core/middleware.py
 
 from django.http import JsonResponse
-from bot_management.models import Bot,BotRunnerToken
+from bot_management.models import Bot,BotRunner
 
 
 class ApiKeyMiddleware:
@@ -18,6 +18,13 @@ class ApiKeyMiddleware:
 
         
         if api_key.startswith("bot_runner_"):
+            try:
+                bot_runner = BotRunner.objects.get(
+                    token=api_key,
+                    is_active=True,
+                )
+            except BotRunner.DoesNotExist:
+                return JsonResponse({"error": "forbidden"}, status=403)
             return self.get_response(request)
         else:
             try:
