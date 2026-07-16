@@ -122,13 +122,6 @@ class Api:
 
         return await self._request("POST", "context/", json=payload)
     
-    async def save_data(self,type: str, data: dict[str, Any]) -> dict[str, Any]:
-        payload = {
-            "type": type,
-            "data": data
-        }
-        return await self._request("POST", "save_data/", json=payload)
-    
     async def save_plugin_state(self, plugin_name: str,state: dict[str, Any]) -> dict[str, Any]:
         payload = {
             "plugin": plugin_name,
