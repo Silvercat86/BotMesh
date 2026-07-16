@@ -1,3 +1,5 @@
+import logging
+
 from django.utils import timezone
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -5,15 +7,10 @@ from django.db import transaction
 
 from accounts.models import TelegramUser
 from communication.models import Chat, ChatMembership
-from bot_management.models import Bot, PluginState,BotRunner
+from bot_management.models import Bot, PluginState
 from bot_templates.models import TemplatePack
 
-@api_view(["POST"])
-def save_data(request):
-    bot : Bot | None = getattr(request, "bot", None)
-    data = request.data.get("data", {})
-    print(f"Data received from bot {bot.name if bot else 'unknown'}: {data}")
-    return Response({"status": "success"})
+log = logging.getLogger(__name__)
 
 
 @api_view(["POST"])
@@ -22,8 +19,7 @@ def get_context(request):
     chat_data = request.data.get("chat")
 
     bot : Bot | None = getattr(request, "bot", None)
-    if bot:
-        print(f"Context request for bot {bot.name} (api_key={bot.api_key})")
+    log.info("Context request for bot %s", bot.name)
 
     if not user_data or not chat_data:
         return Response({"error": "user and chat required"}, status=400)
@@ -80,17 +76,27 @@ def save_plugin_state(request):
     if state is None:
         return Response({"error": "state required"}, status=400)
 
-    for key, value in state.items():
-        PluginState.objects.update_or_create(
-            bot=bot,
-            plugin_code=plugin_name,
-            key=key,
-            defaults={"value": value},
-        )
+    if not isinstance(state, dict):
+        return Response({"error": "state must be an object"}, status=400)
+
+    if not isinstance(plugin_name, str) or len(plugin_name) > 100:
+        return Response({"error": "invalid plugin"}, status=400)
+
+    if any(not isinstance(key, str) or not key or len(key) > 255 for key in state):
+        return Response({"error": "invalid state key"}, status=400)
+
+    with transaction.atomic():
+        for key, value in state.items():
+            PluginState.objects.update_or_create(
+                bot=bot,
+                plugin_code=plugin_name,
+                key=key,
+                defaults={"value": value},
+            )
 
     states = PluginState.objects.filter(bot=bot, plugin_code=plugin_name)
     state_dict = {state.key: state.value for state in states}
-    print(f"Saved state for bot {bot.name if bot else 'unknown'} for plugin {plugin_name}: {state_dict}")
+    log.info("Saved state for bot %s, plugin %s", bot.name, plugin_name)
     return Response({"status": "success", "state": state_dict})
 
 @api_view(["GET"])
@@ -101,11 +107,9 @@ def load_plugin_state(request):
     if not plugin_name:
         return Response({"error": "plugin required"}, status=400)
 
-    print(f"Loading state for bot {bot.name if bot else 'unknown'} for plugin {plugin_name}")
-
     states = PluginState.objects.filter(bot=bot, plugin_code=plugin_name)
     state_dict = {state.key: state.value for state in states}
-    print(f"Loaded state for bot {bot.name if bot else 'unknown'} for plugin {plugin_name}: {state_dict}")
+    log.info("Loaded state for bot %s, plugin %s", bot.name, plugin_name)
     return Response({"status": "success", "state": state_dict})
 
 def upsert_user(user_data):
@@ -189,18 +193,8 @@ def upsert_chat(chat_data):
 
 @api_view(["GET"])
 def get_active_bots(request):
-    api_key = request.headers.get("X-API-KEY")
-
-    try:
-        BotRunner.objects.get(
-            api_key=api_key,
-            is_active=True,
-        )
-    except BotRunner.DoesNotExist:
-        return Response({"error": "forbidden"}, status=403)
-
-
-    active_bots = Bot.objects.filter(is_active=True)
+    bot_runner = request.bot_runner
+    active_bots = Bot.objects.filter(is_active=True, runner=bot_runner)
 
     bot_list = [
         {

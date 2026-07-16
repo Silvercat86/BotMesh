@@ -24,6 +24,14 @@ class Bot(models.Model):
     name = models.CharField(max_length=100, unique=True)
     platform = models.CharField(max_length=20, choices=Platform.choices)
 
+    runner = models.ForeignKey(
+        "BotRunner",
+        on_delete=models.PROTECT,
+        related_name="bots",
+        null=True,
+        blank=True,
+    )
+
     plugins = models.JSONField(default=list)
     services = models.JSONField(default=list)
     actions = models.JSONField(default=list)
@@ -31,17 +39,20 @@ class Bot(models.Model):
     token = models.CharField(max_length=255)
     api_key = models.CharField(max_length=255, unique=True)
 
-    version = models.IntegerField(default=1)
+    version = models.PositiveBigIntegerField(default=1, editable=False)
 
     is_active = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):
-        if not self.version:
-            self.version = 1
+        if self.pk:
+            self.version = max(self.version, 1) + 1
         else:
-            self.version += 1
-            if self.version > 10:
-                self.version = 1
+            self.version = max(self.version, 1)
+
+        update_fields = kwargs.get("update_fields")
+        if update_fields is not None:
+            kwargs["update_fields"] = set(update_fields) | {"version"}
+
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -52,6 +63,10 @@ class BotRunner(models.Model):
     name = models.CharField(max_length=100, unique=True)
     api_key = models.CharField(max_length=255, unique=True)
     is_active = models.BooleanField(default=False)
+
+    def __str__(self):
+        status = "active" if self.is_active else "not active"
+        return f"{self.name} ({status})"
 
 
 class PluginState(models.Model):
@@ -66,7 +81,12 @@ class PluginState(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        unique_together = ("bot", "plugin_code", "key")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["bot", "plugin_code", "key"],
+                name="unique_bot_plugin_state_key",
+            ),
+        ]
         indexes = [
             models.Index(fields=["bot", "plugin_code", "key"]),
         ]
