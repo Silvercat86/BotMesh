@@ -200,7 +200,10 @@ def get_active_bots(request):
         {
             "name": bot.name,
             "platform": bot.platform,
-            "plugins": bot.plugins,
+            "plugins": [
+                {"name": item.plugin.code, **item.config}
+                for item in bot.plugins.select_related("plugin").filter(is_enabled=True)
+            ],
             "services": bot.services,
             "actions": bot.actions,
             "token": bot.token,

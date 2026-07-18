@@ -1,17 +1,1 @@
-<h1>Боты</h1>
-
-{% for bot in bots %}
-    <div style="border: 1px solid #ccc; padding: 16px; margin-bottom: 12px;">
-        <h2>{{ bot.name }}</h2>
-
-        <p>Платформа: {{ bot.platform }}</p>
-        <p>Активен: {{ bot.is_active }}</p>
-        <p>Версия: {{ bot.version }}</p>
-
-        <a href="{% url 'dashboard_bot_plugins' bot.id %}">
-            Плагины
-        </a>
-    </div>
-{% empty %}
-    <p>Ботов нет.</p>
-{% endfor %}
+{% extends "dashboard/base.html" %}{% block content %}<div class="heading"><div><h1>{% if request.user.is_superuser %}Все боты{% else %}Мои боты{% endif %}</h1><div class="muted">Выберите бота, чтобы управлять его модулями.</div></div>{% if request.user.is_superuser %}<a class="button" href="{% url 'dashboard_bot_create' %}">+ Новый бот</a>{% endif %}</div><div class="grid">{% for bot in bots %}<article class="card"><div class="row" style="justify-content:space-between"><h2>{{ bot.name }}</h2><span class="badge {% if bot.is_active %}on{% else %}off{% endif %}">{% if bot.is_active %}Активен{% else %}Выключен{% endif %}</span></div><p class="muted">{{ bot.get_platform_display }} · версия {{ bot.version }}</p><div class="row"><a class="button" href="{% url 'dashboard_bot_plugins' bot.id %}">Открыть</a>{% if request.user.is_superuser %}<a class="button secondary" href="{% url 'dashboard_bot_edit' bot.id %}">Технические настройки</a>{% endif %}</div></article>{% empty %}<div class="card"><p class="muted">Доступных ботов пока нет.</p></div>{% endfor %}</div>{% endblock %}

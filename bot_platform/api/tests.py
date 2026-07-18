@@ -2,7 +2,7 @@ from django.test import TestCase
 from django.urls import reverse
 from rest_framework.test import APIClient
 
-from bot_management.models import Bot, BotRunner, Platform, PluginState
+from bot_management.models import Bot, BotPlugin, BotRunner, Platform, PluginDefinition, PluginState
 
 
 class ApiAuthenticationTests(TestCase):
@@ -85,6 +85,18 @@ class ActiveBotsApiTests(TestCase):
             [bot["name"] for bot in response.json()["active_bots"]],
             [own_bot.name],
         )
+
+    def test_runner_receives_only_enabled_installed_plugins(self):
+        bot = self.create_bot("plugins", self.runner)
+        enabled = PluginDefinition.objects.create(code="enabled", title="Enabled")
+        disabled = PluginDefinition.objects.create(code="disabled", title="Disabled")
+        bot.available_plugins.add(enabled, disabled)
+        BotPlugin.objects.create(bot=bot, plugin=enabled, is_enabled=True, config={"text": "hello"})
+        BotPlugin.objects.create(bot=bot, plugin=disabled, is_enabled=False)
+
+        response = self.client.get(reverse("get_active_bots"), HTTP_X_API_KEY=self.runner.api_key)
+        payload = next(item for item in response.json()["active_bots"] if item["name"] == bot.name)
+        self.assertEqual(payload["plugins"], [{"name": "enabled", "text": "hello"}])
 
 
 class PluginStateApiTests(TestCase):
