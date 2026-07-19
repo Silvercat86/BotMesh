@@ -21,6 +21,7 @@ class PluginDefinition(models.Model):
     description = models.TextField(blank=True)
     default_config = models.JSONField(default=dict)
     config_schema = models.JSONField(default=dict)
+    runtime_schema = models.JSONField(default=dict, blank=True)
     is_active = models.BooleanField(default=True)
 
     def __str__(self):

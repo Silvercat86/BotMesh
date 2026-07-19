@@ -14,7 +14,7 @@ class ApiKeyMiddleware:
         if not api_key:
             return JsonResponse({"error": "forbidden"}, status=403)
 
-        if request.path == "/api/active_bots/":
+        if request.path == "/api/active_bots/" or request.path.startswith("/api/runner/"):
             try:
                 bot_runner = BotRunner.objects.get(
                     api_key=api_key,

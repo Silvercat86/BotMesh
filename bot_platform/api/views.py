@@ -7,10 +7,64 @@ from django.db import transaction
 
 from accounts.models import TelegramUser
 from communication.models import Chat, ChatMembership
-from bot_management.models import Bot, PluginState
+from bot_management.models import Bot, PluginDefinition, PluginState
 from bot_templates.models import TemplatePack
 
 log = logging.getLogger(__name__)
+
+
+def compare_plugin_contracts(expected, actual):
+    errors = []
+    expected_names = set(expected)
+    actual_names = set(actual)
+    for name in sorted(expected_names - actual_names):
+        errors.append({"type": "missing_plugin", "plugin": name, "expected": expected[name]})
+    for name in sorted(actual_names - expected_names):
+        errors.append({"type": "unexpected_plugin", "plugin": name, "actual": actual[name]})
+
+    for name in sorted(expected_names & actual_names):
+        expected_contract = expected[name]
+        actual_contract = actual[name]
+        expected_fields = expected_contract.get("fields", {})
+        actual_fields = actual_contract.get("fields", {})
+        for field in sorted(set(expected_fields) - set(actual_fields)):
+            errors.append({"type": "missing_field", "plugin": name, "field": field, "expected": expected_fields[field]})
+        for field in sorted(set(actual_fields) - set(expected_fields)):
+            errors.append({"type": "unexpected_field", "plugin": name, "field": field, "actual": actual_fields[field]})
+        for field in sorted(set(expected_fields) & set(actual_fields)):
+            if expected_fields[field] != actual_fields[field]:
+                errors.append({
+                    "type": "field_contract_mismatch",
+                    "plugin": name,
+                    "field": field,
+                    "expected": expected_fields[field],
+                    "actual": actual_fields[field],
+                })
+        if expected_contract.get("additional_fields", True) != actual_contract.get("additional_fields", True):
+            errors.append({
+                "type": "additional_fields_mismatch",
+                "plugin": name,
+                "expected": expected_contract.get("additional_fields", True),
+                "actual": actual_contract.get("additional_fields", True),
+            })
+    return errors
+
+
+@api_view(["POST"])
+def validate_runner_contracts(request):
+    actual = request.data.get("plugins")
+    if not isinstance(actual, dict):
+        return Response({"error": "plugins must be an object"}, status=400)
+
+    expected = {
+        definition.code: definition.runtime_schema
+        for definition in PluginDefinition.objects.filter(is_active=True)
+    }
+    errors = compare_plugin_contracts(expected, actual)
+    return Response({
+        "status": "compatible" if not errors else "incompatible",
+        "errors": errors,
+    })
 
 
 @api_view(["POST"])

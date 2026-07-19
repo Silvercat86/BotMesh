@@ -83,11 +83,20 @@ class PluginConfigForm(forms.Form):
             field_type, label, value = schema.get("type"), schema.get("label", key), merged.get(key)
             if field_type == "int":
                 self.fields[key] = forms.IntegerField(label=label, initial=value, required=False, min_value=schema.get("min"), max_value=schema.get("max"))
+            elif field_type == "float":
+                self.fields[key] = forms.FloatField(label=label, initial=value, required=False, min_value=schema.get("min"), max_value=schema.get("max"))
             elif field_type == "chat":
                 choices = [("", "Не выбрано")] + [(str(c.chat_id), c.title or str(c.chat_id)) for c in Chat.objects.filter(platform=bot_plugin.bot.platform).order_by("title", "chat_id")]
                 self.fields[key] = forms.ChoiceField(label=label, choices=choices, initial="" if value is None else str(value), required=False)
             elif field_type == "bool":
                 self.fields[key] = forms.BooleanField(label=label, initial=bool(value), required=False)
+            elif field_type in {"list", "dict", "json"}:
+                self.fields[key] = forms.JSONField(
+                    label=label,
+                    initial=value,
+                    required=False,
+                    widget=forms.Textarea(attrs={"rows": 6}),
+                )
             else:
                 self.fields[key] = forms.CharField(label=label, initial="" if value is None else str(value), required=False, widget=forms.Textarea if schema.get("format") == "textarea" else forms.TextInput)
 

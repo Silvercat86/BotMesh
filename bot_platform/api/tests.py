@@ -45,6 +45,83 @@ class ApiAuthenticationTests(TestCase):
         self.assertEqual(response.status_code, 403)
 
 
+class RunnerContractApiTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.runner = BotRunner.objects.create(
+            name="contract-runner",
+            api_key="contract-runner-key",
+            is_active=True,
+        )
+        self.contract = {
+            "fields": {
+                "message": {"type": "string", "required": True},
+            },
+            "additional_fields": False,
+        }
+        PluginDefinition.objects.create(
+            code="message_plugin",
+            title="Message",
+            runtime_schema=self.contract,
+        )
+
+    def validate(self, plugins):
+        return self.client.post(
+            reverse("validate_runner_contracts"),
+            {"plugins": plugins},
+            format="json",
+            HTTP_X_API_KEY=self.runner.api_key,
+        )
+
+    def test_matching_contract_is_compatible(self):
+        response = self.validate({"message_plugin": self.contract})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {"status": "compatible", "errors": []})
+
+    def test_missing_plugin_is_reported(self):
+        response = self.validate({})
+
+        self.assertEqual(response.json()["status"], "incompatible")
+        self.assertEqual(
+            response.json()["errors"],
+            [{"type": "missing_plugin", "plugin": "message_plugin", "expected": self.contract}],
+        )
+
+    def test_field_difference_contains_expected_and_actual_contracts(self):
+        actual = {
+            "fields": {
+                "message": {"type": "integer", "required": True},
+            },
+            "additional_fields": False,
+        }
+
+        response = self.validate({"message_plugin": actual})
+        error = response.json()["errors"][0]
+
+        self.assertEqual(error["type"], "field_contract_mismatch")
+        self.assertEqual(error["plugin"], "message_plugin")
+        self.assertEqual(error["field"], "message")
+        self.assertEqual(error["expected"]["type"], "string")
+        self.assertEqual(error["actual"]["type"], "integer")
+
+    def test_bot_key_cannot_validate_runner_contracts(self):
+        bot = Bot.objects.create(
+            name="contract-bot",
+            platform=Platform.TELEGRAM,
+            token="token",
+            is_active=True,
+        )
+        response = self.client.post(
+            reverse("validate_runner_contracts"),
+            {"plugins": {}},
+            format="json",
+            HTTP_X_API_KEY=bot.api_key,
+        )
+
+        self.assertEqual(response.status_code, 403)
+
+
 class ActiveBotsApiTests(TestCase):
     def setUp(self):
         self.client = APIClient()
