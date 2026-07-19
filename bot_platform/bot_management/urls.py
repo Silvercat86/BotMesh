@@ -16,4 +16,13 @@ urlpatterns = [
     path("dashboard/bots/<int:bot_id>/plugins/<int:plugin_id>/edit/", views.edit_bot_plugin, name="dashboard_edit_bot_plugin"),
     path("dashboard/bots/<int:bot_id>/plugins/<int:plugin_id>/toggle/", views.toggle_bot_plugin, name="dashboard_toggle_bot_plugin"),
     path("dashboard/bots/<int:bot_id>/plugins/<int:plugin_id>/delete/", views.delete_bot_plugin, name="dashboard_delete_bot_plugin"),
+    path("dashboard/bots/<int:bot_id>/services/", views.bot_services, name="dashboard_bot_services"),
+    path("dashboard/bots/<int:bot_id>/services/add/<str:service_code>/", views.add_service_to_bot, name="dashboard_add_service_to_bot"),
+    path("dashboard/bots/<int:bot_id>/services/<int:service_id>/edit/", views.edit_bot_service, name="dashboard_edit_bot_service"),
+    path("dashboard/bots/<int:bot_id>/services/<int:service_id>/toggle/", views.toggle_bot_service, name="dashboard_toggle_bot_service"),
+    path("dashboard/bots/<int:bot_id>/services/<int:service_id>/delete/", views.delete_bot_service, name="dashboard_delete_bot_service"),
+    path("dashboard/bots/<int:bot_id>/actions/", views.bot_actions, name="dashboard_bot_actions"),
+    path("dashboard/bots/<int:bot_id>/actions/new/", views.create_bot_action, name="dashboard_create_bot_action"),
+    path("dashboard/bots/<int:bot_id>/actions/<int:action_id>/edit/", views.edit_bot_action, name="dashboard_edit_bot_action"),
+    path("dashboard/bots/<int:bot_id>/actions/<int:action_id>/delete/", views.delete_bot_action, name="dashboard_delete_bot_action"),
 ]

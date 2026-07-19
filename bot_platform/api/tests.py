@@ -2,7 +2,10 @@ from django.test import TestCase
 from django.urls import reverse
 from rest_framework.test import APIClient
 
-from bot_management.models import Bot, BotPlugin, BotRunner, Platform, PluginDefinition, PluginState
+from bot_management.models import (
+    Bot, BotAction, BotPlugin, BotRunner, BotService, Platform,
+    PluginDefinition, PluginState, ServiceDefinition,
+)
 
 
 class ApiAuthenticationTests(TestCase):
@@ -59,6 +62,17 @@ class RunnerContractApiTests(TestCase):
             },
             "additional_fields": False,
         }
+        self.service_contract = {
+            "fields": {
+                "cache_ttl": {"type": "integer", "required": False},
+                "sources": {
+                    "type": "object",
+                    "additionalProperties": {"type": "object", "additionalProperties": True},
+                    "required": False,
+                },
+            },
+            "additional_fields": False,
+        }
         PluginDefinition.objects.create(
             code="message_plugin",
             title="Message",
@@ -68,13 +82,15 @@ class RunnerContractApiTests(TestCase):
     def validate(self, plugins):
         return self.client.post(
             reverse("validate_runner_contracts"),
-            {"plugins": plugins},
+            {"plugins": plugins, "services": {"people_directory_service": self.service_contract}},
             format="json",
             HTTP_X_API_KEY=self.runner.api_key,
         )
 
     def test_matching_contract_is_compatible(self):
-        response = self.validate({"message_plugin": self.contract})
+        response = self.validate({"message_plugin": {
+            "config": self.contract, "required_services": [], "actions": {},
+        }})
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), {"status": "compatible", "errors": []})
@@ -85,7 +101,9 @@ class RunnerContractApiTests(TestCase):
         self.assertEqual(response.json()["status"], "incompatible")
         self.assertEqual(
             response.json()["errors"],
-            [{"type": "missing_plugin", "plugin": "message_plugin", "expected": self.contract}],
+            [{"type": "missing_plugin", "plugin": "message_plugin", "expected": {
+                "config": self.contract, "required_services": [], "actions": {},
+            }}],
         )
 
     def test_field_difference_contains_expected_and_actual_contracts(self):
@@ -96,7 +114,9 @@ class RunnerContractApiTests(TestCase):
             "additional_fields": False,
         }
 
-        response = self.validate({"message_plugin": actual})
+        response = self.validate({"message_plugin": {
+            "config": actual, "required_services": [], "actions": {},
+        }})
         error = response.json()["errors"][0]
 
         self.assertEqual(error["type"], "field_contract_mismatch")
@@ -114,7 +134,7 @@ class RunnerContractApiTests(TestCase):
         )
         response = self.client.post(
             reverse("validate_runner_contracts"),
-            {"plugins": {}},
+            {"plugins": {}, "services": {}},
             format="json",
             HTTP_X_API_KEY=bot.api_key,
         )
@@ -174,6 +194,27 @@ class ActiveBotsApiTests(TestCase):
         response = self.client.get(reverse("get_active_bots"), HTTP_X_API_KEY=self.runner.api_key)
         payload = next(item for item in response.json()["active_bots"] if item["name"] == bot.name)
         self.assertEqual(payload["plugins"], [{"name": "enabled", "text": "hello"}])
+
+    def test_runner_receives_relational_services_and_exact_plugin_actions(self):
+        bot = self.create_bot("relations", self.runner)
+        service = ServiceDefinition.objects.create(code="directory", title="Directory")
+        BotService.objects.create(bot=bot, service=service, is_enabled=True, config={"cache_ttl": 60})
+        plugin = PluginDefinition.objects.create(
+            code="commands", title="Commands",
+            actions_schema={"hello": {"types": ["command"]}},
+        )
+        bot.available_plugins.add(plugin)
+        bot_plugin = BotPlugin.objects.create(bot=bot, plugin=plugin, is_enabled=True)
+        BotAction.objects.create(
+            bot=bot, plugin=bot_plugin, name="hello", handler="hello", type="command"
+        )
+
+        response = self.client.get(reverse("get_active_bots"), HTTP_X_API_KEY=self.runner.api_key)
+        payload = next(item for item in response.json()["active_bots"] if item["name"] == bot.name)
+
+        self.assertEqual(payload["services"], [{"name": "directory", "cache_ttl": 60}])
+        self.assertEqual(payload["actions"][0]["plugin"], "commands")
+        self.assertEqual(payload["actions"][0]["func_name"], "hello")
 
 
 class PluginStateApiTests(TestCase):

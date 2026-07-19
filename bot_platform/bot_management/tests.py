@@ -4,8 +4,12 @@ from django.db import IntegrityError
 from django.db.models import ProtectedError
 from django.test import TestCase
 from django.urls import reverse
+from django.core.management import call_command
 
-from bot_management.models import Bot, BotAccess, BotPlugin, BotRunner, Platform, PluginDefinition
+from bot_management.models import (
+    Bot, BotAccess, BotAction, BotPlugin, BotRunner, BotService,
+    Platform, PluginDefinition, ServiceDefinition,
+)
 
 
 class BotModelTests(TestCase):
@@ -85,6 +89,55 @@ class BotPluginTests(TestCase):
         item.save()
         self.bot.refresh_from_db()
         self.assertEqual(self.bot.version, 3)
+
+
+class ServiceAndActionTests(TestCase):
+    def setUp(self):
+        self.bot = Bot.objects.create(name="contracts", platform=Platform.TELEGRAM, token="token")
+        self.service = ServiceDefinition.objects.create(code="directory", title="Directory")
+        self.plugin = PluginDefinition.objects.create(
+            code="welcome", title="Welcome",
+            actions_schema={"welcome": {"types": ["command"]}},
+        )
+        self.plugin.required_services.add(self.service)
+        self.bot.available_plugins.add(self.plugin)
+        self.bot_plugin = BotPlugin.objects.create(bot=self.bot, plugin=self.plugin)
+
+    def test_plugin_cannot_be_enabled_without_required_service(self):
+        self.bot_plugin.is_enabled = True
+        with self.assertRaises(ValidationError):
+            self.bot_plugin.save()
+
+    def test_required_service_cannot_be_disabled(self):
+        service = BotService.objects.create(bot=self.bot, service=self.service, is_enabled=True)
+        self.bot_plugin.is_enabled = True
+        self.bot_plugin.save()
+
+        service.is_enabled = False
+        with self.assertRaises(ValidationError):
+            service.save()
+
+    def test_action_must_target_declared_handler(self):
+        with self.assertRaises(ValidationError):
+            BotAction.objects.create(
+                bot=self.bot, plugin=self.bot_plugin, name="bad", handler="missing", type="command"
+            )
+
+
+class BuiltinCatalogTests(TestCase):
+    def test_sync_creates_complete_catalog_and_dependencies(self):
+        call_command("sync_builtin_catalog", verbosity=0)
+
+        self.assertEqual(PluginDefinition.objects.count(), 9)
+        self.assertEqual(ServiceDefinition.objects.count(), 1)
+        march8 = PluginDefinition.objects.get(code="march8_plugin")
+        birthday = PluginDefinition.objects.get(code="birthday_plugin")
+        self.assertFalse(march8.required_services.exists())
+        self.assertEqual(
+            list(birthday.required_services.values_list("code", flat=True)),
+            ["people_directory_service"],
+        )
+        self.assertIn("birthday_test", birthday.actions_schema)
 
 
 class DashboardAccessTests(TestCase):

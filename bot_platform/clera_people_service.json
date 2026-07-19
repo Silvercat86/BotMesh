@@ -1,0 +1,37 @@
+{
+  "sources": {
+    "clera_people": {
+      "url": "https://docs.google.com/spreadsheets/d/1YtrOaUOudSsBRT5XDW0U62kE1qSXHdDplaE_xx_4oGM/export?format=csv&gid=1875323650",
+      "mode": "named",
+      "required_fields": [
+        "fio"
+      ],
+      "fields_mapping": {
+        "fio": "ФИО",
+        "status": "Статус",
+        "position": "Должность",
+        "employment_type": "формат трудоустройства",
+        "zone": "Зона",
+        "comments": "комментарии",
+        "start_date": "дата выхода",
+        "birthday": "день рождения",
+        "probation_end": "окончание ИС",
+        "last_heat": "Дата посл  тепловой с Заботой",
+        "next_heat": "Дата след тепловой",
+        "last_1to1": "Дата посл 1 to 1 с рук",
+        "next_1to1": "Дата след 1 to 1 с рук",
+        "employee_card": "Карточка сотрдуника",
+        "gender": "пол",
+        "stack": "Специализация",
+        "manager": "Руководитель",
+        "project": "Точка",
+        "phone": "Телефон",
+        "username": "контакт ТГ",
+        "children": "дети",
+        "address": "адрес проживания",
+        "photo_url": "фото для поздравления"
+      }
+    }
+  },
+  "cache_ttl": 300
+}

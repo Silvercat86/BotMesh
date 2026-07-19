@@ -7,7 +7,7 @@ from django.db import transaction
 
 from accounts.models import TelegramUser
 from communication.models import Chat, ChatMembership
-from bot_management.models import Bot, PluginDefinition, PluginState
+from bot_management.models import Bot, PluginDefinition, PluginState, ServiceDefinition
 from bot_templates.models import TemplatePack
 
 log = logging.getLogger(__name__)
@@ -25,8 +25,10 @@ def compare_plugin_contracts(expected, actual):
     for name in sorted(expected_names & actual_names):
         expected_contract = expected[name]
         actual_contract = actual[name]
-        expected_fields = expected_contract.get("fields", {})
-        actual_fields = actual_contract.get("fields", {})
+        expected_config = expected_contract.get("config", expected_contract)
+        actual_config = actual_contract.get("config", actual_contract)
+        expected_fields = expected_config.get("fields", {})
+        actual_fields = actual_config.get("fields", {})
         for field in sorted(set(expected_fields) - set(actual_fields)):
             errors.append({"type": "missing_field", "plugin": name, "field": field, "expected": expected_fields[field]})
         for field in sorted(set(actual_fields) - set(expected_fields)):
@@ -40,27 +42,50 @@ def compare_plugin_contracts(expected, actual):
                     "expected": expected_fields[field],
                     "actual": actual_fields[field],
                 })
-        if expected_contract.get("additional_fields", True) != actual_contract.get("additional_fields", True):
+        if expected_config.get("additional_fields", True) != actual_config.get("additional_fields", True):
             errors.append({
                 "type": "additional_fields_mismatch",
                 "plugin": name,
-                "expected": expected_contract.get("additional_fields", True),
-                "actual": actual_contract.get("additional_fields", True),
+                "expected": expected_config.get("additional_fields", True),
+                "actual": actual_config.get("additional_fields", True),
             })
+        for key in ("required_services", "actions"):
+            if key in expected_contract or key in actual_contract:
+                if expected_contract.get(key, [] if key == "required_services" else {}) != actual_contract.get(key, [] if key == "required_services" else {}):
+                    errors.append({
+                        "type": f"{key}_mismatch",
+                        "plugin": name,
+                        "expected": expected_contract.get(key),
+                        "actual": actual_contract.get(key),
+                    })
     return errors
 
 
 @api_view(["POST"])
 def validate_runner_contracts(request):
     actual = request.data.get("plugins")
-    if not isinstance(actual, dict):
-        return Response({"error": "plugins must be an object"}, status=400)
+    actual_services = request.data.get("services")
+    if not isinstance(actual, dict) or not isinstance(actual_services, dict):
+        return Response({"error": "plugins and services must be objects"}, status=400)
 
     expected = {
-        definition.code: definition.runtime_schema
-        for definition in PluginDefinition.objects.filter(is_active=True)
+        definition.code: {
+            "config": definition.runtime_schema,
+            "required_services": sorted(definition.required_services.values_list("code", flat=True)),
+            "actions": definition.actions_schema or {},
+        }
+        for definition in PluginDefinition.objects.filter(is_active=True).prefetch_related("required_services")
     }
     errors = compare_plugin_contracts(expected, actual)
+    expected_services = {
+        definition.code: definition.runtime_schema
+        for definition in ServiceDefinition.objects.filter(is_active=True)
+    }
+    service_errors = compare_plugin_contracts(expected_services, actual_services)
+    for error in service_errors:
+        error["service"] = error.pop("plugin")
+        error["type"] = error["type"].replace("plugin", "service")
+    errors.extend(service_errors)
     return Response({
         "status": "compatible" if not errors else "incompatible",
         "errors": errors,
@@ -258,8 +283,22 @@ def get_active_bots(request):
                 {"name": item.plugin.code, **item.config}
                 for item in bot.plugins.select_related("plugin").filter(is_enabled=True)
             ],
-            "services": bot.services,
-            "actions": bot.actions,
+            "services": [
+                {"name": item.service.code, **item.config}
+                for item in bot.services.select_related("service").filter(is_enabled=True)
+            ],
+            "actions": [
+                {
+                    "name": item.name,
+                    "plugin": item.plugin.plugin.code,
+                    "func_name": item.handler,
+                    "type": item.type,
+                    "scope": item.scope,
+                }
+                for item in bot.actions.select_related("plugin__plugin").filter(
+                    is_enabled=True, plugin__is_enabled=True
+                )
+            ],
             "token": bot.token,
             "api_key": bot.api_key,
             "version": bot.version,
