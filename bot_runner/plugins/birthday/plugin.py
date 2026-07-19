@@ -309,20 +309,23 @@ class BirthdayPlugin(BasePlugin):
             else:
                 self.log.warning("No chat_id configured, birthday notifications will not be sent until a chat is registered")
 
-        try :
-
-            template_pack = await self.get_template_pack(self.templates_name)
-            data = template_pack.get("data")
-            if (data):
-                self.templates = data
-            else:
-                self.log.warning(f"Templates for {self.name} {self.bot_name} were empty")
-                self.templates = DEFAULT_BIRTHDAY_TEMPLATES
-
-
-        except Exception as e:
-            self.log.warning(f"Couldnt find templates for {self.name} {self.bot_name}")
+        if not self.templates_name:
+            self.log.warning("Template pack is not configured, using built-in birthday templates")
             self.templates = DEFAULT_BIRTHDAY_TEMPLATES
+        else:
+            try:
+
+                template_pack = await self.get_template_pack(self.templates_name)
+                data = template_pack.get("data")
+                if data:
+                    self.templates = data
+                else:
+                    self.log.warning(f"Templates for {self.name} {self.bot_name} were empty")
+                    self.templates = DEFAULT_BIRTHDAY_TEMPLATES
+
+            except Exception:
+                self.log.warning(f"Couldnt find templates for {self.name} {self.bot_name}")
+                self.templates = DEFAULT_BIRTHDAY_TEMPLATES
 
             
 

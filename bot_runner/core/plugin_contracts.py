@@ -135,10 +135,18 @@ def get_service_contracts(service_registry: dict) -> dict[str, dict[str, Any]]:
     return contracts
 
 
-def validate_plugin_config(plugin_class: type, config: dict[str, Any]) -> None:
+def _validated_config(model: type[PluginConfig], config: dict[str, Any]) -> dict[str, Any]:
+    normalized = dict(config)
+    for name, field in model.model_fields.items():
+        if not field.is_required() and normalized.get(name) in (None, ""):
+            normalized.pop(name, None)
+    return model.model_validate(normalized).model_dump()
+
+
+def validate_plugin_config(plugin_class: type, config: dict[str, Any]) -> dict[str, Any]:
     model = plugin_class.config_model
-    model.model_validate(config)
+    return _validated_config(model, config)
 
 
-def validate_service_config(service_class: type, config: dict[str, Any]) -> None:
-    service_class.config_model.model_validate(config)
+def validate_service_config(service_class: type, config: dict[str, Any]) -> dict[str, Any]:
+    return _validated_config(service_class.config_model, config)

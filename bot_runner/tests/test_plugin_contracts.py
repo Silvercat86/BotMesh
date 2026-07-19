@@ -12,6 +12,11 @@ from core.plugin_contracts import (
 )
 from core.registries import PLUGIN_REGISTRY
 from core.registries import SERVICE_REGISTRY
+from plugins.clever_shma.plugin import MODEL, OPENROUTER_URL
+from plugins.march8.plugin import DEFAULT_TEMPLATE
+from plugins.memes.plugin import MemePlugin
+from plugins.start.plugin import DEFAULT_TEMPLATES
+from plugins.welcome.plugin import DEFAULT_BASE_TEMPLATE, DEFAULT_QUESTIONS
 
 
 class PluginContractTests(unittest.TestCase):
@@ -73,6 +78,31 @@ class PluginContractTests(unittest.TestCase):
                     validate_plugin_config(plugin_class, config)
                     instance = plugin_class.from_config(config)
                     self.assertIsInstance(instance, plugin_class)
+                    if name == "start_plugin":
+                        self.assertTrue(instance.messages)
+
+    def test_empty_values_use_plugin_fallbacks(self):
+        start = PLUGIN_REGISTRY["start_plugin"].from_config({"messages": []})
+        welcome = PLUGIN_REGISTRY["welcome_plugin"].from_config({
+            "base_template": "", "questions": [], "n_questions": 3, "dedupe_ttl_seconds": 30,
+        })
+        march8 = PLUGIN_REGISTRY["march8_plugin"].from_config({
+            "template": "", "storage_dir": "data/march", "photo": None,
+            "hour": 6, "minute": 0, "chat_id": "",
+        })
+        meme = MemePlugin.from_config({"data_file": ""})
+        clever = PLUGIN_REGISTRY["clever_shma_plugin"].from_config({
+            "api_url": "", "model": "", "system_prompt": None,
+            "temperature": 0.7, "max_tokens": 1024, "timeout_seconds": 60,
+        })
+
+        self.assertEqual(start.messages, DEFAULT_TEMPLATES)
+        self.assertEqual(welcome.base_template, DEFAULT_BASE_TEMPLATE)
+        self.assertEqual(welcome.questions, DEFAULT_QUESTIONS)
+        self.assertEqual(march8.template, DEFAULT_TEMPLATE)
+        self.assertEqual(str(meme.data_file).replace("\\", "/"), "data/memes/memes.txt")
+        self.assertEqual(clever.api_url, OPENROUTER_URL)
+        self.assertEqual(clever.model, MODEL)
 
 
 if __name__ == "__main__":

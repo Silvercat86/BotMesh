@@ -40,8 +40,8 @@ class WelcomePlugin(BasePlugin):
 
     @classmethod
     def from_config(cls, config):
-        base_template = config.get("base_template",DEFAULT_BASE_TEMPLATE)
-        questions = config.get("questions", DEFAULT_QUESTIONS)
+        base_template = config.get("base_template") or DEFAULT_BASE_TEMPLATE
+        questions = config.get("questions") or DEFAULT_QUESTIONS
 
         return cls(
             base_template,

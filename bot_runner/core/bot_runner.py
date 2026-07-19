@@ -184,7 +184,7 @@ class BotRunner:
                 continue
             else:
                 config = {key: value for key, value in plugin_data.items() if key != "name"}
-                validate_plugin_config(plugin_class, config)
+                config = validate_plugin_config(plugin_class, config)
                 plugin_instance = plugin_class.from_config(config)
                 plugin_instance.name = plugin_data["name"]
                 plugin_instances.append(plugin_instance)
@@ -200,7 +200,7 @@ class BotRunner:
                 continue
             else:
                 config = {key: value for key, value in service_data.items() if key != "name"}
-                validate_service_config(service_class, config)
+                config = validate_service_config(service_class, config)
                 service_instance = service_class.from_config(config)
                 service_instance.name = service_data["name"]
                 service_instances.append(service_instance)

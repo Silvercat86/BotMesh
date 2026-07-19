@@ -15,7 +15,7 @@ class MemePlugin(BasePlugin):
 
     @classmethod
     def from_config(cls, config):
-        return cls(data_file=config.get("data_file", "data/memes/memes.txt"))
+        return cls(data_file=config.get("data_file") or "data/memes/memes.txt")
 
     async def setup(self):
         memes_file = self.data_file

@@ -19,7 +19,7 @@ class StartPlugin(BasePlugin):
 
     @classmethod
     def from_config(cls, config):
-        messages = config.get("messages",DEFAULT_TEMPLATES)
+        messages = config.get("messages") or DEFAULT_TEMPLATES
         return cls(messages)
 
     async def start(self,message:UniversalMessage):

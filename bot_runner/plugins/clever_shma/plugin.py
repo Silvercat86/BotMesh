@@ -37,8 +37,8 @@ class CleverShmaPlugin(BasePlugin):
     @classmethod
     def from_config(cls, config):
         return cls(
-            api_url=config.get("api_url", OPENROUTER_URL),
-            model=config.get("model", MODEL),
+            api_url=config.get("api_url") or OPENROUTER_URL,
+            model=config.get("model") or MODEL,
             system_prompt=config.get("system_prompt"),
             temperature=float(config.get("temperature", 0.7)),
             max_tokens=int(config.get("max_tokens", 1024)),
