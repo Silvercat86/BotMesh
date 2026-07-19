@@ -32,6 +32,12 @@ DEFAULT_WORK_TEMPLATES = {
 }
 
 class WorkExperiencePlugin(BasePlugin):
+    required_services = ("people_directory_service",)
+    action_contracts = {
+        "work_test": {"types": ["command"]},
+        "work_chat_status": {"types": ["command"]},
+        "work_register_chat": {"types": ["command"]},
+    }
     config_model = WorkExperienceConfig
     def __init__(
         self,
@@ -44,7 +50,6 @@ class WorkExperiencePlugin(BasePlugin):
     ):
         super().__init__()
 
-        self.required_services = ("people_directory_service",)
 
 
         self.templates_by_years = templates_by_years

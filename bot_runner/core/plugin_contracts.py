@@ -69,6 +69,11 @@ class CleverShmaConfig(PluginConfig):
     timeout_seconds: float = Field(default=60, gt=0)
 
 
+class PeopleDirectoryConfig(PluginConfig):
+    sources: dict[str, dict] = Field(default_factory=dict)
+    cache_ttl: int = Field(default=300, gt=0)
+
+
 def _canonical_property(schema: dict[str, Any]) -> dict[str, Any]:
     keys = (
         "type",
@@ -112,6 +117,20 @@ def get_plugin_contracts(plugin_registry: dict) -> dict[str, dict[str, Any]]:
         model = getattr(plugin_class, "config_model", None)
         if model is None:
             raise RuntimeError(f"Plugin {name} has no config_model")
+        contracts[name] = {
+            "config": model_contract(model),
+            "required_services": sorted(getattr(plugin_class, "required_services", ())),
+            "actions": getattr(plugin_class, "action_contracts", {}),
+        }
+    return contracts
+
+
+def get_service_contracts(service_registry: dict) -> dict[str, dict[str, Any]]:
+    contracts = {}
+    for name, service_class in sorted(service_registry.items()):
+        model = getattr(service_class, "config_model", None)
+        if model is None:
+            raise RuntimeError(f"Service {name} has no config_model")
         contracts[name] = model_contract(model)
     return contracts
 
@@ -119,3 +138,7 @@ def get_plugin_contracts(plugin_registry: dict) -> dict[str, dict[str, Any]]:
 def validate_plugin_config(plugin_class: type, config: dict[str, Any]) -> None:
     model = plugin_class.config_model
     model.model_validate(config)
+
+
+def validate_service_config(service_class: type, config: dict[str, Any]) -> None:
+    service_class.config_model.model_validate(config)

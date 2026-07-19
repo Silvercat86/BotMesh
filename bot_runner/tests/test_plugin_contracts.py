@@ -6,10 +6,12 @@ from pydantic import ValidationError
 from core.plugin_contracts import (
     BirthdayConfig,
     get_plugin_contracts,
+    get_service_contracts,
     model_contract,
     validate_plugin_config,
 )
 from core.registries import PLUGIN_REGISTRY
+from core.registries import SERVICE_REGISTRY
 
 
 class PluginContractTests(unittest.TestCase):
@@ -17,6 +19,17 @@ class PluginContractTests(unittest.TestCase):
         contracts = get_plugin_contracts(PLUGIN_REGISTRY)
 
         self.assertEqual(set(contracts), set(PLUGIN_REGISTRY))
+        self.assertIn("config", contracts["birthday_plugin"])
+        self.assertEqual(
+            contracts["birthday_plugin"]["required_services"],
+            ["people_directory_service"],
+        )
+        self.assertIn("birthday_test", contracts["birthday_plugin"]["actions"])
+
+    def test_every_registered_service_has_contract(self):
+        contracts = get_service_contracts(SERVICE_REGISTRY)
+        self.assertEqual(set(contracts), set(SERVICE_REGISTRY))
+        self.assertIn("sources", contracts["people_directory_service"]["fields"])
 
     def test_contract_contains_required_fields_and_constraints(self):
         contract = model_contract(BirthdayConfig)

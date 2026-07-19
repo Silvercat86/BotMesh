@@ -41,6 +41,7 @@ class InfoState(StatesGroup):
 
 
 class EmployeeInfoPlugin(BasePlugin):
+    required_services = ("people_directory_service",)
     config_model = EmployeeInfoConfig
 
     def __init__(self,sources: List[str] = [],available_nicknames : List[str] = [],available_chats : List[str] = [],scope_chats : List[int] = []):
@@ -49,7 +50,6 @@ class EmployeeInfoPlugin(BasePlugin):
         self.available_nicknames = available_nicknames
         self.available_chats = available_chats
         self.scope_chats = scope_chats
-        self.required_services = ("people_directory_service",)
 
     @classmethod
     def from_config(cls, config):

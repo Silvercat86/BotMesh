@@ -95,6 +95,7 @@ COMPLIMENTS = [
 ]
 
 class ComplimentPlugin(BasePlugin):
+    action_contracts = {"compliment": {"types": ["command"]}}
     config_model = ComplimentConfig
 
     def __init__(self, messages=None):

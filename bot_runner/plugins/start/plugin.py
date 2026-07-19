@@ -11,6 +11,7 @@ from core.models import UniversalMessage
 DEFAULT_TEMPLATES = ["Привет! Я бот сопровождения. По вопросам можешь обратиться @KatyaLay7"]
     
 class StartPlugin(BasePlugin):
+    action_contracts = {"start": {"types": ["command"]}}
     config_model = StartConfig
     def __init__(self,messages: List[str]):
         super().__init__()

@@ -104,6 +104,8 @@ class TelegramBotInstance(BotInstance):
 
     def _register_telegram_action(self, action: Action):
         for plugin in self.plugins:
+            if plugin.name != action.plugin_name:
+                continue
             plugin_action = plugin.get_action(action.func_name)
             if plugin_action:
                 if action.type == ActionType.COMMAND:
@@ -166,6 +168,8 @@ class MaxBotInstance(BotInstance):
 
     def _register_max_action(self, action: Action):
         for plugin in self.plugins:
+            if plugin.name != action.plugin_name:
+                continue
             plugin_action = plugin.get_action(action.func_name)
 
             if not plugin_action:

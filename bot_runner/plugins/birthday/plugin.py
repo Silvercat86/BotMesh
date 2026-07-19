@@ -97,6 +97,12 @@ DEFAULT_BIRTHDAY_TEMPLATES = [
 
 
 class BirthdayPlugin(BasePlugin):
+    required_services = ("people_directory_service",)
+    action_contracts = {
+        "birthday_test": {"types": ["command"]},
+        "birthday_chat_status": {"types": ["command"]},
+        "birthday_register_chat": {"types": ["command"]},
+    }
     config_model = BirthdayConfig
     def __init__(
         self,
@@ -110,7 +116,6 @@ class BirthdayPlugin(BasePlugin):
     ):
         super().__init__()
 
-        self.required_services = ("people_directory_service",)
 
         
         self.templates_name = templates_name

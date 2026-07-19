@@ -5,6 +5,7 @@ from typing import Optional
 
 import base64
 import json
+import os
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 
@@ -75,9 +76,17 @@ from io import StringIO
 from typing import List, Optional, Dict
 
 from core.base_service import BaseService
+from core.plugin_contracts import PeopleDirectoryConfig
 
 
 class PeopleDirectoryService(BaseService): 
+    config_model = PeopleDirectoryConfig
+
+    @staticmethod
+    def _service_account_b64(source_cfg: dict) -> str:
+        return source_cfg.get("service_account_b64") or os.getenv(
+            "KEEPCAT_CREDENTIALS_BASE64", ""
+        )
 
     def __init__(self, sources: Dict[str, dict], cache_ttl: int = 300):
 
@@ -249,7 +258,7 @@ class PeopleDirectoryService(BaseService):
         if not url and not path:
             raise RuntimeError("People source must contain url or path")
 
-        service_account_b64 = source_cfg.get("service_account_b64")
+        service_account_b64 = self._service_account_b64(source_cfg)
 
         if service_account_b64 and url and "docs.google.com" in url:
             print("Loading using Google Sheets API, url:", url)
@@ -480,4 +489,3 @@ class PeopleDirectoryService(BaseService):
         cache_ttl = config.get("cache_ttl", 300)
 
         return cls(sources, cache_ttl)
-        

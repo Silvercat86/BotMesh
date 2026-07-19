@@ -12,6 +12,7 @@ class ActionType(str, Enum):
 @dataclass
 class Action:
     name: str
+    plugin_name: str
     func_name: str
     scope: str = "any"
     type: ActionType = ActionType.COMMAND

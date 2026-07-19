@@ -16,6 +16,9 @@ DEFAULT_QUESTIONS = ["Да?"]
 
 
 class WelcomePlugin(BasePlugin):
+    action_contracts = {
+        "handle_chat_member_join": {"types": ["chat_member_join"]},
+    }
     config_model = WelcomeConfig
     def __init__(
         self,

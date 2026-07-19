@@ -12,7 +12,10 @@ from core.registries import PLUGIN_REGISTRY, SERVICE_REGISTRY
 from core.base_service import BaseService
 from core.base_plugin import BasePlugin
 from core.action import Action, get_action_type_from_string
-from core.plugin_contracts import get_plugin_contracts, validate_plugin_config
+from core.plugin_contracts import (
+    get_plugin_contracts, get_service_contracts,
+    validate_plugin_config, validate_service_config,
+)
 
 
 log = logging.getLogger("bot.runner")
@@ -51,7 +54,10 @@ class BotRunner:
             if self.api is None:
                 raise RuntimeError("BotRunner API is not initialized")
 
-            result = await self.api.validate_runner_contracts(get_plugin_contracts(PLUGIN_REGISTRY))
+            result = await self.api.validate_runner_contracts(
+                get_plugin_contracts(PLUGIN_REGISTRY),
+                get_service_contracts(SERVICE_REGISTRY),
+            )
             if result.get("status") != "compatible":
                 for error in result.get("errors", []):
                     log.error("Runner contract mismatch: %s", error)
@@ -193,7 +199,9 @@ class BotRunner:
                 log.warning("Service %s not found in registry", service_data["name"])
                 continue
             else:
-                service_instance = service_class.from_config(service_data)
+                config = {key: value for key, value in service_data.items() if key != "name"}
+                validate_service_config(service_class, config)
+                service_instance = service_class.from_config(config)
                 service_instance.name = service_data["name"]
                 service_instances.append(service_instance)
 
@@ -208,6 +216,7 @@ class BotRunner:
             action_scope = action_data.get("scope")
             action = Action(
                 name=action_name,
+                plugin_name=action_data.get("plugin"),
                 func_name=action_func_name,
                 type=get_action_type_from_string(action_type),
                 scope=action_scope
