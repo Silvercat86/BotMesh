@@ -1,4 +1,5 @@
 from core.base_plugin import BasePlugin
+from core.plugin_contracts import CleverShmaConfig
 from aiogram.filters import Command
 from aiogram.types import Message
 import os
@@ -13,10 +14,36 @@ MODEL = os.getenv("OPENROUTER_MODEL", "deepseek/deepseek-chat")
 
 
 class CleverShmaPlugin(BasePlugin):
-    def __init__(self):
-        super().__init__()
+    config_model = CleverShmaConfig
 
+    def __init__(
+        self,
+        api_url=OPENROUTER_URL,
+        model=MODEL,
+        system_prompt=None,
+        temperature=0.7,
+        max_tokens=1024,
+        timeout_seconds=60,
+    ):
+        super().__init__()
+        self.api_url = api_url
+        self.model = model
+        self.system_prompt = system_prompt
+        self.temperature = temperature
+        self.max_tokens = max_tokens
+        self.timeout_seconds = timeout_seconds
         self.log = None
+
+    @classmethod
+    def from_config(cls, config):
+        return cls(
+            api_url=config.get("api_url", OPENROUTER_URL),
+            model=config.get("model", MODEL),
+            system_prompt=config.get("system_prompt"),
+            temperature=float(config.get("temperature", 0.7)),
+            max_tokens=int(config.get("max_tokens", 1024)),
+            timeout_seconds=float(config.get("timeout_seconds", 60)),
+        )
 
     async def setup(self):
 
@@ -76,22 +103,25 @@ class CleverShmaPlugin(BasePlugin):
 {message.text}
 """
 
+            if self.system_prompt:
+                question = f"{self.system_prompt}\n\nВопрос:\n{text}"
+
             payload = {
-                "model": MODEL,
+                "model": self.model,
                 "messages": [
                     {
                         "role": "user",
                         "content": question,
                     }
                 ],
-                "temperature": 0.7,
-                "max_tokens": 1024,
+                "temperature": self.temperature,
+                "max_tokens": self.max_tokens,
             }
 
             try:
-                async with httpx.AsyncClient(timeout=60) as client:
+                async with httpx.AsyncClient(timeout=self.timeout_seconds) as client:
                     r = await client.post(
-                        OPENROUTER_URL,
+                        self.api_url,
                         json=payload,
                         headers=headers,
                     )

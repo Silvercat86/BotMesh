@@ -12,6 +12,7 @@ from aiogram.filters import Command
 from aiogram.types import Message, FSInputFile
 
 from core.base_plugin import BasePlugin
+from core.plugin_contracts import WorkExperienceConfig
 from plugins.work_experience.service import (
     today_almaty,
     build_payloads,
@@ -31,6 +32,7 @@ DEFAULT_WORK_TEMPLATES = {
 }
 
 class WorkExperiencePlugin(BasePlugin):
+    config_model = WorkExperienceConfig
     def __init__(
         self,
         templates_by_years: dict,

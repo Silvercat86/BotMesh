@@ -6,6 +6,7 @@ from core.api import Api
 from core.adapters.protocols import BotAdapter
 
 class BasePlugin:
+    config_model = None
     required_services: tuple[str, ...] = ()
 
     def __init__(self):

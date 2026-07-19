@@ -12,6 +12,7 @@ from core.registries import PLUGIN_REGISTRY, SERVICE_REGISTRY
 from core.base_service import BaseService
 from core.base_plugin import BasePlugin
 from core.action import Action, get_action_type_from_string
+from core.plugin_contracts import get_plugin_contracts, validate_plugin_config
 
 
 log = logging.getLogger("bot.runner")
@@ -46,13 +47,19 @@ class BotRunner:
     async def run(self):
         await self.init()
 
-        if self.api is None:
-            raise RuntimeError("BotRunner API is not initialized")
-
-        self._running = True
-        log.info("BotRunner started")
-
         try:
+            if self.api is None:
+                raise RuntimeError("BotRunner API is not initialized")
+
+            result = await self.api.validate_runner_contracts(get_plugin_contracts(PLUGIN_REGISTRY))
+            if result.get("status") != "compatible":
+                for error in result.get("errors", []):
+                    log.error("Runner contract mismatch: %s", error)
+                raise RuntimeError("Runner plugin contracts are incompatible with backend")
+
+            self._running = True
+            log.info("BotRunner started")
+
             while self._running:
                 started_at = time.monotonic()
 
@@ -170,7 +177,9 @@ class BotRunner:
                 log.warning("Plugin %s not found in registry", plugin_data["name"])
                 continue
             else:
-                plugin_instance = plugin_class.from_config(plugin_data)
+                config = {key: value for key, value in plugin_data.items() if key != "name"}
+                validate_plugin_config(plugin_class, config)
+                plugin_instance = plugin_class.from_config(config)
                 plugin_instance.name = plugin_data["name"]
                 plugin_instances.append(plugin_instance)
 

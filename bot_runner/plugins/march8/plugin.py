@@ -9,11 +9,13 @@ from aiogram.filters import Command
 from aiogram.types import Message, FSInputFile
 
 from core.base_plugin import BasePlugin
+from core.plugin_contracts import March8Config
 
 DEFAULT_TEMPLATE = "С 8 марта!"
 
 
 class March8Plugin(BasePlugin):
+    config_model = March8Config
     def __init__(
         self,
         template: str,
@@ -54,6 +56,7 @@ class March8Plugin(BasePlugin):
         return cls(
             template=templates,
             storage_dir=str(config["storage_dir"]),
+            photo=config.get("photo"),
             hour=int(config.get("hour", 6)),
             minute=int(config.get("minute", 0)),
             chat_id=str(config["chat_id"]),

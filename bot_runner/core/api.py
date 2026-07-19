@@ -135,6 +135,13 @@ class Api:
     
     async def get_active_bots(self):
         return await self._request("GET", "active_bots/")
+
+    async def validate_runner_contracts(self, plugins: dict[str, dict]) -> dict[str, Any]:
+        return await self._request(
+            "POST",
+            "runner/validate_contracts/",
+            json={"plugins": plugins},
+        )
     
     async def get_template_pack(self,plugin_name,template_name) -> dict[str, Any]:
         params = {

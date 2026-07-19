@@ -9,12 +9,14 @@ from aiogram.types import ChatMemberUpdated, Message
 from aiogram import F
 
 from core.base_plugin import BasePlugin
+from core.plugin_contracts import WelcomeConfig
 
 DEFAULT_BASE_TEMPLATE = "Привет"
 DEFAULT_QUESTIONS = ["Да?"]
 
 
 class WelcomePlugin(BasePlugin):
+    config_model = WelcomeConfig
     def __init__(
         self,
         base_template: str,
@@ -38,7 +40,12 @@ class WelcomePlugin(BasePlugin):
         base_template = config.get("base_template",DEFAULT_BASE_TEMPLATE)
         questions = config.get("questions", DEFAULT_QUESTIONS)
 
-        return cls(base_template,questions)
+        return cls(
+            base_template,
+            questions,
+            n_questions=int(config.get("n_questions", 3)),
+            dedupe_ttl_seconds=int(config.get("dedupe_ttl_seconds", 30)),
+        )
         
 
     def get_actions(self) -> dict[str, Callable]:

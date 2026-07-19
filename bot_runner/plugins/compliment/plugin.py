@@ -4,6 +4,7 @@ from typing import Callable
 from aiogram.filters import Command
 from aiogram.types import Message
 from core.base_plugin import BasePlugin
+from core.plugin_contracts import ComplimentConfig
 
 COMPLIMENTS = [
     # блок 1
@@ -94,6 +95,16 @@ COMPLIMENTS = [
 ]
 
 class ComplimentPlugin(BasePlugin):
+    config_model = ComplimentConfig
+
+    def __init__(self, messages=None):
+        super().__init__()
+        self.messages = messages or COMPLIMENTS
+
+    @classmethod
+    def from_config(cls, config):
+        return cls(messages=config.get("messages") or COMPLIMENTS)
+
     def get_actions(self) -> dict[str, Callable]:
         return {
             "compliment": self.send_compliment,
@@ -102,5 +113,5 @@ class ComplimentPlugin(BasePlugin):
         pass
 
     async def send_compliment(self, chat_id: int):
-        compliment = random.choice(COMPLIMENTS)
+        compliment = random.choice(self.messages)
         await self._send(chat_id, compliment)

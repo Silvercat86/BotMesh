@@ -13,3 +13,4 @@ google-auth-oauthlib==1.2.1
 httpx==0.28.1
 
 maxapi==1.0.0
+pydantic>=2.0,<3.0

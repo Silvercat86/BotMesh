@@ -10,6 +10,7 @@ import schedule
 
 
 from core.base_plugin import BasePlugin
+from core.plugin_contracts import BirthdayConfig
 from plugins.birthday.service import (
     today_almaty,
     build_payloads,
@@ -96,6 +97,7 @@ DEFAULT_BIRTHDAY_TEMPLATES = [
 
 
 class BirthdayPlugin(BasePlugin):
+    config_model = BirthdayConfig
     def __init__(
         self,
         templates_name: str,

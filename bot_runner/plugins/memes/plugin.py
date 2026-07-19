@@ -4,10 +4,21 @@ from aiogram.filters import Command
 import random
 
 from core.base_plugin import BasePlugin
+from core.plugin_contracts import MemeConfig
 
 class MemePlugin(BasePlugin):
+    config_model = MemeConfig
+
+    def __init__(self, data_file="data/memes/memes.txt"):
+        super().__init__()
+        self.data_file = Path(data_file)
+
+    @classmethod
+    def from_config(cls, config):
+        return cls(data_file=config.get("data_file", "data/memes/memes.txt"))
+
     async def setup(self):
-        memes_file = Path("data/memes/memes.txt")
+        memes_file = self.data_file
         memes_file.parent.mkdir(parents=True, exist_ok=True)
 
         @self.router.message(Command("meme"))

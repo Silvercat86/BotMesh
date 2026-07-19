@@ -1,6 +1,7 @@
 import logging
 
 from core.base_plugin import BasePlugin
+from core.plugin_contracts import StartConfig
 import random
 from typing import Callable, List
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, Message
@@ -10,6 +11,7 @@ from core.models import UniversalMessage
 DEFAULT_TEMPLATES = ["Привет! Я бот сопровождения. По вопросам можешь обратиться @KatyaLay7"]
     
 class StartPlugin(BasePlugin):
+    config_model = StartConfig
     def __init__(self,messages: List[str]):
         super().__init__()
         self.messages = messages

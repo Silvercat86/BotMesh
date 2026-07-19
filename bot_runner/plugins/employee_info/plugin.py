@@ -6,6 +6,7 @@ from multiprocessing import context
 import maxapi
 
 from core.base_plugin import BasePlugin
+from core.plugin_contracts import EmployeeInfoConfig
 
 from aiogram.filters import Command
 from aiogram.types import Message, InlineKeyboardButton, CallbackQuery
@@ -40,6 +41,7 @@ class InfoState(StatesGroup):
 
 
 class EmployeeInfoPlugin(BasePlugin):
+    config_model = EmployeeInfoConfig
 
     def __init__(self,sources: List[str] = [],available_nicknames : List[str] = [],available_chats : List[str] = [],scope_chats : List[int] = []):
         super().__init__()
