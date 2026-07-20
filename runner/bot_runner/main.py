@@ -1,0 +1,591 @@
+import asyncio
+import logging
+import sys
+import os
+from dotenv import load_dotenv
+
+from aiogram import Bot, Dispatcher, html
+from aiogram.client.default import DefaultBotProperties
+from aiogram.enums import ParseMode
+from aiogram.filters import CommandStart
+from aiogram.types import Message
+from aiogram import Router
+
+
+from core.bot_instance import TelegramBotInstance
+from core.bot_instance import MaxBotInstance
+
+from plugins.compliment.plugin import ComplimentPlugin
+from plugins.birthday.plugin import BirthdayPlugin
+from plugins.work_experience.plugin import WorkExperiencePlugin
+from plugins.welcome.plugin import WelcomePlugin
+from plugins.start.plugin import StartPlugin
+from plugins.memes.plugin import MemePlugin
+from plugins.march8.plugin import March8Plugin
+from plugins.employee_info.plugin import EmployeeInfoPlugin
+from plugins.clever_shma.plugin import CleverShmaPlugin
+
+
+from core.templates import RIO_BIRTHDAY_TEMPLATES, THREEIT_BIRTHDAY_TEMPLATES
+from core.templates import RIO_WORK_TEMPLATES, THREEIT_WORK_TEMPLATES
+from core.templates import THREEIT_WELCOME_TEMPLATE, THREEIT_WELCOME_QUESTIONS
+from core.templates import RIO_WELCOME_TEMPLATE, RIO_WELCOME_QUESTIONS
+from core.templates import CLERA_WELCOME_TEMPLATE,CLERA_WELCOME_QUESTIONS,CLERA_WORK_TEMPLATES,CLERA_BIRTHDAY_TEMPLATES
+from core.templates import RIO_START_TEMPLATES, THREEIT_START_TEMPLATES,CLERA_START_TEMPLATES
+from core.templates import RIO_MARCH8_TEMPLATE, THREEIT_MARCH8_TEMPLATE
+
+from core.templates import USADBA_BIRTHDAY_TEMPLATES,USADBA_WORK_TEMPLATES,USADBA_WELCOME_TEMPLATE,USADBA_WELCOME_QUESTIONS
+
+
+from services.people_directory import PeopleDirectoryService
+
+from core.action import Action, ActionType
+
+from core.bot_runner import BotRunner
+
+
+load_dotenv()
+
+is_testing = os.getenv("TESTING", "false").lower() == "true"
+
+
+async def main() -> None:
+    if not is_testing:
+
+        not_shma_bot_instance = TelegramBotInstance(
+            token=os.getenv("NOT_SHMA_BOT_TOKEN", ""),
+            api_key=os.getenv("NOT_SHMA_API_KEY",""),
+            name="NotShmaBot",
+            plugins=[
+                CleverShmaPlugin(),
+            ],
+            services=[]
+        )
+
+        rio_bot_instance = TelegramBotInstance(
+            token=os.getenv("RIO_BOT_TOKEN", ""),
+            api_key=os.getenv("RIO_API_KEY",""),
+            name="RioBot",
+            plugins=[
+                ComplimentPlugin(),
+                BirthdayPlugin(
+                    templates=RIO_BIRTHDAY_TEMPLATES,
+                    storage_dir="data/rio/birthday",
+                    people_source="rio_people_birthdays",
+                    hour=6,
+                    minute=0,
+                    chat_id="-1001712668166"
+                ),
+                WorkExperiencePlugin(
+                    templates_by_years=RIO_WORK_TEMPLATES,
+                    storage_dir="data/rio/work",
+                    people_source="rio_people_work",
+                    hour=6,
+                    minute=0,
+                    chat_id="-1001712668166"
+                ),
+
+                WelcomePlugin(
+                    base_template=RIO_WELCOME_TEMPLATE,
+                    questions=RIO_WELCOME_QUESTIONS,
+                    n_questions=3,
+                    ),
+
+                StartPlugin(
+                    messages=RIO_START_TEMPLATES
+                ),
+                # MemePlugin(),
+                March8Plugin(
+                    template=RIO_MARCH8_TEMPLATE,
+                    storage_dir="data/rio/march8",
+                    hour=6,
+                    minute=0,
+                    photo = "data/rio/march8/image.jpg",
+                    chat_id="-1001712668166"
+
+                ),
+
+                EmployeeInfoPlugin(
+                    sources=["rio_people"],
+                    available_nicknames=["not_silvercat86","katyalay7","kseniyanika","olga_voropaeva","jenay1985","kamilkamimiko","antonvrp","cheerryplum"],
+                    available_chats=["Забота Рио 2025","test"],
+                    scope_chats = [-1003575870359]
+                
+                ),
+
+            ],
+            services=[
+                PeopleDirectoryService(
+                    sources={
+                         "rio_people_birthdays": {
+                            "url": "https://docs.google.com/spreadsheets/d/1QFdn6iAmc-krAIY75nDvWvn54LZrpjX5TfufZb1sJRg/export?format=csv&gid=0",
+                            "mode": "indexed",
+                            "required_fields": ("fio",),
+                            "fields_mapping": {
+                                "fio": 0,
+                                "username": 1,
+                                "birthday": 2,
+                                "photo_url": 3
+                        }
+                        },
+                        "rio_people_work": {
+                            "url": "https://docs.google.com/spreadsheets/d/1QFdn6iAmc-krAIY75nDvWvn54LZrpjX5TfufZb1sJRg/export?format=csv&gid=1937147644",
+                            "mode": "indexed",
+                            "required_fields": ("fio",),
+                            "fields_mapping": {
+                                "fio": 0,
+                                "username": 1,
+                                "start_date": 2,
+                                "photo_url": 3
+                        }
+                        },
+                        "rio_people": {
+                            "url": "https://docs.google.com/spreadsheets/d/11xOQjQxoYvfbyOAu5oPtR0SE6xkgCFJY7Q0_Zt1ShuY/export?format=csv",
+                            "service_account_b64": os.getenv("RIO_CREDENTIALS_BASE64", ""),
+                            "mode": "named",
+                            "required_fields": ("fio",),
+                            "fields_mapping": {
+
+                                # база
+                                "fio": "ФИО",
+                                "status": "Статус",
+                                "position": "Должность",
+
+                                # занятость / hr
+                                "employment_type": "формат трудоустройства",
+                                "zone": "Зона",
+                                "risk": "Риск ухода",
+                                "comments": "комментарии",
+
+                                # даты
+                                "start_date": "дата выхода",
+                                "birthday": "день рождения",
+                                "probation_end": "окончание ИС",
+
+                                # тепловые / встречи (исправлены названия)
+                                "last_heat": "Дата посл  тепловой с Заботой",
+                                "next_heat": "Дата след тепловой",
+
+                                "last_1to1": "Дата посл 1 to 1 с рук",
+                                "next_1to1": "Дата след 1 to 1 с рук",
+
+                                # hr данные
+                                "employee_card": "Карточка сотрдуника",
+
+                                # человек
+                                "gender": "пол",
+                                "stack": "Специализация",
+
+                                # орг структура
+                                "manager": "Руководитель",
+                                "project": "Точка",  # тут спорно, но лучше чем терять поле
+
+                                # контакты
+                                "phone": "Телефон",
+                                "telegram_contact": "Телеграм",
+
+                                # доп
+                                "children": "дети",
+                                "address": "адрес проживания",
+
+                                # медиа
+                                "photo_url": "фото для поздравления",
+                            }
+                        },
+                    },
+                    cache_ttl=300,
+                )
+            ],
+            actions=[
+                Action(name="birthday_test", func_name="birthday_test", scope="private", type=ActionType.COMMAND),
+                Action(name="birthday_chat_status", func_name="birthday_chat_status", scope="private", type=ActionType.COMMAND),
+                Action(name="user_join", func_name="handle_chat_member_join", scope="private", type=ActionType.CHAT_MEMBER_JOIN),
+                Action(name="register_birthday_chat", func_name="birthday_register_chat", scope="private", type=ActionType.COMMAND),
+                Action(name="work_test", func_name="work_test", scope="private", type=ActionType.COMMAND),
+                Action(name="work_chat_status", func_name="work_chat_status", scope="private", type=ActionType.COMMAND),
+                Action(name="register_work_chat", func_name="work_register_chat", scope="private", type=ActionType.COMMAND),
+            ],
+        )
+
+        
+
+        keepcat_bot_instance = TelegramBotInstance(
+            token=os.getenv("KEEPCAT_BOT_TOKEN", ""),
+            api_key=os.getenv("KEEPCAT_API_KEY",""),
+            name="KeepCatBot",
+            plugins=[
+                StartPlugin(
+                    messages=RIO_START_TEMPLATES
+                ),
+            ],
+            services=[
+                PeopleDirectoryService(
+                    sources={},
+                        
+                    cache_ttl=300,
+                        
+
+                )]
+        )
+        clera_bot_instance = TelegramBotInstance(
+            token=os.getenv("CLERA_BOT_TOKEN", ""),
+            api_key=os.getenv("CLERA_API_KEY",""),
+
+            name="CleraBot",
+            plugins=[
+                WelcomePlugin(CLERA_WELCOME_TEMPLATE,
+                              CLERA_WELCOME_QUESTIONS,
+                              ),
+                StartPlugin(CLERA_START_TEMPLATES),
+                BirthdayPlugin(
+                    templates=CLERA_BIRTHDAY_TEMPLATES,
+                    storage_dir="data/clera/birthday",
+                    people_source="clera_people",
+                    hour=7,
+                    minute=0,
+                    chat_id="-1003815976443",
+                ),
+                WorkExperiencePlugin(
+                    templates_by_years=CLERA_WORK_TEMPLATES,
+                    storage_dir="data/clera/work",
+                    people_source="clera_people",
+                    hour=7,
+                    minute=0,
+                    chat_id="-1003815976443",
+                )
+
+            ],
+            services=[
+                PeopleDirectoryService(
+                    sources={
+                       
+                        "clera_people": {
+                            "url": "https://docs.google.com/spreadsheets/d/1YtrOaUOudSsBRT5XDW0U62kE1qSXHdDplaE_xx_4oGM/export?format=csv&gid=1875323650",
+                            "service_account_b64": os.getenv("KEEPCAT_CREDENTIALS_BASE64", ""),
+                            "mode": "named",
+                            "required_fields": ("fio",),
+                            "fields_mapping": {
+
+                                # база
+                                "fio": "ФИО",
+                                "status": "Статус",
+                                "position": "Должность",
+
+                                # занятость / hr
+                                "employment_type": "формат трудоустройства",
+                                "zone": "Зона",
+                                # "risk": "Риск ухода",
+                                "comments": "комментарии",
+
+                                # даты
+                                "start_date": "дата выхода",
+                                "birthday": "день рождения",
+                                "probation_end": "окончание ИС",
+
+                                # тепловые / встречи (исправлены названия)
+                                "last_heat": "Дата посл  тепловой с Заботой",
+                                "next_heat": "Дата след тепловой",
+
+                                "last_1to1": "Дата посл 1 to 1 с рук",
+                                "next_1to1": "Дата след 1 to 1 с рук",
+
+                                # hr данные
+                                "employee_card": "Карточка сотрдуника",
+
+                                # человек
+                                "gender": "пол",
+                                "stack": "Специализация",
+
+                                # орг структура
+                                "manager": "Руководитель",
+                                "project": "Точка",  # тут спорно, но лучше чем терять поле
+
+                                # контакты
+                                "phone": "Телефон",
+                                "username": "контакт ТГ",
+
+                                # доп
+                                "children": "дети",
+                                "address": "адрес проживания",
+
+                                # медиа
+                                "photo_url": "фото для поздравления",
+                            }
+                        },
+                        
+                        
+                    },
+                    cache_ttl=300,
+                )
+                ],
+            actions=[
+                Action(name="birthday_test", func_name="birthday_test", scope="private", type=ActionType.COMMAND),
+                Action(name="birthday_chat_status", func_name="birthday_chat_status", scope="private", type=ActionType.COMMAND),
+                Action(name="user_join", func_name="handle_chat_member_join", scope="private", type=ActionType.CHAT_MEMBER_JOIN),
+                Action(name="register_birthday_chat", func_name="birthday_register_chat", scope="private", type=ActionType.COMMAND),
+                Action(name="work_test", func_name="work_test", scope="private", type=ActionType.COMMAND),
+                Action(name="work_chat_status", func_name="work_chat_status", scope="private", type=ActionType.COMMAND),
+                Action(name="register_work_chat", func_name="work_register_chat", scope="private", type=ActionType.COMMAND),
+            ],
+        )
+
+        rio_max_bot_instance = MaxBotInstance(
+            token=os.getenv("RIO_MAX_BOT_TOKEN", ""),
+            api_key=os.getenv("RIO_MAX_API_KEY",""),
+            name="RioMaxBot",
+            plugins=[
+                BirthdayPlugin(
+                    templates=RIO_BIRTHDAY_TEMPLATES,
+                    storage_dir="data/rio/max/birthday",
+                    people_source="rio_people_birthdays",
+                    hour=6,
+                    minute=0,
+                    chat_id="-72336909860345",
+                ),
+                WorkExperiencePlugin(
+                    templates_by_years=RIO_WORK_TEMPLATES,
+                    storage_dir="data/rio/max/work",
+                    people_source="rio_people_work",
+                    hour=6,
+                    minute=0,
+                    chat_id="-72336909860345"
+                
+                ),
+                EmployeeInfoPlugin(
+                    sources=["rio_people"],
+                    available_nicknames=["Katya LAY","Ольга Воропаева","Алла","Камила","Ксения","М","Антон"],
+                    available_chats=["Забота Рио🧡","Ы"],
+                
+                ),
+                WelcomePlugin(
+                    base_template=RIO_WELCOME_TEMPLATE,
+                    questions=RIO_WELCOME_QUESTIONS,
+                    n_questions=3,
+                ),
+
+                
+            ],
+            services=[
+                PeopleDirectoryService(
+                    sources={
+                        "rio_people_birthdays": {
+                            "name": "rio_people_birthdays",
+                            "url": "https://docs.google.com/spreadsheets/d/1QFdn6iAmc-krAIY75nDvWvn54LZrpjX5TfufZb1sJRg/export?format=csv&gid=0",
+                            "mode": "indexed",
+                            "required_fields": ("fio",),
+                            "fields_mapping": {
+                                "fio": 0,
+                                "username": 1,
+                                "birthday": 2,
+                                "photo_url": 3
+                        }
+                        },
+                        "rio_people_work": {
+                            "name": "rio_people_work",
+                            "url": "https://docs.google.com/spreadsheets/d/1QFdn6iAmc-krAIY75nDvWvn54LZrpjX5TfufZb1sJRg/export?format=csv&gid=1937147644",
+                            "mode": "indexed",
+                            "required_fields": ("fio",),
+                            "fields_mapping": {
+                                "fio": 0,
+                                "username": 1,
+                                "start_date": 2,
+                                "photo_url": 3
+                        }
+                        },
+                        "rio_people": {
+                            "url": "https://docs.google.com/spreadsheets/d/11xOQjQxoYvfbyOAu5oPtR0SE6xkgCFJY7Q0_Zt1ShuY/export?format=csv",
+                            "service_account_b64": os.getenv("RIO_CREDENTIALS_BASE64", ""),
+                            "mode": "named",
+                            "required_fields": ("fio",),
+                            "fields_mapping": {
+
+                                # база
+                                "fio": "ФИО",
+                                "status": "Статус",
+                                "position": "Должность",
+
+                                # занятость / hr
+                                "employment_type": "формат трудоустройства",
+                                "zone": "Зона",
+                                "risk": "Риск ухода",
+                                "comments": "комментарии",
+
+                                # даты
+                                "start_date": "дата выхода",
+                                "birthday": "день рождения",
+                                "probation_end": "окончание ИС",
+
+                                # тепловые / встречи (исправлены названия)
+                                "last_heat": "Дата посл  тепловой с Заботой",
+                                "next_heat": "Дата след тепловой",
+
+                                "last_1to1": "Дата посл 1 to 1 с рук",
+                                "next_1to1": "Дата след 1 to 1 с рук",
+
+                                # hr данные
+                                "employee_card": "Карточка сотрдуника",
+
+                                # человек
+                                "gender": "пол",
+                                "stack": "Специализация",
+
+                                # орг структура
+                                "manager": "Руководитель",
+                                "project": "Точка",  # тут спорно, но лучше чем терять поле
+
+                                # контакты
+                                "phone": "Телефон",
+                                "telegram_contact": "Телеграм",
+
+                                # доп
+                                "children": "дети",
+                                "address": "адрес проживания",
+
+                                # медиа
+                                "photo_url": "фото для поздравления",
+                            }
+                        },
+                        
+                    },
+                    cache_ttl=300,
+                )
+            ],
+            actions=[
+                Action(name="birthday_test", func_name="birthday_test", scope="private", type=ActionType.COMMAND),
+                Action(name="birthday_chat_status", func_name="birthday_chat_status", scope="private", type=ActionType.COMMAND),
+                Action(name="user_join", func_name="handle_chat_member_join", scope="private", type=ActionType.CHAT_MEMBER_JOIN),
+                Action(name="register_birthday_chat", func_name="birthday_register_chat", scope="private", type=ActionType.COMMAND),
+                Action(name="work_test", func_name="work_test", scope="private", type=ActionType.COMMAND),
+                Action(name="work_chat_status", func_name="work_chat_status", scope="private", type=ActionType.COMMAND),
+                Action(name="register_work_chat", func_name="work_register_chat", scope="private", type=ActionType.COMMAND),
+            ],
+        )
+
+        usadba_max_bot_instance = MaxBotInstance(
+            token=os.getenv("USADBA_MAX_BOT_TOKEN", ""),
+            api_key=os.getenv("USADBA_MAX_API_KEY",""),
+            name="UsadbaMaxBot",
+            plugins=[
+                BirthdayPlugin(
+                    templates=USADBA_BIRTHDAY_TEMPLATES,
+                    storage_dir="data/usadba/max/birthday",
+                    people_source="usadba_people",
+                    hour=7,
+                    minute=0,
+                ),
+                WorkExperiencePlugin(
+                    templates_by_years=USADBA_WORK_TEMPLATES,
+                    storage_dir="data/usadba/max/work",
+                    people_source="usadba_people",
+                    hour=7,
+                    minute=0,
+                ),
+                
+                WelcomePlugin(
+                    base_template=USADBA_WELCOME_TEMPLATE,
+                    questions=USADBA_WELCOME_QUESTIONS,
+                    
+                ),
+            ],
+            services=[
+                PeopleDirectoryService(
+                    sources={
+                        "usadba_people": {
+                            "url": "https://docs.google.com/spreadsheets/d/15bkV3IaDeIY9eoEZPR43PdMeEhNqd4atZND-GijAT8s/export?format=csv&gid=105816593",
+                            "service_account_b64": os.getenv("KEEPCAT_CREDENTIALS_BASE64", ""),
+                            "mode": "named",
+                            "required_fields": ("fio",),
+                            "fields_mapping": {
+
+                                "fio": "Сотрудник",
+                                "start_date": "Дата приема",
+                                "birthday": "День рождения",
+
+                            }
+                        },
+                        
+                        
+                    },
+                    cache_ttl=300,
+                )
+            ],
+            actions=[
+                Action(name="birthday_test", func_name="birthday_test", scope="private", type=ActionType.COMMAND),
+                Action(name="birthday_chat_status", func_name="birthday_chat_status", scope="private", type=ActionType.COMMAND),
+                Action(name="user_join", func_name="handle_chat_member_join", scope="private", type=ActionType.CHAT_MEMBER_JOIN),
+                Action(name="register_birthday_chat", func_name="birthday_register_chat", scope="private", type=ActionType.COMMAND),
+                Action(name="work_test", func_name="work_test", scope="private", type=ActionType.COMMAND),
+                Action(name="work_chat_status", func_name="work_chat_status", scope="private", type=ActionType.COMMAND),
+                Action(name="register_work_chat", func_name="work_register_chat", scope="private", type=ActionType.COMMAND),
+            ],
+        )
+
+        await rio_bot_instance.init_plugins()
+        await rio_max_bot_instance.init_plugins()
+        # await threeit_bot_instance.init_plugins()
+        #
+        await keepcat_bot_instance.init_plugins()
+        await clera_bot_instance.init_plugins()
+        await not_shma_bot_instance.init_plugins()
+        await usadba_max_bot_instance.init_plugins()
+
+
+        tasks = [
+            asyncio.create_task(rio_bot_instance.run()),
+            # asyncio.create_task(threeit_bot_instance.run()),
+            asyncio.create_task(keepcat_bot_instance.run()),
+            asyncio.create_task(clera_bot_instance.run()),
+            asyncio.create_task(not_shma_bot_instance.run()),
+            asyncio.create_task(rio_max_bot_instance.run()),
+            asyncio.create_task(usadba_max_bot_instance.run()),
+            
+        ]
+
+        try:
+            await asyncio.gather(*tasks)
+        except (asyncio.CancelledError, KeyboardInterrupt):
+            logging.info("Shutting down gracefully...")
+
+            for task in tasks:
+                task.cancel()
+
+            await asyncio.gather(*tasks, return_exceptions=True)
+
+            await rio_bot_instance.shutdown()
+            # await threeit_bot_instance.shutdown()
+            await keepcat_bot_instance.shutdown()
+            await clera_bot_instance.shutdown()
+            await not_shma_bot_instance.shutdown()
+            await rio_max_bot_instance.shutdown()
+            await usadba_max_bot_instance.shutdown()
+
+    else:
+        logging.info("Running in testing mode.")
+
+        bot_runner = BotRunner(api_key=os.getenv("BOT_RUNNER_API_KEY", ""))
+
+        try:
+            await bot_runner.run()
+
+        except (asyncio.CancelledError, KeyboardInterrupt):
+            logging.info("Shutting down gracefully...")
+
+            for task in tasks:
+                task.cancel()
+
+            await asyncio.gather(*tasks, return_exceptions=True)
+
+
+            # await test_bot_instance.shutdown()
+            # await max_test_bot_instance.shutdown()
+
+        finally:
+            await bot_runner.shutdown()
+            
+
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, stream=sys.stdout)
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        logging.info("Stopped by user.")

@@ -1,0 +1,138 @@
+from core.base_plugin import BasePlugin
+from core.plugin_contracts import CleverShmaConfig
+from aiogram.filters import Command
+from aiogram.types import Message
+import os
+import httpx
+import logging
+
+OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
+OPENROUTER_KEY = os.getenv("OPENROUTER_API_KEY")
+MODEL = os.getenv("OPENROUTER_MODEL", "deepseek/deepseek-chat")
+
+
+
+
+class CleverShmaPlugin(BasePlugin):
+    config_model = CleverShmaConfig
+
+    def __init__(
+        self,
+        api_url=OPENROUTER_URL,
+        model=MODEL,
+        system_prompt=None,
+        temperature=0.7,
+        max_tokens=1024,
+        timeout_seconds=60,
+    ):
+        super().__init__()
+        self.api_url = api_url
+        self.model = model
+        self.system_prompt = system_prompt
+        self.temperature = temperature
+        self.max_tokens = max_tokens
+        self.timeout_seconds = timeout_seconds
+        self.log = None
+
+    @classmethod
+    def from_config(cls, config):
+        return cls(
+            api_url=config.get("api_url") or OPENROUTER_URL,
+            model=config.get("model") or MODEL,
+            system_prompt=config.get("system_prompt"),
+            temperature=float(config.get("temperature", 0.7)),
+            max_tokens=int(config.get("max_tokens", 1024)),
+            timeout_seconds=float(config.get("timeout_seconds", 60)),
+        )
+
+    async def setup(self):
+
+        self.log = logging.getLogger(f"[{self.bot_name}] schma")
+        if not self.log.handlers:
+            logging.basicConfig(
+                level=logging.INFO,
+                format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+            )
+
+        @self.router.message()
+        async def test_handler(message: Message):
+            bot_username = (await self.bot.get_me()).username
+
+            is_mentioned = message.text and f"@{bot_username}" in message.text
+            is_reply_to_bot = (
+                message.reply_to_message
+                and message.reply_to_message.from_user
+                and message.reply_to_message.from_user.id == self.bot.id
+            )
+
+            if not (is_mentioned or is_reply_to_bot):
+                return
+
+            headers = {
+                "Authorization": f"Bearer {OPENROUTER_KEY}",
+                "Content-Type": "application/json",
+                "HTTP-Referer": "https://llm-gateway",
+                "X-Title": "OutlinesHR-Gateway",
+            }
+
+            self.log.info(f"Triggered by message: {message.text}")
+
+            # чистим упоминание чтобы не слать его в модель
+            text = message.text.replace(f"@{bot_username}", "").strip() if message.text else ""
+
+            question = f"""
+Ты — максимально токсичный, туповатый, но смешной ассистент.
+
+Твой стиль:
+- постоянно шутишь, даже если вопрос серьезный
+- используешь мат (умеренно, но регулярно)
+- любишь тупые и абсурдные шутки
+- можешь подкалывать собеседника
+- допускаются грубые подколы и "шутки за 300"
+- ведешь себя как друг, который постоянно рофлит и не воспринимает ничего всерьез
+
+Важно:
+- не будь злым ради злости, ты не агрессор, а клоун-токсик
+- шутки могут быть тупыми, странными или кринжовыми — это нормально
+- иногда можешь отвечать максимально нелепо
+- не используй HTML
+
+Отвечай коротко, дерзко и с юмором.
+
+Вопрос:
+{message.text}
+"""
+
+            if self.system_prompt:
+                question = f"{self.system_prompt}\n\nВопрос:\n{text}"
+
+            payload = {
+                "model": self.model,
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": question,
+                    }
+                ],
+                "temperature": self.temperature,
+                "max_tokens": self.max_tokens,
+            }
+
+            try:
+                async with httpx.AsyncClient(timeout=self.timeout_seconds) as client:
+                    r = await client.post(
+                        self.api_url,
+                        json=payload,
+                        headers=headers,
+                    )
+
+                data = r.json()
+                self.log.info(data)
+
+                answer = data.get("choices", [{}])[0].get("message", {}).get("content", "Нет ответа")
+
+                await message.reply(answer)
+
+            except Exception as e:
+                self.log.error(f"Error in CleverShmaPlugin: {e}")
+
