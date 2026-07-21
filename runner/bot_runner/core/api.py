@@ -9,7 +9,7 @@ from aiogram.types import Message,User,Chat
 
 log = logging.getLogger("bot.api")
 
-API_BASE_URL = os.getenv("BACKEND_API_URL","http://bot-platform:8000/api/") 
+API_BASE_URL = os.getenv("BACKEND_API_URL", "http://backend:8000/api/").rstrip("/") + "/"
 DEFAULT_TIMEOUT = aiohttp.ClientTimeout(total=8)
 
 RETRIES = 2

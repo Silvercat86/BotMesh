@@ -1,0 +1,12 @@
+services:
+  runner:
+    build:
+      context: ../runner/bot_runner
+    restart: unless-stopped
+    env_file:
+      - ../.env.runner
+    volumes:
+      - runner_data:/app/data
+
+volumes:
+  runner_data:

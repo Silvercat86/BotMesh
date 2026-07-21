@@ -34,9 +34,9 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://keepcat.ru",
-    "https://www.keepcat.ru",
-    "http://localhost:8080",
+    origin.strip()
+    for origin in os.getenv("CSRF_TRUSTED_ORIGINS", "http://localhost:8080").split(",")
+    if origin.strip()
 ]
 
 

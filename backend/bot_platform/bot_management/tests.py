@@ -5,6 +5,7 @@ from django.db.models import ProtectedError
 from django.test import TestCase
 from django.urls import reverse
 from django.core.management import call_command
+from unittest.mock import patch
 
 from bot_management.models import (
     Bot, BotAccess, BotAction, BotPlugin, BotRunner, BotService,
@@ -138,6 +139,26 @@ class BuiltinCatalogTests(TestCase):
             ["people_directory_service"],
         )
         self.assertIn("birthday_test", birthday.actions_schema)
+
+    def test_ensure_runner_reads_key_from_environment(self):
+        with patch.dict("os.environ", {"BOT_RUNNER_API_KEY": "local-runner-secret"}):
+            call_command("ensure_runner", name="test-runner", verbosity=0)
+
+        runner = BotRunner.objects.get(name="test-runner")
+        self.assertTrue(runner.is_active)
+        self.assertEqual(runner.api_key, "local-runner-secret")
+
+    def test_ensure_runner_activates_existing_key_without_renaming(self):
+        existing = BotRunner.objects.create(
+            name="existing-runner", api_key="shared-runner-secret", is_active=False
+        )
+
+        with patch.dict("os.environ", {"BOT_RUNNER_API_KEY": "shared-runner-secret"}):
+            call_command("ensure_runner", name="different-name", verbosity=0)
+
+        existing.refresh_from_db()
+        self.assertTrue(existing.is_active)
+        self.assertFalse(BotRunner.objects.filter(name="different-name").exists())
 
 
 class DashboardAccessTests(TestCase):
