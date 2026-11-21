@@ -26,6 +26,7 @@ class March8Plugin(BasePlugin):
         chat_id: int | None = None,
     ):
         super().__init__()
+        self.scheduler = schedule.Scheduler()
 
         self.template = template
         self.photo = photo
@@ -80,16 +81,16 @@ class March8Plugin(BasePlugin):
         else:
             self.log.info("March8Plugin: photo is not configured, will send text only")
 
-            @self.router.message(Command("march8_test"))
-            async def march8_test(message: Message):
+        @self.router.message(Command("march8_test"))
+        async def march8_test(message: Message):
 
-                if not self.chat_id:
-                    await message.reply("❌ chat_id не задан")
-                    return
+            if not self.chat_id:
+                await message.reply("❌ chat_id не задан")
+                return
 
-                await self._send()
+            await self._send()
 
-            self._schedule_task = asyncio.create_task(self._schedule_loop())
+        self._schedule_task = self.start_background_task(self._schedule_loop())
 
     # -------------------- CHAT LOAD --------------------
 
@@ -181,7 +182,7 @@ class March8Plugin(BasePlugin):
         await self._catch_up_if_needed()
 
         while True:
-            schedule.run_pending()
+            self.scheduler.run_pending()
             await asyncio.sleep(60)
 
     def _register_daily_job(self):
@@ -203,6 +204,6 @@ class March8Plugin(BasePlugin):
             if state.get("last_sent_year") == now.year:
                 return
 
-            asyncio.create_task(self._send())
+            self.start_background_task(self._send())
 
-        schedule.every().day.at(schedule_time).do(job)
+        self.scheduler.every().day.at(schedule_time).do(job)

@@ -33,6 +33,8 @@ class BotRunner:
 
         self.bot_instances: dict[str, BotInstance] = {}
         self.bot_tasks: dict[str, asyncio.Task] = {}
+        self.retry_after: dict[str, float] = {}
+        self.failure_counts: dict[str, int] = {}
 
 
 
@@ -92,51 +94,73 @@ class BotRunner:
             await self.shutdown()
 
     async def actualize_bots(self, active_bots: list[dict]) -> None:
-        new_bots_by_name = {
-            bot_data["name"]: bot_data
-            for bot_data in active_bots
-        }
+        desired = {bot_data["name"]: bot_data for bot_data in active_bots}
 
-        current_names = set(self.bot_instances.keys())
-        new_names = set(new_bots_by_name.keys())
+        for name in set(self.bot_instances) - set(desired):
+            try:
+                await self.stop_bot(name)
+            except Exception:
+                log.exception("Failed to stop removed bot %s", name)
+            self.retry_after.pop(name, None)
+            self.failure_counts.pop(name, None)
 
-        for bot_name in current_names - new_names:
-            log.info("Bot removed from backend, stopping: %s", bot_name)
-            await self.stop_bot(bot_name)
+        for name, data in desired.items():
+            instance = self.bot_instances.get(name)
+            task = self.bot_tasks.get(name)
+            schedule_tasks = (
+                getattr(plugin, "_schedule_task", None)
+                for plugin in getattr(instance, "plugins", ())
+            )
+            schedule_stopped = any(schedule_task is not None and schedule_task.done() for schedule_task in schedule_tasks)
+            polling_stopped = task is None or task.done()
+            if instance is not None and instance.version == data.get("version") and not polling_stopped and not schedule_stopped:
+                self.retry_after.pop(name, None)
+                self.failure_counts.pop(name, None)
+                continue
+            if time.monotonic() < self.retry_after.get(name, 0):
+                continue
 
-        for bot_name in current_names & new_names:
-            bot_instance = self.bot_instances[bot_name]
-            bot_data = new_bots_by_name[bot_name]
+            if instance is not None and (polling_stopped or schedule_stopped):
+                error = task.exception() if task is not None and task.done() and not task.cancelled() else None
+                failures = self.failure_counts.get(name, 0) + 1
+                self.failure_counts[name] = failures
+                delay = min(60, 2 ** min(failures, 6))
+                self.retry_after[name] = time.monotonic() + delay
+                log.error("Bot %s stopped unexpectedly: %r; retrying in %s seconds", name, error, delay)
+                try:
+                    await self.stop_bot(name)
+                except Exception:
+                    log.exception("Failed to clean up bot %s", name)
+                continue
 
-            current_version = getattr(bot_instance, "version", None)
-            new_version = bot_data.get("version")
-
-            if current_version != new_version:
-                log.info(
-                    "Bot version changed, recreating: %s old=%r new=%r",
-                    bot_name,
-                    current_version,
-                    new_version,
-                )
-
-                await self.stop_bot(bot_name)
-                
-                await asyncio.sleep(1) 
-
-                await self.start_bot_from_data(bot_data)
-        for bot_name in new_names - current_names:
-            bot_data = new_bots_by_name[bot_name]
-
-            log.info("New bot found, starting: %s", bot_name)
-            
-            await self.start_bot_from_data(bot_data)
+            try:
+                # Reject invalid configuration while the previous version is still running.
+                for plugin in data["plugins"]:
+                    validate_plugin_config(PLUGIN_REGISTRY[plugin["name"]], {key: value for key, value in plugin.items() if key != "name"})
+                for service in data["services"]:
+                    validate_service_config(SERVICE_REGISTRY[service["name"]], {key: value for key, value in service.items() if key != "name"})
+                if instance is not None:
+                    await self.stop_bot(name)
+                await self.start_bot_from_data(data)
+                self.retry_after.pop(name, None)
+            except asyncio.CancelledError:
+                raise
+            except Exception:
+                failures = self.failure_counts.get(name, 0) + 1
+                self.failure_counts[name] = failures
+                delay = min(60, 2 ** min(failures, 6))
+                self.retry_after[name] = time.monotonic() + delay
+                log.exception("Failed to start bot %s; retrying in %s seconds", name, delay)
 
 
     async def shutdown(self):
         self._running = False
 
         for bot_name in list(self.bot_instances.keys()):
-            await self.stop_bot(bot_name)
+            try:
+                await self.stop_bot(bot_name)
+            except Exception:
+                log.exception("Failed to stop bot %s during shutdown", bot_name)
 
         if self.session is not None and not self.session.closed:
             await self.session.close()
@@ -256,9 +280,12 @@ class BotRunner:
         if bot_instance is None:
             return
 
-        await bot_instance.init_plugins()
-
-        task = asyncio.create_task(bot_instance.run())
+        try:
+            await bot_instance.init_plugins()
+            task = asyncio.create_task(bot_instance.run())
+        except BaseException:
+            await bot_instance.shutdown()
+            raise
 
         self.bot_instances[bot_instance.name] = bot_instance
         self.bot_tasks[bot_instance.name] = task
@@ -273,12 +300,12 @@ class BotRunner:
         task = self.bot_tasks.pop(bot_name, None)
         bot_instance = self.bot_instances.pop(bot_name, None)
 
-        if bot_instance is not None:
-            await bot_instance.shutdown()
-
         if task is not None:
             task.cancel()
             await asyncio.gather(task, return_exceptions=True)
+
+        if bot_instance is not None:
+            await bot_instance.shutdown()
 
         
 

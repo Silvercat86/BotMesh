@@ -1,3 +1,5 @@
+import asyncio
+import logging
 from typing import Any, Callable
 from typing import  Self
 
@@ -20,6 +22,28 @@ class BasePlugin:
         self.bot_name = None
         self.router = Router()
         self.dp = None
+        self._background_tasks: set[asyncio.Task] = set()
+
+    def start_background_task(self, coroutine):
+        task = asyncio.create_task(coroutine)
+        self._background_tasks.add(task)
+        task.add_done_callback(self._background_task_finished)
+        return task
+
+    def _background_task_finished(self, task):
+        self._background_tasks.discard(task)
+        if not task.cancelled() and (error := task.exception()) is not None:
+            logging.getLogger("bot.plugin").error(
+                "Background task failed for plugin %s on bot %s: %r",
+                self.name, self.bot_name, error,
+            )
+
+    async def shutdown(self):
+        tasks = list(self._background_tasks)
+        for task in tasks:
+            task.cancel()
+        if tasks:
+            await asyncio.gather(*tasks, return_exceptions=True)
 
         
 

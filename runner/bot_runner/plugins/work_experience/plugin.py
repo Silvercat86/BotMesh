@@ -49,6 +49,7 @@ class WorkExperiencePlugin(BasePlugin):
         chat_id: int | None = None,
     ):
         super().__init__()
+        self.scheduler = schedule.Scheduler()
 
 
 
@@ -239,7 +240,7 @@ class WorkExperiencePlugin(BasePlugin):
                 self.log.info(f"Using chat_id from server {chat_id_from_server}")
             else:
                 self.log.warning("No chat_id configured, birthday notifications will not be sent until a chat is registered")
-        self._schedule_task = asyncio.create_task(self._schedule_loop())
+        self._schedule_task = self.start_background_task(self._schedule_loop())
 
         
 
@@ -296,7 +297,7 @@ class WorkExperiencePlugin(BasePlugin):
         await self._catch_up_if_needed()
 
         while True:
-            schedule.run_pending()
+            self.scheduler.run_pending()
             await asyncio.sleep(60)
 
     async def _catch_up_if_needed(self):
@@ -331,11 +332,11 @@ class WorkExperiencePlugin(BasePlugin):
                 return
 
             
-            asyncio.create_task(
+            self.start_background_task(
                 self._run_today()
             )
 
-        schedule.every().day.at(schedule_time).do(job)
+        self.scheduler.every().day.at(schedule_time).do(job)
 
     def _load_chat_id_from_file(self):
         if not self.chat_file.exists():

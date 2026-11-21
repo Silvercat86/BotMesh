@@ -149,6 +149,7 @@ class BirthdayPlugin(BasePlugin):
         }
 
         self._schedule_task = None
+        self.scheduler = schedule.Scheduler()
 
     @classmethod
     def from_config(cls, config: dict):
@@ -331,7 +332,7 @@ class BirthdayPlugin(BasePlugin):
 
         
 
-        self._schedule_task = asyncio.create_task(self._schedule_loop())
+        self._schedule_task = self.start_background_task(self._schedule_loop())
 
 
 
@@ -414,10 +415,10 @@ class BirthdayPlugin(BasePlugin):
             await self._catch_up_if_needed()
 
             while True:
-                schedule.run_pending()
+                self.scheduler.run_pending()
                 await asyncio.sleep(60)
         except Exception as e:
-            self.log(f"Crashed: {e}")
+            self.log.exception("Birthday schedule failed: %s", e)
 
     def _register_daily_job(self):
         schedule_time = f"{self.hour:02d}:{self.minute:02d}"
@@ -429,9 +430,9 @@ class BirthdayPlugin(BasePlugin):
                 return
 
             
-            asyncio.create_task(
+            self.start_background_task(
                 self._run_today(
                 )
             )
 
-        schedule.every().day.at(schedule_time).do(job)
+        self.scheduler.every().day.at(schedule_time).do(job)

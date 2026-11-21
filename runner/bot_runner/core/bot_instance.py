@@ -5,6 +5,8 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 
 import aiohttp
+import asyncio
+import logging
 
 from core.services.container import ServiceContainer
 from core.services import Services
@@ -25,6 +27,7 @@ from core.action import Action, ActionType
 
 
 import maxapi
+log = logging.getLogger("bot.instance")
 class BotInstance:
     def __init__(self, api_key: str, name: str, plugins: list, services: list, actions: list[Action] = None,version: int = 1):
         self.name = name
@@ -59,6 +62,14 @@ class BotInstance:
         plugin.services = self.services
         plugin.api = self.api
 
+    async def shutdown_plugins(self):
+        results = await asyncio.gather(
+            *(plugin.shutdown() for plugin in self.plugins), return_exceptions=True
+        )
+        for plugin, result in zip(self.plugins, results):
+            if isinstance(result, BaseException):
+                log.error("Failed to stop plugin %s for bot %s: %r", plugin.name, self.name, result)
+
         
 
 
@@ -66,16 +77,12 @@ class BotInstance:
 
 class TelegramBotInstance(BotInstance):
     def __init__(self, token: str,api_key:str, name: str, plugins: list, services: list, actions: list[Action] = None,version: int = 1):
-
-        super().__init__(api_key, name, plugins, services, actions,version)
-
-
-        self.dp = Dispatcher()
-
         self.bot = aiogram.Bot(
             token=token,
             default=DefaultBotProperties(parse_mode=ParseMode.HTML),
         )
+        super().__init__(api_key, name, plugins, services, actions,version)
+        self.dp = Dispatcher()
         self.adapter = TelegramAdapter(self.bot)
 
 
@@ -132,17 +139,19 @@ class TelegramBotInstance(BotInstance):
         await self.dp.start_polling(self.bot)
 
     async def shutdown(self):
-        await self.http_session.close()
-        await self.bot.session.close()
-        if hasattr(self, 'dp') and self.dp is not None:
-            await self.dp.stop_polling()
+        try:
+            await self.shutdown_plugins()
+        finally:
+            try:
+                await self.bot.session.close()
+            finally:
+                await self.http_session.close()
 
 
 class MaxBotInstance(BotInstance):
     def __init__(self, token: str, api_key: str, name: str, plugins: list, services: list, actions: list[Action] = None, version: int = 1):
-        super().__init__(api_key, name, plugins, services, actions, version)
-
         self.bot = maxapi.Bot(token)
+        super().__init__(api_key, name, plugins, services, actions, version)
         self.dp = maxapi.Dispatcher()
         self.adapter = MaxAdapter(self.bot)
         
@@ -197,4 +206,13 @@ class MaxBotInstance(BotInstance):
         await self.dp.start_polling(self.bot)
 
     async def shutdown(self):
-        await self.http_session.close()
+        try:
+            await self.dp.stop_polling()
+        finally:
+            try:
+                await self.shutdown_plugins()
+            finally:
+                try:
+                    await self.bot.close_session()
+                finally:
+                    await self.http_session.close()
